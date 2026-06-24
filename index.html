@@ -80,7 +80,7 @@
         .msg.received { align-self: flex-start; }
         .msg.received .msg-bubble { border-top-left-radius: 4px; }
 
-        /* МОДАЛЬНЫЕ ОКНА (ВСПЛЫВАЮЩИЕ) */
+        /* МОДАЛЬНЫЕ ОКНА */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.2); backdrop-filter: blur(5px); display:flex; justify-content:center; align-items:center; z-index:100; }
         .modal-content { width: 90%; max-width: 340px; padding: 25px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
 
@@ -93,6 +93,11 @@
             #app.chat-active .sidebar { display: none; } #app.chat-active .main-chat { display: flex; }
         }
     </style>
+
+    <!-- ПОДКЛЮЧАЕМ КЛАССИЧЕСКИЙ FIREBASE (РАБОТАЕТ БЕЗ MODULE) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -152,15 +157,14 @@
         </div>
     </div>
 
+    <!-- ОКНО ДЛЯ ЗВОНКОВ -->
     <div id="callScreen" class="modal-overlay hidden">
         <div class="modal-content aero-card" style="max-width: 450px; padding: 20px;">
             <h3 id="callStatus" style="margin-bottom: 12px; font-weight: 700;">Вызов...</h3>
-            
             <div style="position: relative; width: 100%; height: 280px; background: rgba(0, 40, 80, 0.15); border-radius: 18px; overflow: hidden; border: 1px solid var(--glass-border); box-shadow: inset 0 0 20px rgba(255,255,255,0.3);">
                 <video id="remoteVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; background: #011627;"></video>
                 <video id="localVideo" autoplay playsinline muted style="position: absolute; bottom: 10px; right: 10px; width: 95px; height: 125px; object-fit: cover; background: #0b2545; border-radius: 12px; border: 2px solid var(--glass-border); box-shadow: 0 4px 12px rgba(0,0,0,0.2);"></video>
             </div>
-            
             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
                 <button id="answerBtn" class="aero-btn hidden" style="background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);" onclick="acceptCall()">🟢 Ответить</button>
                 <button class="aero-btn" style="background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);" onclick="hangUp()">🔴 Сбросить</button>
@@ -184,10 +188,8 @@
         <div class="modal-content aero-card">
             <h3>Настройки профиля</h3>
             <input id="settingsNameInput" class="aero-input" placeholder="Изменить @username">
-            
             <label style="font-size:12px; text-align:left; display:block; margin-top:5px;">Сменить аватарку:</label>
             <input type="file" id="settingsAvaFile" class="aero-input" accept="image/*">
-            
             <label style="font-size:12px; text-align:left; display:block; margin-top:5px;">Цвет интерфейса:</label>
             <div class="color-picker">
                 <div class="color-dot" style="background:#00b4d8;" onclick="changeThemeColor('#00b4d8','#0077b6')"></div>
@@ -195,17 +197,12 @@
                 <div class="color-dot" style="background:#e74c3c;" onclick="changeThemeColor('#e74c3c','#c0392b')"></div>
                 <div class="color-dot" style="background:#9b59b6;" onclick="changeThemeColor('#9b59b6','#8e44ad')"></div>
             </div>
-
             <button class="aero-btn" onclick="saveSettings()">Сохранить изменения</button>
             <button onclick="closeModal('settingsModal')" style="background:none; border:none; font-size:13px; color:var(--aero-dark); cursor:pointer;">Закрыть</button>
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, push, onChildAdded, onValue, set, get, update, off, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCsU2eJ2aF5oj4uWFbyy0Ez0mekT_At4vU",
             authDomain: "sava-online.firebaseapp.com",
@@ -216,19 +213,18 @@
             appId: "1:997547069745:web:821a8fa505cf14670ee010"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
+        // Инициализация
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
 
         let localUser = null, currentChatId = null, localAvatar = "", localUsername = "", currentChatRef = null;
         const IMGBB_API_KEY = "0163c7a477f73da3a4ea73c5bafa7b80";
         const defaultAva = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ccircle cx="20" cy="20" r="20" fill="%23a5c4e0"/%3E%3C/svg%3E';
 
-        // ПЕРЕМЕННЫЕ ДЛЯ ЗВОНКОВ (WebRTC)
         let peerConnection = null, localStream = null, remoteStream = null, isCallHost = false, targetUserUid = null;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 
-        // Модальные окна
         window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
         window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
         window.toggleAuthView = (showReg) => {
@@ -236,14 +232,13 @@
             document.getElementById('regForm').classList.toggle('hidden', !showReg);
         };
 
-        // Изменение цвета темы в CSS
         window.changeThemeColor = (light, dark) => {
             document.documentElement.style.setProperty('--aero-blue', light);
             document.documentElement.style.setProperty('--aero-dark', dark);
-            if(localUser) update(ref(db, `users/${localUser.uid}`), { themeLight: light, themeDark: dark });
+            if(localUser) db.ref(`users/${localUser.uid}`).update({ themeLight: light, themeDark: dark });
         };
 
-        // Авторизация / Регистрация
+        // ТЕПЕРЬ ФУНКЦИЯ ДОСТУПНА СРАЗУ
         window.authAction = async (type) => {
             const email = document.getElementById(type === 'login' ? 'email' : 'regEmail').value.trim();
             const pass = document.getElementById(type === 'login' ? 'pass' : 'regPass').value.trim();
@@ -254,33 +249,32 @@
                     let nick = document.getElementById('regName').value.trim().replace('@', '');
                     if(!nick) return alert("Введите желаемый username!");
                     
-                    const nameCheck = await get(ref(db, `usernames/${nick.toLowerCase()}`));
+                    const nameCheck = await db.ref(`usernames/${nick.toLowerCase()}`).get();
                     if(nameCheck.exists()) return alert("Этот никнейм уже занят!");
 
-                    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                    await set(ref(db, `users/${cred.user.uid}`), { username: nick, avatar: "" });
-                    await set(ref(db, `usernames/${nick.toLowerCase()}`), cred.user.uid);
+                    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+                    await db.ref(`users/${cred.user.uid}`).set({ username: nick, avatar: "" });
+                    await db.ref(`usernames/${nick.toLowerCase()}`).set(cred.user.uid);
                 } else {
-                    await signInWithEmailAndPassword(auth, email, pass);
+                    await auth.signInWithEmailAndPassword(email, pass);
                 }
             } catch (err) { alert("Ошибка: " + err.message); }
         };
 
-        // Живой слушатель авторизации + СЛУШАТЕЛЬ ВХОДЯЩИХ ЗВОНКОВ
-        onAuthStateChanged(auth, async (user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
                 localUser = user;
                 document.getElementById('authBox').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
 
-                const snap = await get(ref(db, `users/${user.uid}`));
+                const snap = await db.ref(`users/${user.uid}`).get();
                 let uData = snap.val() || {};
 
                 if (!uData.username) {
                     const legacyNick = "user" + Math.floor(100 + Math.random() * 900);
                     uData.username = legacyNick;
-                    await update(ref(db, `users/${user.uid}`), { username: legacyNick });
-                    await set(ref(db, `usernames/${legacyNick}`), user.uid);
+                    await db.ref(`users/${user.uid}`).update({ username: legacyNick });
+                    await db.ref(`usernames/${legacyNick}`).set(user.uid);
                 }
 
                 localUsername = uData.username;
@@ -297,8 +291,7 @@
 
                 loadMyActiveChatsList();
 
-                // ЖИВОЙ СЛУШАТЕЛЬ ВХОДЯЩИХ ЗВОНКОВ ДЛЯ ТЕКУЩЕГО ЮЗЕРА
-                onValue(ref(db, `userCalls/${user.uid}`), (snapshot) => {
+                db.ref(`userCalls/${user.uid}`).on('value', (snapshot) => {
                     const callData = snapshot.val();
                     if (callData && callData.type === "dialing") {
                         currentChatId = callData.chatId;
@@ -307,22 +300,19 @@
                         document.getElementById('callStatus').innerText = `Входящий звонок от ${callData.callerName}`;
                         document.getElementById('answerBtn').classList.remove('hidden');
                         
-                        // Если звонящий сбросил до ответа, закрываем окно
-                        onValue(ref(db, `callRooms/${currentChatId}`), (roomSnap) => {
+                        db.ref(`callRooms/${currentChatId}`).on('value', (roomSnap) => {
                             if (!roomSnap.exists() && (peerConnection || localStream)) {
                                 stopCallTracks();
                             }
                         });
                     }
                 });
-
             } else {
                 document.getElementById('authBox').classList.remove('hidden');
                 document.getElementById('app').classList.add('hidden');
             }
         });
 
-        // Создание чата
         window.initChat = async (type) => {
             let target = document.getElementById('modalTargetInput').value.trim().replace('@', '');
             if(!target) return alert("Заполните поле");
@@ -330,7 +320,7 @@
             let id, label;
             if(type === 'private') {
                 if(target.toLowerCase() === localUsername.toLowerCase()) return alert("Нельзя создать чат с самим собой.");
-                const snap = await get(ref(db, `usernames/${target.toLowerCase()}`));
+                const snap = await db.ref(`usernames/${target.toLowerCase()}`).get();
                 if(!snap.exists()) return alert("Пользователь не найден!");
                 id = [localUser.uid, snap.val()].sort().join('_');
                 label = `@${target}`;
@@ -339,17 +329,16 @@
                 label = `📢 ${target}`;
             }
 
-            await set(ref(db, `userChats/${localUser.uid}/${id}`), { title: label, type: type });
+            await db.ref(`userChats/${localUser.uid}/${id}`).set({ title: label, type: type });
             closeModal('createChatModal');
             document.getElementById('modalTargetInput').value = "";
             openChatRoom(id, label);
         };
 
-        // Загрузка бесед в левое меню
         function loadMyActiveChatsList() {
             const container = document.getElementById('activeChatsContainer');
             container.innerHTML = "";
-            onChildAdded(ref(db, `userChats/${localUser.uid}`), (snap) => {
+            db.ref(`userChats/${localUser.uid}`).on('child_added', (snap) => {
                 const chatId = snap.key;
                 const info = snap.val();
                 
@@ -361,28 +350,21 @@
             });
         }
 
-        // Открытие комнаты сообщений
         function openChatRoom(id, title) {
             currentChatId = id;
             document.getElementById('chatTitle').innerText = title;
-            
-            // Динамически прячем кнопку звонка для публичных каналов и показываем в ЛС
-            if (id.startsWith('channel_')) {
-                document.getElementById('callBtn').classList.add('hidden');
-            } else {
-                document.getElementById('callBtn').classList.remove('hidden');
-            }
+            document.getElementById('callBtn').classList.toggle('hidden', id.startsWith('channel_'));
 
             if(window.innerWidth <= 768) {
                 document.getElementById('app').classList.add('chat-active');
                 document.getElementById('backBtn').style.display = "block";
             }
 
-            if(currentChatRef) off(currentChatRef);
+            if(currentChatRef) currentChatRef.off();
             document.getElementById('msgs').innerHTML = "";
             
-            currentChatRef = ref(db, `messages/${id}`);
-            onChildAdded(currentChatRef, (snap) => {
+            currentChatRef = db.ref(`messages/${id}`);
+            currentChatRef.on('child_added', (snap) => {
                 const m = snap.val();
                 if(m) {
                     const box = document.createElement('div');
@@ -390,7 +372,6 @@
                     box.className = `msg ${isMe ? 'sent' : 'received'}`;
                     
                     const msgAva = m.avatar || defaultAva;
-                    
                     let bodyContent = m.type === 'image' 
                         ? `<img src="${m.text}" style="max-width:100%; max-height:220px; border-radius:12px; margin-top:4px; box-shadow:0 4px 10px rgba(0,0,0,0.08); display:block; cursor:pointer;" onclick="window.open('${m.text}')" />`
                         : `<p style="word-break:break-word;">${m.text}</p>`;
@@ -402,7 +383,6 @@
                             ${bodyContent}
                         </div>
                     `;
-                    
                     document.getElementById('msgs').appendChild(box);
                     document.getElementById('msgs').scrollTop = document.getElementById('msgs').scrollHeight;
                 }
@@ -411,12 +391,11 @@
 
         window.backToSidebar = () => document.getElementById('app').classList.remove('chat-active');
 
-        // Отправка текста
         window.postMessage = () => {
             const input = document.getElementById('msgInput');
             if(!input.value.trim() || !currentChatId) return;
 
-            push(ref(db, `messages/${currentChatId}`), {
+            db.ref(`messages/${currentChatId}`).push({
                 sender: localUser.uid,
                 author: `@${localUsername}`,
                 avatar: localAvatar,
@@ -426,7 +405,6 @@
             input.value = "";
         };
 
-        // Загрузка медиафайлов/гифок через Imgbb API и отправка
         window.uploadAndSendMedia = async () => {
             const fileInput = document.getElementById('mediaInput');
             const file = fileInput.files[0];
@@ -437,14 +415,10 @@
             formData.append('image', file);
 
             try {
-                const response = await fetch('https://api.imgbb.com/1/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
                 const result = await response.json();
-
                 if(result.success) {
-                    push(ref(db, `messages/${currentChatId}`), {
+                    db.ref(`messages/${currentChatId}`).push({
                         sender: localUser.uid,
                         author: `@${localUsername}`,
                         avatar: localAvatar,
@@ -452,23 +426,12 @@
                         text: result.data.url
                     });
                     fileInput.value = "";
-                } else {
-                    alert("Ошибка загрузки изображения: " + result.error.message);
-                }
-            } catch(err) {
-                alert("Ошибка сети при отправке картинки.");
-            }
+                } else { alert("Ошибка загрузки: " + result.error.message); }
+            } catch(err) { alert("Ошибка сети при отправке картинки."); }
         };
 
-        // ==========================================
-        // ЛОГИКА ЗВОНКОВ (WEBRTC + FIREBASE СИГНАЛИНГ)
-        // ==========================================
-        
-        // 1. Инициализация исходящего вызова
         window.startCall = async () => {
             if (!currentChatId || currentChatId.startsWith('channel_')) return alert("Звонки доступны только в личных чатах!");
-            
-            // Вычленяем UID собеседника из ID чата (сортированная строка uid1_uid2)
             targetUserUid = currentChatId.split('_').find(id => id !== localUser.uid);
             if (!targetUserUid) return;
 
@@ -477,81 +440,59 @@
             document.getElementById('callStatus').innerText = "Вызов...";
             document.getElementById('answerBtn').classList.add('hidden');
 
-            // Запрашиваем веб-камеру и микрофон
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
             } catch (err) {
                 alert("Ошибка доступа к камере или микрофону: " + err.message);
-                closeModal('callScreen');
-                return;
+                closeModal('callScreen'); return;
             }
 
             initPeerConnection();
 
-            // Создаем WebRTC Offer (предложение соединения)
             const offerDescription = await peerConnection.createOffer();
             await peerConnection.setLocalDescription(offerDescription);
 
-            // Публикуем offer в общую комнату звонка в Firebase
-            await set(ref(db, `callRooms/${currentChatId}`), {
+            await db.ref(`callRooms/${currentChatId}`).set({
                 offer: { sdp: offerDescription.sdp, type: offerDescription.type },
-                callerName: `@${localUsername}`,
-                status: "ringing"
+                callerName: `@${localUsername}`, status: "ringing"
             });
 
-            // "Звоним" на телефон получателю (создаем триггер уведомления)
-            await set(ref(db, `userCalls/${targetUserUid}`), {
-                chatId: currentChatId,
-                callerName: `@${localUsername}`,
-                type: "dialing"
+            await db.ref(`userCalls/${targetUserUid}`).set({
+                chatId: currentChatId, callerName: `@${localUsername}`, type: "dialing"
             });
 
-            // Слушаем комнату звонка: ждем ответа от получателя или сброса
-            onValue(ref(db, `callRooms/${currentChatId}`), async (snapshot) => {
+            db.ref(`callRooms/${currentChatId}`).on('value', async (snapshot) => {
                 const room = snapshot.val();
-                if (!room) {
-                    if (peerConnection || localStream) stopCallTracks(); // Звонок отменен
-                    return;
-                }
-                // Если прилетел Answer от собеседника — соединяем потоки
+                if (!room) { if (peerConnection || localStream) stopCallTracks(); return; }
                 if (room.answer && peerConnection && !peerConnection.currentRemoteDescription) {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(room.answer));
                     document.getElementById('callStatus').innerText = "В разговоре ⚡";
                 }
             });
 
-            // Слушаем сетевые ICE-кандидаты от получателя
-            onChildAdded(ref(db, `callRooms/${currentChatId}/calleeCandidates`), (snapshot) => {
+            db.ref(`callRooms/${currentChatId}/calleeCandidates`).on('child_added', (snapshot) => {
                 const data = snapshot.val();
                 if (data && peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(data));
             });
         };
 
-        // 2. Создание объекта связи RTCPeerConnection
         function initPeerConnection() {
             peerConnection = new RTCPeerConnection(rtcConfig);
             remoteStream = new MediaStream();
             document.getElementById('remoteVideo').srcObject = remoteStream;
 
-            // Передаем наши аудио/видео треки в поток соединения
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            peerConnection.ontrack = (event) => { event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track)); };
 
-            // Ловим входящие треки от собеседника и крепим к окну видео
-            peerConnection.ontrack = (event) => {
-                event.streams[0].getTracks().forEach(track => remoteStream.addTrack(track));
-            };
-
-            // Генерация и отправка сетевых ICE-кандидатов в Firebase
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     const path = `callRooms/${currentChatId}/${isCallHost ? 'callerCandidates' : 'calleeCandidates'}`;
-                    push(ref(db, path), event.candidate.toJSON());
+                    db.ref(path).push(event.candidate.toJSON());
                 }
             };
         }
 
-        // 3. Ответ на входящий вызов
         window.acceptCall = async () => {
             document.getElementById('callStatus').innerText = "Подключение...";
             document.getElementById('answerBtn').classList.add('hidden');
@@ -559,92 +500,65 @@
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
-            } catch (err) {
-                alert("Ошибка доступа к камере/микрофону: " + err.message);
-                window.hangUp();
-                return;
-            }
+            } catch (err) { alert("Ошибка доступа: " + err.message); window.hangUp(); return; }
 
             initPeerConnection();
 
-            // Скачиваем Offer звонящего из Firebase
-            const roomSnap = await get(ref(db, `callRooms/${currentChatId}`));
+            const roomSnap = await db.ref(`callRooms/${currentChatId}`).get();
             const roomData = roomSnap.val();
-            if (!roomData || !roomData.offer) {
-                alert("Звонок уже отменен или недоступен.");
-                window.hangUp();
-                return;
-            }
+            if (!roomData || !roomData.offer) { alert("Звонок отменен."); window.hangUp(); return; }
 
-            // Устанавливаем удаленную конфигурацию сети
             await peerConnection.setRemoteDescription(new RTCSessionDescription(roomData.offer));
-            
-            // Создаем наш Answer (согласие на соединение)
             const answerDescription = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answerDescription);
 
-            // Пушим ответ в Firebase, замыкая сигнальный круг
-            await update(ref(db, `callRooms/${currentChatId}`), {
-                answer: { sdp: answerDescription.sdp, type: answerDescription.type },
-                status: "connected"
+            await db.ref(`callRooms/${currentChatId}`).update({
+                answer: { sdp: answerDescription.sdp, type: answerDescription.type }, status: "connected"
             });
 
             document.getElementById('callStatus').innerText = "В разговоре ⚡";
 
-            // Слушаем сетевые ICE-кандидаты от звонящего
-            onChildAdded(ref(db, `callRooms/${currentChatId}/callerCandidates`), (snapshot) => {
+            db.ref(`callRooms/${currentChatId}/callerCandidates`).on('child_added', (snapshot) => {
                 const data = snapshot.val();
                 if (data && peerConnection) peerConnection.addIceCandidate(new RTCIceCandidate(data));
             });
         };
 
-        // 4. Повесить трубку / Сбросить вызов
         window.hangUp = async () => {
             if (currentChatId) {
                 const targetUid = currentChatId.split('_').find(id => id !== localUser.uid);
-                
-                // Снимаем слушатели, удаляем данные звонка из Firebase
-                off(ref(db, `callRooms/${currentChatId}`));
-                await remove(ref(db, `callRooms/${currentChatId}`));
-                
-                if (targetUid) await remove(ref(db, `userCalls/${targetUid}`));
-                await remove(ref(db, `userCalls/${localUser.uid}`));
+                db.ref(`callRooms/${currentChatId}`).off();
+                await db.ref(`callRooms/${currentChatId}`).remove();
+                if (targetUid) await db.ref(`userCalls/${targetUid}`).remove();
+                await db.ref(`userCalls/${localUser.uid}`).remove();
             }
             stopCallTracks();
         };
 
-        // Очистка аппаратной части стримов при завершении разговора
         function stopCallTracks() {
             if (currentChatId) {
-                off(ref(db, `callRooms/${currentChatId}`));
-                off(ref(db, `callRooms/${currentChatId}/callerCandidates`));
-                off(ref(db, `callRooms/${currentChatId}/calleeCandidates`));
+                db.ref(`callRooms/${currentChatId}`).off();
+                db.ref(`callRooms/${currentChatId}/callerCandidates`).off();
+                db.ref(`callRooms/${currentChatId}/calleeCandidates`).off();
             }
-            if (peerConnection) {
-                peerConnection.close();
-                peerConnection = null;
-            }
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
+            if (peerConnection) { peerConnection.close(); peerConnection = null; }
+            if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
             if(document.getElementById('localVideo')) document.getElementById('localVideo').srcObject = null;
             if(document.getElementById('remoteVideo')) document.getElementById('remoteVideo').srcObject = null;
             closeModal('callScreen');
         }
 
-        // Сохранение настроек профиля (⚙️)
         window.saveSettings = async () => {
             const newNick = document.getElementById('settingsNameInput').value.trim().replace('@', '');
             if(!newNick) return alert("Никнейм не может быть пустым!");
 
             if(newNick.toLowerCase() !== localUsername.toLowerCase()) {
-                const nameCheck = await get(ref(db, `usernames/${newNick.toLowerCase()}`));
+                const nameCheck = await db.ref(`usernames/${newNick.toLowerCase()}`).get();
                 if(nameCheck.exists()) return alert("Этот никнейм уже занят!");
                 
-                await set(ref(db, `usernames/${localUsername.toLowerCase()}`), null);
-                await set(ref(db, `usernames/${newNick.toLowerCase()}`), localUser.uid);
-                await update(ref(db, `users/${localUser.uid}`), { username: newNick });
+                await db.ref(`usernames/${localUsername.toLowerCase()}`).set(null);
+                await db.ref(`usernames/${newNick.toLowerCase()}`).set(localUser.uid);
+                await db.ref(`users/${localUser.uid}`).update({ username: newNick });
                 localUsername = newNick;
                 document.getElementById('myCurrentName').innerText = `@${newNick}`;
             }
@@ -654,7 +568,7 @@
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     localAvatar = e.target.result;
-                    await update(ref(db, `users/${localUser.uid}`), { avatar: localAvatar });
+                    await db.ref(`users/${localUser.uid}`).update({ avatar: localAvatar });
                     document.getElementById('myAvatarDisplay').src = localAvatar;
                 };
                 reader.readAsDataURL(file);
