@@ -164,6 +164,14 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 10px;
+            transition: 0.2s;
+        }
+
+        .sidebar .header:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .sidebar .header .avatar {
@@ -181,7 +189,7 @@
             font-size: 16px;
         }
 
-        .sidebar .header .status {
+        .sidebar .header .username {
             font-size: 11px;
             opacity: 0.6;
             color: var(--text);
@@ -529,6 +537,148 @@
             display: none;
         }
 
+        /* ===== МОДАЛ ПРОФИЛЯ ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 28px 24px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            animation: modalSlide 0.3s ease;
+            text-align: center;
+        }
+
+        @keyframes modalSlide {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-content .avatar-big {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .modal-content .modal-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .modal-content .modal-username {
+            font-size: 14px;
+            opacity: 0.6;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+
+        .modal-content .modal-field {
+            text-align: left;
+            margin-bottom: 12px;
+        }
+
+        .modal-content .modal-field label {
+            font-weight: 600;
+            font-size: 12px;
+            opacity: 0.6;
+            color: var(--text);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .modal-content .modal-field input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            outline: none;
+            color: var(--text);
+        }
+
+        .modal-content .modal-field input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .modal-content .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .modal-content .modal-actions button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .modal-content .modal-actions button:active {
+            transform: scale(0.95);
+        }
+
+        .modal-content .modal-actions .save-btn {
+            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .modal-content .modal-actions .close-btn {
+            background: rgba(255, 255, 255, 0.4);
+            color: var(--text);
+        }
+
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text);
+            opacity: 0.5;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
         /* ===== СКРОЛЛ ===== */
         #msgs::-webkit-scrollbar,
         .sidebar .chats-list::-webkit-scrollbar {
@@ -702,6 +852,7 @@
             <input id="regEmail" type="email" placeholder="Email" />
             <input id="regPass" type="password" placeholder="Пароль" />
             <input id="regName" placeholder="Ваше имя" />
+            <input id="regUsername" placeholder="@username" />
             <input type="file" id="ava" accept="image/*" />
             <div id="regError" class="error-msg"></div>
             <button class="btn" onclick="window.auth('reg')">🚀 Создать</button>
@@ -712,28 +863,58 @@
     </div>
 
     <!-- ================================================================
+    МОДАЛ ПРОФИЛЯ
+    ================================================================ -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="window.closeProfile()">×</button>
+            <img class="avatar-big" id="modalAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%2300b4d8'/%3E%3Ctext x='50' y='68' font-size='48' text-anchor='middle' fill='white'%3E👤%3C/text%3E%3C/svg%3E" alt="avatar" />
+            <div class="modal-name" id="modalName">Пользователь</div>
+            <div class="modal-username" id="modalUsername">@username</div>
+
+            <div class="modal-field">
+                <label>Имя</label>
+                <input id="editName" placeholder="Ваше имя" />
+            </div>
+            <div class="modal-field">
+                <label>Юзернейм (@username)</label>
+                <input id="editUsername" placeholder="@username" />
+            </div>
+            <div class="modal-field">
+                <label>Email</label>
+                <input id="editEmail" placeholder="Email" disabled style="opacity:0.6;" />
+            </div>
+
+            <div class="modal-actions">
+                <button class="close-btn" onclick="window.closeProfile()">Отмена</button>
+                <button class="save-btn" onclick="window.saveProfile()">💾 Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================
     ПРИЛОЖЕНИЕ
     ================================================================ -->
     <div id="app" class="glass">
 
         <!-- САЙДБАР -->
         <div class="sidebar glass">
-            <div class="header">
+            <div class="header" onclick="window.openProfile()">
                 <img class="avatar" id="myAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%2300b4d8'/%3E%3Ctext x='50' y='68' font-size='48' text-anchor='middle' fill='white'%3E👤%3C/text%3E%3C/svg%3E" alt="avatar" />
                 <div>
                     <div class="name" id="myName">Пользователь</div>
-                    <div class="status">🟢 В сети</div>
+                    <div class="username" id="myUsername">@username</div>
                 </div>
             </div>
 
             <div class="divider"></div>
 
-            <label>🔍 Поиск</label>
-            <input id="target" placeholder="@username или ID канала" />
+            <label>🔍 Поиск пользователя</label>
+            <input id="target" placeholder="@username" />
 
             <div class="btn-group">
-                <button onclick="window.startChat('private')">💬 ЛС</button>
-                <button class="primary" onclick="window.startChat('channel')">📢 Канал</button>
+                <button class="primary" onclick="window.findUser()">🔍 Найти</button>
+                <button onclick="window.startChat('private')">💬 Написать</button>
             </div>
 
             <div class="divider"></div>
@@ -757,7 +938,7 @@
 
             <div id="msgs">
                 <div style="text-align:center; opacity:0.4; padding:40px 0; font-size:14px;">
-                    👋 Выберите чат или создайте новый
+                    👋 Выберите чат или найдите пользователя
                 </div>
             </div>
 
@@ -814,7 +995,10 @@
             set,
             get,
             onValue,
-            remove
+            remove,
+            query,
+            orderByChild,
+            equalTo
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -839,11 +1023,13 @@
         let currentChatId = null;
         let currentChatName = 'Общий чат';
         let myAvatar = null;
+        let myUsername = '';
         let isRecording = false;
         let mediaRecorder = null;
         let audioChunks = [];
         let recStartTime = 0;
         let recTimerInterval = null;
+        let foundUserId = null;
 
         // ================================================================
         //  DOM
@@ -860,9 +1046,19 @@
         const chatTitle = document.getElementById('chatTitle');
         const chatStatus = document.getElementById('chatStatus');
         const myName = document.getElementById('myName');
+        const myUsername = document.getElementById('myUsername');
         const myAvatarEl = document.getElementById('myAvatar');
         const authError = document.getElementById('authError');
         const regError = document.getElementById('regError');
+
+        // Модал профиля
+        const profileModal = document.getElementById('profileModal');
+        const modalAvatar = document.getElementById('modalAvatar');
+        const modalName = document.getElementById('modalName');
+        const modalUsername = document.getElementById('modalUsername');
+        const editName = document.getElementById('editName');
+        const editUsername = document.getElementById('editUsername');
+        const editEmail = document.getElementById('editEmail');
 
         // ================================================================
         //  УТИЛИТЫ
@@ -882,6 +1078,109 @@
         }
 
         // ================================================================
+        //  ПРОФИЛЬ
+        // ================================================================
+
+        window.openProfile = function() {
+            if (!currentUser) return;
+            modalAvatar.src = myAvatar || getDefaultAvatar();
+            modalName.textContent = currentUser.displayName || 'Пользователь';
+            modalUsername.textContent = myUsername || '@username';
+            editName.value = currentUser.displayName || '';
+            editUsername.value = myUsername || '';
+            editEmail.value = currentUser.email || '';
+            profileModal.classList.add('active');
+        };
+
+        window.closeProfile = function() {
+            profileModal.classList.remove('active');
+        };
+
+        window.saveProfile = async function() {
+            const name = editName.value.trim();
+            const username = editUsername.value.trim();
+
+            if (!name) {
+                alert('⚠️ Введите имя');
+                return;
+            }
+            if (!username || !username.startsWith('@')) {
+                alert('⚠️ Введите юзернейм, начинающийся с @');
+                return;
+            }
+
+            try {
+                // Обновляем имя в Auth
+                await updateProfile(currentUser, { displayName: name });
+
+                // Обновляем в базе
+                const updates = {
+                    name: name,
+                    username: username
+                };
+
+                // Если юзернейм изменился
+                if (myUsername && myUsername !== username) {
+                    await remove(ref(database, `usernames/${myUsername.toLowerCase()}`));
+                }
+                await set(ref(database, `usernames/${username.toLowerCase()}`), currentUser.uid);
+
+                await update(ref(database, `users/${currentUser.uid}`), updates);
+
+                myUsername = username;
+                myName.textContent = name;
+                myUsername.textContent = username;
+
+                alert('✅ Профиль обновлён!');
+                window.closeProfile();
+
+            } catch (error) {
+                alert('❌ Ошибка: ' + error.message);
+            }
+        };
+
+        // ================================================================
+        //  ПОИСК ПОЛЬЗОВАТЕЛЯ
+        // ================================================================
+
+        window.findUser = async function() {
+            const target = targetInput.value.trim();
+            if (!target) {
+                alert('⚠️ Введите @username');
+                return;
+            }
+
+            const usernameRef = ref(database, `usernames/${target.toLowerCase()}`);
+            const snap = await get(usernameRef);
+
+            if (snap.exists()) {
+                const uid = snap.val();
+                if (uid === currentUser.uid) {
+                    alert('⚠️ Это ваш юзернейм');
+                    return;
+                }
+
+                const userRef = ref(database, `users/${uid}`);
+                const userSnap = await get(userRef);
+                const userData = userSnap.val();
+
+                if (userData) {
+                    foundUserId = uid;
+                    chatTitle.textContent = `👤 ${userData.name || target}`;
+                    chatStatus.textContent = '🟢 Найден';
+                    msgsEl.innerHTML = `<div style="text-align:center; opacity:0.4; padding:20px 0; font-size:14px;">
+                        👤 Пользователь <strong>${userData.name}</strong> (${target}) найден.<br/>
+                        Нажмите "💬 Написать" чтобы начать чат.
+                    </div>`;
+                } else {
+                    alert('❌ Пользователь не найден');
+                }
+            } else {
+                alert('❌ Пользователь не найден');
+            }
+        };
+
+        // ================================================================
         //  АВТОРИЗАЦИЯ
         // ================================================================
 
@@ -896,6 +1195,7 @@
             const email = type === 'login' ? document.getElementById('email').value : document.getElementById('regEmail').value;
             const pass = type === 'login' ? document.getElementById('pass').value : document.getElementById('regPass').value;
             const name = document.getElementById('regName')?.value || '';
+            const username = document.getElementById('regUsername')?.value || '';
 
             if (!email || !pass) {
                 showError(type === 'login' ? authError : regError, '⚠️ Заполните все поля');
@@ -908,6 +1208,10 @@
                         showError(regError, '⚠️ Введите имя');
                         return;
                     }
+                    if (!username || !username.startsWith('@')) {
+                        showError(regError, '⚠️ Введите юзернейм, начинающийся с @');
+                        return;
+                    }
 
                     const userCred = await createUserWithEmailAndPassword(auth, email, pass);
                     const user = userCred.user;
@@ -915,9 +1219,12 @@
 
                     await set(ref(database, `users/${user.uid}`), {
                         name: name,
+                        username: username,
                         email: email,
                         createdAt: Date.now()
                     });
+
+                    await set(ref(database, `usernames/${username.toLowerCase()}`), user.uid);
 
                     const file = document.getElementById('ava').files[0];
                     if (file) {
@@ -964,19 +1271,24 @@
             authBox.style.display = 'none';
             appEl.classList.add('active');
 
-            myName.textContent = user.displayName || 'Пользователь';
-
             get(ref(database, `users/${user.uid}`)).then(snap => {
                 const data = snap.val();
-                if (data?.avatar) {
-                    myAvatar = data.avatar;
-                    myAvatarEl.src = data.avatar;
+                if (data) {
+                    myUsername = data.username || '@username';
+                    myName.textContent = data.name || 'Пользователь';
+                    myUsername.textContent = myUsername;
+
+                    if (data.avatar) {
+                        myAvatar = data.avatar;
+                        myAvatarEl.src = data.avatar;
+                    }
                 }
             });
 
             loadChats();
             chatTitle.textContent = '💬 Выберите чат';
-            msgsEl.innerHTML = `<div style="text-align:center; opacity:0.4; padding:40px 0; font-size:14px;">👋 Выберите чат или создайте новый</div>`;
+            msgsEl.innerHTML =
+                `<div style="text-align:center; opacity:0.4; padding:40px 0; font-size:14px;">👋 Найдите пользователя или выберите чат</div>`;
         }
 
         // ================================================================
@@ -992,7 +1304,8 @@
                 chatsList.innerHTML = '';
 
                 if (!data) {
-                    chatsList.innerHTML = `<div style="text-align:center; opacity:0.4; padding:10px; font-size:13px;">Нет чатов</div>`;
+                    chatsList.innerHTML =
+                        `<div style="text-align:center; opacity:0.4; padding:10px; font-size:13px;">Нет чатов</div>`;
                     return;
                 }
 
@@ -1015,35 +1328,44 @@
         }
 
         // ================================================================
-        //  СОЗДАНИЕ / ПРИСОЕДИНЕНИЕ К ЧАТУ
+        //  НАЧАТЬ ЧАТ
         // ================================================================
 
-        window.startChat = function(type) {
-            const target = targetInput.value.trim();
-            if (!target) {
-                alert('⚠️ Введите @username или ID канала');
-                return;
-            }
-
-            let chatId;
-            let chatName;
+        window.startChat = async function(type) {
+            let target = targetInput.value.trim();
 
             if (type === 'private') {
+                if (!target) {
+                    alert('⚠️ Введите @username');
+                    return;
+                }
+
+                // Если пользователь уже найден через поиск
+                if (foundUserId) {
+                    const chatId = [currentUser.uid, foundUserId].sort().join('_');
+                    const userData = await get(ref(database, `users/${foundUserId}`));
+                    const name = userData.val()?.name || target;
+                    joinChat(chatId, `Чат с ${name}`);
+                    return;
+                }
+
+                // Ищем по username
                 const usernameRef = ref(database, `usernames/${target.toLowerCase()}`);
-                get(usernameRef).then(snap => {
-                    if (snap.exists()) {
-                        const uid = snap.val();
-                        chatId = [currentUser.uid, uid].sort().join('_');
-                        chatName = `Чат с ${target}`;
-                        joinChat(chatId, chatName);
-                    } else {
-                        alert('❌ Пользователь не найден');
+                const snap = await get(usernameRef);
+
+                if (snap.exists()) {
+                    const uid = snap.val();
+                    if (uid === currentUser.uid) {
+                        alert('⚠️ Это вы');
+                        return;
                     }
-                });
-            } else {
-                chatId = target;
-                chatName = target;
-                joinChat(chatId, chatName);
+                    const chatId = [currentUser.uid, uid].sort().join('_');
+                    const userData = await get(ref(database, `users/${uid}`));
+                    const name = userData.val()?.name || target;
+                    joinChat(chatId, `Чат с ${name}`);
+                } else {
+                    alert('❌ Пользователь не найден');
+                }
             }
         };
 
@@ -1056,10 +1378,8 @@
             chatStatus.textContent = '🟢 Онлайн';
             msgsEl.innerHTML = '';
 
-            // Сохраняем чат у пользователя
             set(ref(database, `userChats/${currentUser.uid}/${chatId}`), true);
 
-            // Создаём чат в базе
             get(ref(database, `chats/${chatId}`)).then(snap => {
                 if (!snap.exists()) {
                     set(ref(database, `chats/${chatId}`), {
@@ -1070,7 +1390,6 @@
                 }
             });
 
-            // Подписываемся на сообщения
             const messagesRef = ref(database, `messages/${chatId}`);
             onChildAdded(messagesRef, (snapshot) => {
                 const data = snapshot.val();
@@ -1079,7 +1398,6 @@
                 }
             });
 
-            // Обновляем список чатов
             loadChats();
         }
 
@@ -1141,7 +1459,7 @@
         targetInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                window.startChat('private');
+                window.findUser();
             }
         });
 
