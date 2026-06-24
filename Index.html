@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Sava Online</title>
+
+    <!-- ===== FIREBASE SDK ===== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import {
+            getAuth,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            onAuthStateChanged,
+            signOut,
+            updateProfile,
+            sendEmailVerification
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import {
+            getDatabase,
+            ref,
+            set,
+            push,
+            onChildAdded,
+            onValue,
+            update,
+            serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCsU2eJ2aF5oj4uWFbyy0Ez0mekT_At4vU",
+            authDomain: "sava-online.firebaseapp.com",
+            projectId: "sava-online",
+            databaseURL: "https://sava-online-default-rtdb.europe-west1.firebasedatabase.app/",
+            storageBucket: "sava-online.firebasestorage.app",
+            messagingSenderId: "997547069745",
+            appId: "1:997547069745:web:821a8fa505cf14670ee010"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        window.firebaseAuth = auth;
+        window.firebaseDatabase = database;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebasePush = push;
+        window.firebaseOnChildAdded = onChildAdded;
+        window.firebaseOnValue = onValue;
+        window.firebaseUpdate = update;
+        window.firebaseServerTimestamp = serverTimestamp;
+        window.firebaseSignOut = signOut;
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+        window.firebaseSignInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.firebaseCreateUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.firebaseUpdateProfile = updateProfile;
+        window.sendEmailVerification = sendEmailVerification;
+
+        console.log("✅ Firebase готов");
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: #e8f5e9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .auth-container {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 28px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .auth-container h1 {
+            font-size: 26px;
+            margin-bottom: 6px;
+        }
+
+        .auth-container p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            border: 1px solid #ccc;
+            border-radius: 14px;
+            font-size: 15px;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #0083b0;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .auth-btn:active {
+            opacity: 0.7;
+        }
+
+        .toggle-link {
+            color: #0083b0;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .messenger {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .messenger.active {
+            display: flex;
+        }
+
+        .chat-header {
+            background: #0083b0;
+            color: white;
+            padding: 14px 18px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #f5f7fa;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            word-wrap: break-word;
+        }
+
+        .message.sent {
+            background: #0083b0;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message.received {
+            background: white;
+            border: 1px solid #ddd;
+            align-self: flex-start;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px 14px;
+            gap: 10px;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border-radius: 30px;
+            border: 1px solid #ccc;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            background: #0083b0;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error-msg {
+            color: red;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== АВТОРИЗАЦИЯ ===== -->
+    <div id="authContainer" class="auth-container">
+        <h1>🌐 Sava Online</h1>
+        <p id="authSubtitle">Войдите или создайте аккаунт</p>
+
+        <div id="authError" class="error-msg"></div>
+
+        <input type="text" id="authName" placeholder="Имя" />
+        <input type="email" id="authEmail" placeholder="Email" />
+        <input type="password" id="authPassword" placeholder="Пароль" />
+
+        <button class="auth-btn" id="authActionBtn">🚀 Создать аккаунт</button>
+
+        <p style="margin-top:14px; font-size:14px;">
+            <span id="authToggleText">Уже есть аккаунт?</span>
+            <span class="toggle-link" id="authToggleLink">Войти</span>
+        </p>
+
+        <p style="margin-top:10px; font-size:13px; color:#888;">
+            <span class="toggle-link" id="resendLink" onclick="resendVerificationEmail()">
+                📧 Отправить письмо повторно
+            </span>
+        </p>
+    </div>
+
+    <!-- ===== МЕССЕНДЖЕР ===== -->
+    <div id="messenger" class="messenger">
+        <div class="chat-header">
+            <span>💬 Общий чат</span>
+            <button class="logout-btn" onclick="logoutUser()">🚪 Выйти</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message received">👋 Добро пожаловать в Sava Online!</div>
+        </div>
+
+        <div class="chat-input">
+            <input type="text" id="textInput" placeholder="Напишите сообщение..." />
+            <button onclick="sendText()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+        // ================================================================
+
+        let currentUser = null;
+        let isLoginMode = false;
+
+        // ================================================================
+        //  DOM ССЫЛКИ
+        // ================================================================
+
+        const authContainer = document.getElementById('authContainer');
+        const messenger = document.getElementById('messenger');
+        const authName = document.getElementById('authName');
+        const authEmail = document.getElementById('authEmail');
+        const authPassword = document.getElementById('authPassword');
+        const authActionBtn = document.getElementById('authActionBtn');
+        const authToggleLink = document.getElementById('authToggleLink');
+        const authToggleText = document.getElementById('authToggleText');
+        const authSubtitle = document.getElementById('authSubtitle');
+        const authError = document.getElementById('authError');
+        const chatMessages = document.getElementById('chatMessages');
+        const textInput = document.getElementById('textInput');
+
+        // ================================================================
+        //  ПЕРЕКЛЮЧЕНИЕ РЕЖИМА (ВХОД / РЕГИСТРАЦИЯ)
+        // ================================================================
+
+        authToggleLink.addEventListener('click', () => {
+            isLoginMode = !isLoginMode;
+            if (isLoginMode) {
+                authSubtitle.textContent = 'Войдите в аккаунт';
+                authActionBtn.textContent = '🔑 Войти';
+                authToggleText.textContent = 'Нет аккаунта?';
+                authToggleLink.textContent = 'Создать';
+                authName.classList.add('hidden');
+            } else {
+                authSubtitle.textContent = 'Создайте аккаунт';
+                authActionBtn.textContent = '🚀 Создать аккаунт';
+                authToggleText.textContent = 'Уже есть аккаунт?';
+                authToggleLink.textContent = 'Войти';
+                authName.classList.remove('hidden');
+            }
+            authError.textContent = '';
+        });
+
+        // ================================================================
+        //  РЕГИСТРАЦИЯ / ВХОД
+        // ================================================================
+
+        authActionBtn.addEventListener('click', async () => {
+            const name = authName.value.trim();
+            const email = authEmail.value.trim();
+            const password = authPassword.value.trim();
+
+            authError.textContent = '';
+
+            if (!email || !password) {
+                authError.textContent = '⚠️ Заполните email и пароль';
+                return;
+            }
+            if (password.length < 6) {
+                authError.textContent = '⚠️ Пароль должен быть не менее 6 символов';
+                return;
+            }
+
+            try {
+                if (isLoginMode) {
+                    // ===== ВХОД =====
+                    const cred = await firebaseSignInWithEmailAndPassword(firebaseAuth, email, password);
+                    const user = cred.user;
+
+                    if (!user.emailVerified) {
+                        await sendEmailVerification(user);
+                        authError.textContent = '⚠️ Почта не подтверждена! Новое письмо отправлено.';
+                        await firebaseSignOut(firebaseAuth);
+                        return;
+                    }
+
+                    showMessenger(user);
+                } else {
+                    // ===== РЕГИСТРАЦИЯ =====
+                    if (!name) {
+                        authError.textContent = '⚠️ Введите имя';
+                        return;
+                    }
+
+                    const cred = await firebaseCreateUserWithEmailAndPassword(firebaseAuth, email, password);
+                    const user = cred.user;
+
+                    await firebaseUpdateProfile(user, { displayName: name });
+
+                    // Сохраняем в базу
+                    const db = firebaseDatabase;
+                    const ref = firebaseRef;
+                    await firebaseSet(ref(db, `users/${user.uid}`), {
+                        name: name,
+                        email: email,
+                        createdAt: Date.now()
+                    });
+
+                    // Отправляем письмо
+                    await sendEmailVerification(user);
+                    await firebaseSignOut(firebaseAuth);
+
+                    alert('✅ Аккаунт создан! 📧 На почту отправлено письмо с подтверждением.');
+                    alert('⚠️ Перейдите по ссылке в письме, затем войдите.');
+
+                    // Переключаем на режим входа
+                    isLoginMode = true;
+                    authSubtitle.textContent = 'Войдите в аккаунт';
+                    authActionBtn.textContent = '🔑 Войти';
+                    authToggleText.textContent = 'Нет аккаунта?';
+                    authToggleLink.textContent = 'Создать';
+                    authName.classList.add('hidden');
+                }
+            } catch (err) {
+                authError.textContent = '❌ ' + err.message;
+                console.error(err);
+            }
+        });
+
+        // ================================================================
+        //  ПОВТОРНАЯ ОТПРАВКА ПИСЬМА
+        // ================================================================
+
+        window.resendVerificationEmail = async function() {
+            const user = firebaseAuth.currentUser;
+            if (!user) {
+                alert('⚠️ Сначала войдите в аккаунт');
+                return;
+            }
+            if (user.emailVerified) {
+                alert('✅ Почта уже подтверждена');
+                return;
+            }
+            try {
+                await sendEmailVerification(user);
+                alert(`📧 Новое письмо отправлено на ${user.email}`);
+            } catch (err) {
+                alert('❌ Ошибка: ' + err.message);
+            }
+        };
+
+        // ================================================================
+        //  ВЫХОД
+        // ================================================================
+
+        window.logoutUser = async function() {
+            await firebaseSignOut(firebaseAuth);
+            authContainer.style.display = 'block';
+            messenger.classList.remove('active');
+            chatMessages.innerHTML = '';
+        };
+
+        // ================================================================
+        //  ПОКАЗАТЬ МЕССЕНДЖЕР
+        // ================================================================
+
+        function showMessenger(user) {
+            currentUser = user;
+            authContainer.style.display = 'none';
+            messenger.classList.add('active');
+            loadMessages();
+        }
+
+        // ================================================================
+        //  ЗАГРУЗКА СООБЩЕНИЙ
+        // ================================================================
+
+        let messages = [];
+
+        function loadMessages() {
+            const db = firebaseDatabase;
+            const ref = firebaseRef;
+            const messagesRef = ref(db, 'messages/general');
+
+            firebaseOnChildAdded(messagesRef, (snap) => {
+                const data = snap.val();
+                if (data) {
+                    messages.push(data);
+                    renderMessages();
+                }
+            });
+        }
+
+        function renderMessages() {
+            chatMessages.innerHTML = '';
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = 'message ' + (msg.sender === currentUser?.uid ? 'sent' : 'received');
+                div.textContent = msg.text || '';
+                chatMessages.appendChild(div);
+            });
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // ================================================================
+        //  ОТПРАВКА СООБЩЕНИЯ
+        // ================================================================
+
+        window.sendText = async function() {
+            const text = textInput.value.trim();
+            if (!text || !currentUser) return;
+
+            const db = firebaseDatabase;
+            const ref = firebaseRef;
+            const messagesRef = ref(db, 'messages/general');
+
+            await firebasePush(messagesRef, {
+                sender: currentUser.uid,
+                text: text,
+                time: new Date().toLocaleTimeString()
+            });
+
+            textInput.value = '';
+        };
+
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendText();
+        });
+
+        // ================================================================
+        //  СЛУШАТЕЛЬ АВТОРИЗАЦИИ
+        // ================================================================
+
+        firebaseOnAuthStateChanged(firebaseAuth, (user) => {
+            if (user && user.emailVerified) {
+                showMessenger(user);
+            } else if (user && !user.emailVerified) {
+                authContainer.style.display = 'block';
+                messenger.classList.remove('active');
+                authError.textContent = '⚠️ Подтвердите почту! Письмо отправлено на ' + user.email;
+                firebaseSignOut(firebaseAuth);
+            } else {
+                authContainer.style.display = 'block';
+                messenger.classList.remove('active');
+            }
+        });
+
+        console.log('🚀 Sava Online 5.0 загружен');
+    </script>
+</body>
+</html>
