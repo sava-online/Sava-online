@@ -144,7 +144,6 @@
                 <button class="aero-btn" id="backBtn" onclick="backToSidebar()" style="padding:5px 10px; display:none;">←</button>
                 <h3 id="chatTitle" style="font-size:16px;">Выберите чат из списка или нажмите +</h3>
                 
-                <!-- БЛОК АУДИО И ВИДЕО ЗВОНКОВ -->
                 <div id="callActionBtns" class="hidden" style="margin-left: auto; display: flex; gap: 8px;">
                     <button class="aero-btn" style="padding: 5px 12px; border-radius: 10px; background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);" onclick="startCall(false)" title="Аудиозвонок">📞</button>
                     <button class="aero-btn" style="padding: 5px 12px; border-radius: 10px; background: linear-gradient(180deg, #9b59b6 0%, #8e44ad 100%);" onclick="startCall(true)" title="Видеозвонок">📹</button>
@@ -159,17 +158,14 @@
         </div>
     </div>
 
-    <!-- ОКНО ЗВОНКОВ -->
     <div id="callScreen" class="modal-overlay hidden">
         <div class="modal-content aero-card" style="max-width: 450px; padding: 20px;">
             <h3 id="callStatus" style="margin-bottom: 12px; font-weight: 700;">Вызов...</h3>
             
             <div style="position: relative; width: 100%; height: 280px; background: rgba(0, 40, 80, 0.15); border-radius: 18px; overflow: hidden; border: 1px solid var(--glass-border);">
-                <!-- Элементы для видеозвонка -->
                 <video id="remoteVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; background: #011627;"></video>
                 <video id="localVideo" autoplay playsinline muted style="position: absolute; bottom: 10px; right: 10px; width: 95px; height: 125px; object-fit: cover; background: #0b2545; border-radius: 12px; border: 2px solid var(--glass-border);"></video>
                 
-                <!-- Заглушка для аудиозвонка -->
                 <div id="audioPlaceholder" class="hidden" style="position: absolute; top:0; left:0; width:100%; height:100%; background: #011627; display: flex; justify-content: center; align-items: center; z-index: 10;">
                     <div class="audio-pulse">🎙️</div>
                 </div>
@@ -182,7 +178,6 @@
         </div>
     </div>
 
-    <!-- ОКНО СОЗДАНИЯ ЧАТА / КАНАЛА -->
     <div id="createChatModal" class="modal-overlay hidden">
         <div class="modal-content aero-card">
             <h3 style="margin-bottom: 5px;">Создать Чат или Канал</h3>
@@ -196,7 +191,6 @@
         </div>
     </div>
 
-    <!-- ОКНО ОНЛАЙН МИНИ-ИГРЫ -->
     <div id="gameModal" class="modal-overlay hidden">
         <div class="modal-content aero-card" style="max-width: 440px; padding: 15px;">
             <h3 id="gameLevelDisplay">⚔️ Командный Босс (Уровень 1)</h3>
@@ -222,7 +216,6 @@
         </div>
     </div>
 
-    <!-- НАСТРОЙКИ С ПАНЕЛЬЮ РАЗРАБОТЧИКА -->
     <div id="settingsModal" class="modal-overlay hidden">
         <div class="modal-content aero-card" style="max-height: 90vh; overflow-y: auto;">
             <h3>Настройки профиля</h3>
@@ -238,7 +231,6 @@
             </div>
             <button class="aero-btn" onclick="saveSettings()">Сохранить изменения</button>
             
-            <!-- СЕКРЕТНЫЙ БЛОК ДЛЯ ДЕВЕЛОПЕРОВ -->
             <div id="devAdminPanel" class="hidden" style="margin-top: 15px; border-top: 1px dashed rgba(0,0,0,0.2); padding-top:12px; text-align: left;">
                 <h4 style="font-size: 13px; color: var(--aero-dark); margin-bottom: 5px; text-align: center;">👑 Панель Управления</h4>
                 <input id="adminTargetUser" class="aero-input" placeholder="username без @" style="padding: 8px; font-size: 13px;">
@@ -457,7 +449,10 @@
                     const msgAva = m.avatar || defaultAva;
                     let authorStyle = "";
                     let badgeIcons = "";
-                    if (m.isDev) badgeIcons += `<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/1280px-Tux.svg.png" style="width:14px; height:14px; vertical-align:middle; margin-left:4px;" title="Разработчик">`;
+                    
+                    // Заменяем обычный текстовый смайлик галочки на картинку по ссылке
+                    if (m.isDev) badgeIcons += `<img src="https://png.pngtree.com/png-vector/20251117/ourmid/pngtree-green-circle-with-white-check-mark-symbol-png-image_17947677.webp" style="width:14px; height:14px; vertical-align:middle; margin-left:4px; object-fit:contain;" title="Разработчик">`;
+                    
                     if (m.isGold) {
                         authorStyle = "color: #e67e22; font-weight: 800;";
                         badgeIcons += `<span style="vertical-align:middle; margin-left:2px; font-size:12px;" title="Sava Gold">👑</span>`;
