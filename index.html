@@ -80,6 +80,14 @@
         .color-picker { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
         .color-dot { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
+        /* Анимация для аудиозвонка */
+        @keyframes pulseMic {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .audio-pulse { font-size: 70px; animation: pulseMic 1.5s infinite; text-shadow: 0 0 20px rgba(0, 180, 216, 0.6); }
+
         @media (max-width: 768px) {
             .sidebar { width: 100%; } .main-chat { display: none; }
             #app.chat-active .sidebar { display: none; } #app.chat-active .main-chat { display: flex; }
@@ -121,12 +129,11 @@
                 <button onclick="openModal('settingsModal')" style="background:none; border:none; font-size:18px; cursor:pointer;">⚙️</button>
             </div>
             
-            <!-- КНОПКА ИГРЫ (ОТКРЫВАЕТСЯ ТОЛЬКО ДЛЯ GOLD И ДЕВА) -->
             <button id="gameLauncherBtn" class="aero-btn hidden" style="width:100%; margin: 5px 0; background: linear-gradient(180deg, #9b59b6 0%, #8e44ad 100%); border-radius:14px;" onclick="openGame()">🎮 Онлайн Мини-Игра</button>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin: 5px 0;">
                 <span style="font-size:13px; font-weight:700; opacity:0.6;">ВАШИ ЧАТЫ</span>
-                <button class="aero-btn" style="padding: 5px 12px; border-radius:10px;" onclick="openModal('createChatModal')">+</button>
+                <button class="aero-btn" style="padding: 5px 12px; border-radius:10px;" onclick="openModal('createChatModal')" title="Создать чат или канал">+</button>
             </div>
 
             <div class="chats-list" id="activeChatsContainer"></div>
@@ -136,7 +143,12 @@
             <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; padding-bottom:5px; border-bottom:1px solid rgba(0,0,0,0.05);">
                 <button class="aero-btn" id="backBtn" onclick="backToSidebar()" style="padding:5px 10px; display:none;">←</button>
                 <h3 id="chatTitle" style="font-size:16px;">Выберите чат из списка или нажмите +</h3>
-                <button id="callBtn" class="aero-btn hidden" style="padding: 5px 12px; margin-left: auto; border-radius: 10px;" onclick="startCall()">📞</button>
+                
+                <!-- БЛОК АУДИО И ВИДЕО ЗВОНКОВ -->
+                <div id="callActionBtns" class="hidden" style="margin-left: auto; display: flex; gap: 8px;">
+                    <button class="aero-btn" style="padding: 5px 12px; border-radius: 10px; background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);" onclick="startCall(false)" title="Аудиозвонок">📞</button>
+                    <button class="aero-btn" style="padding: 5px 12px; border-radius: 10px; background: linear-gradient(180deg, #9b59b6 0%, #8e44ad 100%);" onclick="startCall(true)" title="Видеозвонок">📹</button>
+                </div>
             </div>
             <div id="msgs"></div>
             
@@ -151,14 +163,36 @@
     <div id="callScreen" class="modal-overlay hidden">
         <div class="modal-content aero-card" style="max-width: 450px; padding: 20px;">
             <h3 id="callStatus" style="margin-bottom: 12px; font-weight: 700;">Вызов...</h3>
+            
             <div style="position: relative; width: 100%; height: 280px; background: rgba(0, 40, 80, 0.15); border-radius: 18px; overflow: hidden; border: 1px solid var(--glass-border);">
+                <!-- Элементы для видеозвонка -->
                 <video id="remoteVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; background: #011627;"></video>
                 <video id="localVideo" autoplay playsinline muted style="position: absolute; bottom: 10px; right: 10px; width: 95px; height: 125px; object-fit: cover; background: #0b2545; border-radius: 12px; border: 2px solid var(--glass-border);"></video>
+                
+                <!-- Заглушка для аудиозвонка -->
+                <div id="audioPlaceholder" class="hidden" style="position: absolute; top:0; left:0; width:100%; height:100%; background: #011627; display: flex; justify-content: center; align-items: center; z-index: 10;">
+                    <div class="audio-pulse">🎙️</div>
+                </div>
             </div>
+
             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
                 <button id="answerBtn" class="aero-btn hidden" style="background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);" onclick="acceptCall()">🟢 Ответить</button>
                 <button class="aero-btn" style="background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);" onclick="hangUp()">🔴 Сбросить</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ОКНО СОЗДАНИЯ ЧАТА / КАНАЛА -->
+    <div id="createChatModal" class="modal-overlay hidden">
+        <div class="modal-content aero-card">
+            <h3 style="margin-bottom: 5px;">Создать Чат или Канал</h3>
+            <p style="font-size: 12px; opacity: 0.8; margin-bottom: 10px;">Введите имя друга для ЛС или название для нового канала:</p>
+            <input id="modalTargetInput" class="aero-input" placeholder="Имя друга / Название">
+            <div style="display:flex; gap:8px; margin-top: 5px;">
+                <button class="aero-btn" style="flex:1; background: linear-gradient(180deg, #00b4d8 0%, #0077b6 100%);" onclick="initChat('private')">💬 Чат (ЛС)</button>
+                <button class="aero-btn" style="flex:1; background: linear-gradient(180deg, #f39c12 0%, #d35400 100%);" onclick="initChat('channel')">📢 Канал</button>
+            </div>
+            <button onclick="closeModal('createChatModal')" style="background:none; border:none; font-size:13px; color:var(--aero-dark); cursor:pointer; margin-top: 10px;">Отмена</button>
         </div>
     </div>
 
@@ -178,7 +212,6 @@
                 </div>
             </div>
 
-            <!-- Сенсорный джойстик для мобилок -->
             <div style="display: grid; grid-template-columns: repeat(3, 38px); gap: 4px; justify-content: center; margin-top: 5px;">
                 <div></div><button class="aero-btn" style="padding:0; height:38px;" onclick="movePlayer(0, -15)">▲</button><div></div>
                 <button class="aero-btn" style="padding:0; height:38px;" onclick="movePlayer(-15, 0)">◀</button><div></div><button class="aero-btn" style="padding:0; height:38px;" onclick="movePlayer(15, 0)">▶</button>
@@ -186,18 +219,6 @@
             </div>
             
             <button onclick="closeGame()" style="background:none; border:none; font-size:13px; color:var(--aero-dark); cursor:pointer; margin-top:5px;">Выйти из арены</button>
-        </div>
-    </div>
-
-    <div id="createChatModal" class="modal-overlay hidden">
-        <div class="modal-content aero-card">
-            <h3>Новая беседа</h3>
-            <input id="modalTargetInput" class="aero-input" placeholder="Имя друга или Название канала">
-            <div style="display:flex; gap:8px;">
-                <button class="aero-btn" style="flex:1" onclick="initChat('private')">💬 ЛС</button>
-                <button class="aero-btn" style="flex:1" onclick="initChat('channel')">📢 Канал</button>
-            </div>
-            <button onclick="closeModal('createChatModal')" style="background:none; border:none; font-size:13px; color:var(--aero-dark); cursor:pointer;">Отмена</button>
         </div>
     </div>
 
@@ -248,12 +269,12 @@
 
         let localUser = null, currentChatId = null, localAvatar = "", localUsername = "", currentChatRef = null;
         let isDeveloper = false, isSavaGold = false;
+        let isVideoCall = true; // Глобальный флаг типа звонка
         const defaultAva = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ccircle cx="20" cy="20" r="20" fill="%23a5c4e0"/%3E%3C/svg%3E';
 
         let peerConnection = null, localStream = null, remoteStream = null, isCallHost = false, targetUserUid = null;
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 
-        // Переменные мини-игры
         let gameLoopInterval = null, myGameX = Math.floor(40 + Math.random()*80), myGameY = Math.floor(170 + Math.random()*40);
         let myGameHp = 100, bossHp = 100, bossMaxHp = 100, gameLevel = 1, onlinePlayers = {};
         let myGameColor = '#' + Math.floor(Math.random()*16777215).toString(16);
@@ -299,13 +320,10 @@
                 document.getElementById('authBox').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
 
-                // Слушаем изменения профиля в реальном времени
                 db.ref(`users/${user.uid}`).on('value', async (snapshot) => {
                     let uData = snapshot.val() || {};
-
                     if (!uData.username) return;
 
-                    // Авто-выдача прав для user271
                     if (uData.username.toLowerCase() === 'user271' && !uData.isDeveloper) {
                         uData.isDeveloper = true;
                         db.ref(`users/${user.uid}`).update({ isDeveloper: true });
@@ -325,7 +343,6 @@
                     document.getElementById('settingsNameInput').value = localUsername;
                     document.getElementById('myAvatarDisplay').src = localAvatar || defaultAva;
 
-                    // Показ скрытых элементов по правам доступа
                     document.getElementById('devAdminPanel').classList.toggle('hidden', !isDeveloper);
                     document.getElementById('gameLauncherBtn').classList.toggle('hidden', !(isDeveloper || isSavaGold));
                 });
@@ -337,8 +354,14 @@
                     if (callData && callData.type === "dialing") {
                         currentChatId = callData.chatId;
                         isCallHost = false;
+                        
+                        // Определяем тип входящего звонка
+                        isVideoCall = (callData.callType === 'video');
+                        document.getElementById('audioPlaceholder').classList.toggle('hidden', isVideoCall);
+
                         openModal('callScreen');
-                        document.getElementById('callStatus').innerText = `Входящий звонок от ${callData.callerName}`;
+                        const callName = isVideoCall ? "Видеовызов" : "Аудиозвонок";
+                        document.getElementById('callStatus').innerText = `${callName} от ${callData.callerName}`;
                         document.getElementById('answerBtn').classList.remove('hidden');
                         
                         db.ref(`callRooms/${currentChatId}`).on('value', (roomSnap) => {
@@ -352,7 +375,6 @@
             }
         });
 
-        // Функция выдачи прав (вызывает только Разработчик)
         window.grantRole = async (role) => {
             const target = document.getElementById('adminTargetUser').value.trim().toLowerCase();
             if(!target) return alert("Введите имя пользователя!");
@@ -363,10 +385,10 @@
             const tUid = nameSnap.val();
             if(role === 'dev') {
                 await db.ref(`users/${tUid}`).update({ isDeveloper: true });
-                alert(`Права Разработчика успешно выданы @${target}!`);
+                alert(`Права Разработчика выданы @${target}!`);
             } else if(role === 'gold') {
                 await db.ref(`users/${tUid}`).update({ isSavaGold: true });
-                alert(`Подписка Sava Gold успешно выдана @${target}!`);
+                alert(`Подписка Sava Gold выдана @${target}!`);
             }
             document.getElementById('adminTargetUser').value = "";
         };
@@ -377,7 +399,7 @@
 
             let id, label;
             if(type === 'private') {
-                if(target.toLowerCase() === localUsername.toLowerCase()) return alert("Нельзя создать чат с самим собой.");
+                if(target.toLowerCase() === localUsername.toLowerCase()) return alert("Нельзя создать ЛС с самим собой.");
                 const snap = await db.ref(`usernames/${target.toLowerCase()}`).get();
                 if(!snap.exists()) return alert("Пользователь не найден!");
                 id = [localUser.uid, snap.val()].sort().join('_');
@@ -411,7 +433,10 @@
         function openChatRoom(id, title) {
             currentChatId = id;
             document.getElementById('chatTitle').innerText = title;
-            document.getElementById('callBtn').classList.toggle('hidden', id.startsWith('channel_'));
+            
+            // Если это ЛС - показываем кнопки звонков, если Канал - прячем
+            const isChannel = id.startsWith('channel_');
+            document.getElementById('callActionBtns').classList.toggle('hidden', isChannel);
 
             if(window.innerWidth <= 768) {
                 document.getElementById('app').classList.add('chat-active');
@@ -430,15 +455,11 @@
                     box.className = `msg ${isMe ? 'sent' : 'received'}`;
                     
                     const msgAva = m.avatar || defaultAva;
-
-                    // Логика бейджиков и цветов подписок
                     let authorStyle = "";
                     let badgeIcons = "";
-                    if (m.isDev) {
-                        badgeIcons += `<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/1280px-Tux.svg.png" style="width:14px; height:14px; vertical-align:middle; margin-left:4px;" title="Разработчик">`;
-                    }
+                    if (m.isDev) badgeIcons += `<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/1280px-Tux.svg.png" style="width:14px; height:14px; vertical-align:middle; margin-left:4px;" title="Разработчик">`;
                     if (m.isGold) {
-                        authorStyle = "color: #e67e22; font-weight: 800;"; // Желто-оранжевый (золотой) никнейм
+                        authorStyle = "color: #e67e22; font-weight: 800;";
                         badgeIcons += `<span style="vertical-align:middle; margin-left:2px; font-size:12px;" title="Sava Gold">👑</span>`;
                     }
 
@@ -478,20 +499,11 @@
             myGameHp = 100;
             document.getElementById('myHpDisplay').innerText = myGameHp;
 
-            // Запись игрока в общую комнату
-            db.ref(`game/players/${localUser.uid}`).set({
-                username: localUsername, x: myGameX, y: myGameY, color: myGameColor, hp: myGameHp
-            });
-
-            // Слушаем позиции других участников
+            db.ref(`game/players/${localUser.uid}`).set({ username: localUsername, x: myGameX, y: myGameY, color: myGameColor, hp: myGameHp });
             db.ref('game/players').on('value', (s) => { onlinePlayers = s.val() || {}; });
-
-            // Слушаем статус здоровья и уровня глобального Босса
             db.ref('game/boss').on('value', (s) => {
                 const data = s.val() || { level: 1, hp: 100 };
-                gameLevel = data.level;
-                bossHp = data.hp;
-                bossMaxHp = data.level * 200;
+                gameLevel = data.level; bossHp = data.hp; bossMaxHp = data.level * 200;
                 document.getElementById('gameLevelDisplay').innerText = `⚔️ Командный Босс (Уровень ${gameLevel})`;
                 document.getElementById('bossHpDisplay').innerText = `${bossHp}/${bossMaxHp}`;
             });
@@ -499,37 +511,25 @@
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
 
-            // Игровой цикл отрисовки (50 кадров в сек)
             gameLoopInterval = setInterval(() => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Вычисление траектории босса по времени (одинаково синхронно у всех)
                 let bSize = 45 + gameLevel * 5;
                 let speedFactor = 1200 - (gameLevel * 60);
-                if (speedFactor < 400) speedFactor = 400; // ограничение скорости
+                if (speedFactor < 400) speedFactor = 400;
 
                 let bx = 160 + Math.sin(Date.now() / speedFactor) * 110;
                 let by = 70 + Math.cos(Date.now() / (speedFactor * 1.3)) * 40;
 
-                // Рисуем Босса (Большой Красный Квадрат)
-                ctx.fillStyle = '#e74c3c';
-                ctx.fillRect(bx, by, bSize, bSize);
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(bx, by, bSize, bSize);
+                ctx.fillStyle = '#e74c3c'; ctx.fillRect(bx, by, bSize, bSize);
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, bSize, bSize);
 
-                // Рисуем подключенных игроков (Цветные квадраты)
                 Object.keys(onlinePlayers).forEach(uid => {
                     const p = onlinePlayers[uid];
                     if(p.hp > 0) {
-                        ctx.fillStyle = p.color || '#00b4d8';
-                        ctx.fillRect(p.x, p.y, 16, 16);
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = '10px sans-serif';
-                        ctx.fillText(p.username, p.x - 12, p.y - 5);
+                        ctx.fillStyle = p.color || '#00b4d8'; ctx.fillRect(p.x, p.y, 16, 16);
+                        ctx.fillStyle = '#ffffff'; ctx.font = '10px sans-serif'; ctx.fillText(p.username, p.x - 12, p.y - 5);
                     }
                 });
-
                 window.currentBossCoordinates = { x: bx, y: by, size: bSize };
             }, 40);
         };
@@ -541,7 +541,6 @@
             db.ref(`game/players/${localUser.uid}`).update({ x: myGameX, y: myGameY });
         };
 
-        // Поддержка клавиатуры для десктопа
         window.addEventListener('keydown', (e) => {
             if (!document.getElementById('gameModal').classList.contains('hidden')) {
                 if(e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -12);
@@ -552,30 +551,21 @@
         });
 
         window.gameAttack = () => {
-            if(myGameHp <= 0) return alert("Вы мертвы! Нажмите кнопку ОТДЫХ, чтобы восстановиться.");
+            if(myGameHp <= 0) return alert("Вы мертвы! Нажмите кнопку ОТДЫХ.");
             if(!window.currentBossCoordinates) return;
-
             const b = window.currentBossCoordinates;
-            // Проверка столкновения квадрата игрока с кубом босса
+            
             if(myGameX + 16 >= b.x && myGameX <= b.x + b.size && myGameY + 16 >= b.y && myGameY <= b.y + b.size) {
-                // Безопасное изменение здоровья в Firebase (Транзакция)
                 db.ref('game/boss').transaction((current) => {
                     if(!current) current = { level: 1, hp: 100 };
-                    current.hp -= 20; // Наносим урон
-                    if(current.hp <= 0) {
-                        current.level += 1; // Повышаем уровень игры
-                        current.hp = current.level * 200;
-                    }
+                    current.hp -= 20;
+                    if(current.hp <= 0) { current.level += 1; current.hp = current.level * 200; }
                     return current;
                 });
-
-                // Босс дает сдачи!
                 myGameHp = Math.max(0, myGameHp - 15);
                 document.getElementById('myHpDisplay').innerText = myGameHp;
                 db.ref(`game/players/${localUser.uid}`).update({ hp: myGameHp });
-            } else {
-                alert("Промах! Подойдите вплотную вашим цветным квадратиком к Боссу!");
-            }
+            } else { alert("Промах! Подойдите вплотную к Боссу!"); }
         };
 
         window.gameHeal = () => {
@@ -587,26 +577,31 @@
         window.closeGame = () => {
             closeModal('gameModal');
             if(gameLoopInterval) clearInterval(gameLoopInterval);
-            db.ref('game/players').off();
-            db.ref('game/boss').off();
+            db.ref('game/players').off(); db.ref('game/boss').off();
             if(localUser) db.ref(`game/players/${localUser.uid}`).remove();
         };
 
-        // --- ЗВУКИ И ЗВОНКИ ИЗ ПРОШЛОЙ ВЕРСИИ ---
-        window.startCall = async () => {
+        // --- УЛУЧШЕННЫЕ ЗВОНКИ ---
+        window.startCall = async (withVideo) => {
             if (!currentChatId || currentChatId.startsWith('channel_')) return alert("Звонки доступны только в ЛС!");
             targetUserUid = currentChatId.split('_').find(id => id !== localUser.uid);
             if (!targetUserUid) return;
 
+            isVideoCall = withVideo;
             isCallHost = true;
+            
+            // Настройка UI (если аудиозвонок - показываем пульс и прячем камеры)
+            document.getElementById('audioPlaceholder').classList.toggle('hidden', isVideoCall);
+
             openModal('callScreen');
-            document.getElementById('callStatus').innerText = "Вызов...";
+            document.getElementById('callStatus').innerText = (isVideoCall ? "Видеовызов..." : "Аудиозвонок...");
             document.getElementById('answerBtn').classList.add('hidden');
 
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                // Запрашиваем медиа в зависимости от типа (микрофон включен всегда)
+                localStream = await navigator.mediaDevices.getUserMedia({ video: isVideoCall, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
-            } catch (err) { alert("Камера недоступна."); closeModal('callScreen'); return; }
+            } catch (err) { alert("Камера или микрофон недоступны."); closeModal('callScreen'); return; }
 
             initPeerConnection();
             const offerDescription = await peerConnection.createOffer();
@@ -614,10 +609,17 @@
 
             await db.ref(`callRooms/${currentChatId}`).set({
                 offer: { sdp: offerDescription.sdp, type: offerDescription.type },
-                callerName: `@${localUsername}`, status: "ringing"
+                callerName: `@${localUsername}`, 
+                status: "ringing",
+                callType: isVideoCall ? 'video' : 'audio'
             });
 
-            await db.ref(`userCalls/${targetUserUid}`).set({ chatId: currentChatId, callerName: `@${localUsername}`, type: "dialing" });
+            await db.ref(`userCalls/${targetUserUid}`).set({ 
+                chatId: currentChatId, 
+                callerName: `@${localUsername}`, 
+                type: "dialing",
+                callType: isVideoCall ? 'video' : 'audio'
+            });
 
             db.ref(`callRooms/${currentChatId}`).on('value', async (snapshot) => {
                 const room = snapshot.val();
@@ -653,9 +655,10 @@
             document.getElementById('answerBtn').classList.add('hidden');
 
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                // При ответе используем тот же тип, какой запросил звонящий
+                localStream = await navigator.mediaDevices.getUserMedia({ video: isVideoCall, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
-            } catch (err) { alert("Ошибка доступа."); window.hangUp(); return; }
+            } catch (err) { alert("Ошибка доступа к медиа."); window.hangUp(); return; }
 
             initPeerConnection();
 
@@ -701,7 +704,6 @@
             closeModal('callScreen');
         }
 
-        // --- УЛУЧШЕННОЕ ИСПРАВЛЕНИЕ АВАТАРОК ---
         window.saveSettings = async () => {
             const newNick = document.getElementById('settingsNameInput').value.trim().replace('@', '');
             if(!newNick) return alert("Никнейм не может быть пустым!");
@@ -721,13 +723,11 @@
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = async () => {
-                        // Создаем невидимый холст для оптимизации размера картинки (64х64)
                         const canvas = document.createElement('canvas');
                         canvas.width = 64; canvas.height = 64;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, 64, 64);
                         
-                        // Получаем легкий base64 и пишем в БД
                         localAvatar = canvas.toDataURL('image/jpeg', 0.8);
                         await db.ref(`users/${localUser.uid}`).update({ avatar: localAvatar });
                         document.getElementById('myAvatarDisplay').src = localAvatar;
