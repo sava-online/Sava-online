@@ -3,133 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sava Online | Alpha 2</title>
+    <title>Sava Online | Финальная Alpha 3</title>
     <style>
         :root {
-            /* Ретро-палитра (iOS 4-6 / Скевоморфизм) */
-            --retro-green-light: #74ae3e;
-            --retro-green-dark: #4f8027;
-            --retro-bar-gradient: linear-gradient(180deg, #8dc63f 0%, #689f38 50%, #4f8027 100%);
-            --retro-btn-gradient: linear-gradient(180deg, #ffffff 0%, #eaeaea 40%, #cccccc 100%);
-            --text-color: #1a1a1a;
-            --bubble-sent-grad: linear-gradient(180deg, #e1f5fe 0%, #b3e5fc 100%);
-            --bubble-recv-grad: linear-gradient(180deg, #ffffff 0%, #f1f1f1 100%);
+            /* Палитра Агента Mail.ru (Скевоморфизм / Ретро-голубой) */
+            --agent-blue-light: #5caede;
+            --agent-blue-dark: #227ca8;
+            --agent-bg-texture: linear-gradient(180deg, #50a2d2 0%, #308cb8 50%, #1e7099 100%);
+            --agent-border: #1b5d80;
+            --bubble-sent: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 100%);
+            --bubble-recv: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
+            --stitch-shadow: 0 1px 0px rgba(255,255,255,0.4), inset 0 1px 1px rgba(0,0,0,0.3);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Lucida Grande', Tahoma, Verdana, sans-serif; }
 
         body {
             height: 100vh; height: 100dvh;
-            /* Текстурный лесной/травяной бэкграунд в стиле скевоморфизма */
-            background: #3b5e2b linear-gradient(135deg, #2d4a1e 0%, #4f8027 50%, #1e3313 100%);
-            background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 0), radial-gradient(rgba(255,255,255,0.1) 1px, transparent 0);
-            background-size: 8px 8px; background-position: 0 0, 4px 4px;
-            display: flex; justify-content: center; align-items: center; padding: 10px;
-            color: var(--text-color); overflow: hidden;
+            background: #cbdce6 linear-gradient(135deg, #b0cddb 0%, #cbdce6 100%);
+            display: flex; justify-content: center; align-items: center; padding: 8px;
+            color: #222; overflow: hidden;
         }
 
         .hidden { display: none !important; }
 
-        /* Объемные ретро-карточки */
-        .retro-card {
-            background: #f4f4f4;
-            border: 1px solid #222;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 1px 0 #fff;
+        /* Стиль Агента Mail.ru с декоративной строчкой */
+        .agent-card {
+            background: #fff;
+            border: 1px solid var(--agent-border);
+            border-radius: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             overflow: hidden;
         }
 
-        /* Глянцевые классические кнопки */
-        .retro-btn {
-            padding: 8px 16px; border: 1px solid #555; border-radius: 6px;
-            font-size: 13px; font-weight: bold; color: #333; cursor: pointer;
-            background: var(--retro-btn-gradient);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 #fff;
+        .agent-header {
+            background: var(--agent-bg-texture);
+            border-bottom: 2px solid var(--agent-border);
+            color: white; padding: 12px 15px;
+            font-weight: bold; font-size: 15px;
+            text-shadow: 0 -1px 1px rgba(0,0,0,0.4);
+            box-shadow: inset 0 -1px 0 rgba(255,255,255,0.2);
+            position: relative;
+        }
+        /* Имитация швейной строчки, как на картинке */
+        .agent-header::after {
+            content: ''; position: absolute; bottom: 2px; left: 0; right: 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.4);
+        }
+
+        .agent-btn {
+            padding: 7px 14px; border: 1px solid #7f9db9; border-radius: 4px;
+            font-size: 12px; font-weight: bold; color: #333; cursor: pointer;
+            background: linear-gradient(180deg, #ffffff 0%, #eef3f7 50%, #dbe5ee 100%);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15), inset 0 1px 0 #fff;
             text-shadow: 0 1px 0 #fff;
-            display: inline-flex; align-items: center; justify-content: center;
+            display: inline-flex; align-items: center; justify-content: center; gap: 4px;
         }
-        .retro-btn:active { background: linear-gradient(180deg, #cccccc 0%, #eaeaea 100%); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-
-        .retro-btn-green {
-            background: linear-gradient(180deg, #89c441 0%, #5ba025 100%);
-            color: white; border-color: #3b6b15; text-shadow: 0 -1px 0 rgba(0,0,0,0.4);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
-        }
-
-        /* Поля ввода с внутренней тенью */
-        .retro-input {
-            width: 100%; padding: 10px 12px; border: 1px solid #999;
-            border-radius: 6px; background: #fff;
-            font-size: 14px; outline: none; color: #000;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
-        }
-
-        /* Хедеры в стиле iOS */
-        .retro-header {
-            background: var(--retro-bar-gradient);
-            border-bottom: 1px solid #2d4a1e;
-            color: white; padding: 10px 15px;
-            text-shadow: 0 -1px 1px rgba(0,0,0,0.5);
-            font-weight: bold; font-size: 16px;
-            display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        #authBox { width: 100%; max-width: 350px; padding: 0; }
-        #authBody { padding: 25px 20px; background: #eee; }
-        #app { width: 100%; max-width: 1000px; height: 88vh; height: 88dvh; display: flex; padding: 4px; gap: 4px; background: #222; border-radius: 14px; }
-
-        .sidebar { width: 280px; display: flex; flex-direction: column; gap: 4px; background: #dcdcdc; border-radius: 10px; border: 1px solid #999; }
-        .user-profile { display: flex; align-items: center; gap: 10px; padding: 10px; background: #eaeaea; border-bottom: 1px solid #bbb; border-top-left-radius:9px; border-top-right-radius:9px; }
-        .user-profile img, .chat-item img, .msg-avatar { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; border: 1px solid #777; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .agent-btn:active { background: linear-gradient(180deg, #dbe5ee 0%, #eef3f7 100%); }
         
-        .chats-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; padding: 4px; gap: 3px; background: #fff; }
-        .chat-item { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 6px; cursor: pointer; border-bottom: 1px solid #eee; transition: none; }
-        .chat-item:hover { background: #ebf3e3; }
-        .chat-item.active { background: linear-gradient(180deg, #74ae3e 0%, #5ba025 100%) !important; color: white !important; border-color: #3b6b15; }
-        .chat-item.active * { color: white !important; }
+        .agent-btn-blue {
+            background: linear-gradient(180deg, #6ec0ed 0%, #3a97cf 100%);
+            color: white; border-color: #26719c; text-shadow: 0 -1px 0 rgba(0,0,0,0.3);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
 
-        .main-chat { flex: 1; display: flex; flex-direction: column; background: #dcdcdc; border-radius: 10px; border: 1px solid #999; overflow: hidden; }
-        
-        /* Фон внутри самого чата — классическая текстура листьев */
-        #chatBodyWrap {
-            flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px;
-            background: #4f8027 linear-gradient(0deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 100%);
-            background-image: radial-gradient(rgba(255,255,255,0.08) 1px, transparent 0); background-size: 12px 12px;
+        .agent-input {
+            width: 100%; padding: 8px 10px; border: 1px solid #7f9db9;
+            border-radius: 4px; background: #fff; font-size: 13px; outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
-        
-        .msg { display: flex; align-items: flex-start; gap: 8px; max-width: 80%; }
-        .msg-bubble { 
-            padding: 8px 14px; border-radius: 12px; font-size: 14px; color: #000;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3); border: 1px solid #bbb; position: relative;
+
+        /* Главный макет */
+        #authBox { width: 100%; max-width: 365px; }
+        #app { width: 100%; max-width: 450px; height: 92vh; height: 92dvh; display: flex; flex-direction: column; background: #fff; }
+
+        /* Вкладки выбора статусов (из картинки image_5.png) */
+        .status-bar {
+            display: flex; background: #f0f4f7; border-bottom: 1px solid #c4d6df; padding: 6px; justify-content: space-around;
         }
+        .status-tab {
+            flex: 1; text-align: center; padding: 6px; font-size: 12px; font-weight: bold; color: #555;
+            cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .status-tab:hover { background: #e1eaf0; }
+        .status-tab.active { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); color: #000; border: 1px solid #b8cbd6; }
+
+        .status-icon { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+        .icon-online { background: #4caf50; position: relative; }
+        .icon-online::after { content: '@'; color: white; font-size: 9px; position: absolute; top:-2px; left:2px; font-weight: bold; }
+        .icon-invisible { background: #ff9800; }
+        .icon-offline { background: #9e9e9e; }
+
+        /* Списки контента */
+        .screen-content { flex: 1; overflow-y: auto; background: #fff; display: flex; flex-direction: column; }
+        
+        .user-info-plate { padding: 12px; background: #e3eff6; border-bottom: 1px solid #bcccdaf; display: flex; align-items: center; gap: 10px; }
+        .user-info-plate img { width: 44px; height: 44px; border-radius: 4px; border: 1px solid #9cb4c4; background: #fff; object-fit: cover; }
+
+        .chat-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid #eaf2f6; cursor: pointer; }
+        .chat-item:hover { background: #f0f6fa; }
+        .chat-item.active { background: #e2eff7; }
+
+        /* Чат-комната */
+        #chatRoomView { display: flex; flex-direction: column; height: 100%; width: 100%; position: absolute; top:0; left:0; background:#fff; z-index: 10; }
+        .messages-container { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: #f4f8fa; }
+        
+        .msg { display: flex; gap: 8px; max-width: 85%; }
         .msg.sent { align-self: flex-end; flex-direction: row-reverse; }
-        .msg.sent .msg-bubble { background: var(--bubble-sent-grad); border-color: #90caf9; }
         .msg.received { align-self: flex-start; }
-        .msg.received .msg-bubble { background: var(--bubble-recv-grad); border-color: #ccc; }
+        .msg-bubble { padding: 8px 12px; border-radius: 8px; font-size: 13px; border: 1px solid #d3e3ec; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .msg.sent .msg-bubble { background: var(--bubble-sent); }
+        .msg.received .msg-bubble { background: var(--bubble-recv); }
 
-        /* Панель ввода внизу */
-        .retro-footer { padding: 8px 10px; background: linear-gradient(180deg, #eaeaea 0%, #bcbcbc 100%); border-top: 1px solid #999; display: flex; gap: 6px; align-items: center; }
-
-        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:100; }
-        .modal-content { width: 90%; max-width: 350px; padding: 0; text-align: center; }
-
-        .color-picker { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
-        .color-dot { width: 28px; height: 28px; border-radius: 4px; cursor: pointer; border: 1px solid #333; box-shadow: inset 0 1px 0 #fff; }
-
-        /* Стили звонков */
-        .call-container { position: relative; width: 100%; height: 260px; background: #111; border-radius: 8px; overflow: hidden; border: 1px solid #444; }
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-        #localVideo { position: absolute; bottom: 8px; right: 8px; width: 85px; height: 115px; object-fit: cover; border-radius: 4px; border: 1px solid #fff; background: #222; }
-        #audioPlaceholder { position: absolute; top:0; left:0; width:100%; height:100%; background: #1c2813; display: flex; justify-content: center; align-items: center; z-index: 10; }
-        
-        @keyframes pulseMic { 0% { transform: scale(1); opacity:0.7; } 50% { transform: scale(1.2); opacity:1; } 100% { transform: scale(1); opacity:0.7; } }
-        .audio-pulse { font-size: 60px; animation: pulseMic 1.5s infinite; }
-
-        @media (max-width: 768px) {
-            .sidebar { width: 100%; } .main-chat { display: none; }
-            #app.chat-active .sidebar { display: none; } #app.chat-active .main-chat { display: flex; }
+        /* Нижний тулбар навигации (из картинки image_5.png) */
+        .agent-navbar {
+            background: var(--agent-bg-texture);
+            border-top: 2px solid var(--agent-border);
+            display: flex; height: 52px; position: relative;
         }
+        .agent-navbar::after {
+            content: ''; position: absolute; top: 2px; left: 0; right: 0;
+            border-top: 1px dashed rgba(255,255,255,0.4);
+        }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #e3f2fd; font-size: 10px; font-weight: bold; cursor: pointer; text-shadow: 0 -1px 0 rgba(0,0,0,0.4);
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.1); }
+        .nav-item.active { background: rgba(0,0,0,0.2); color: #fff; box-shadow: inset 0 2px 5px rgba(0,0,0,0.3); }
+        .nav-item span { font-size: 18px; margin-bottom: 2px; }
+
+        /* Окно звонков */
+        .media-controls { display: flex; gap: 12px; justify-content: center; margin-top: 15px; }
+        .media-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .media-btn.muted { background: #ff6b6b; color: white; border-color: #e64980; }
+        
+        .video-box { position: relative; width: 100%; height: 220px; background: #222; border-radius: 6px; overflow: hidden; }
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
+        #localVideo { position: absolute; bottom: 8px; right: 8px; width: 75px; height: 100px; object-fit: cover; border: 1px solid #fff; border-radius: 4px; background: #333; }
+
+        /* Модальные окна */
+        .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; z-index:100; padding:10px; }
+        .modal-content { width: 100%; max-width: 340px; background: #fff; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -138,145 +153,174 @@
 </head>
 <body>
 
-    <div id="authBox" class="retro-card">
-        <div class="retro-header">💎 Sava Online Alpha 2</div>
-        <div id="authBody">
+    <!-- ЭКРАН ВХОДА И ВЕРИФИКАЦИИ -->
+    <div id="authBox" class="agent-card">
+        <div class="agent-header">✉️ Авторизация | Sava Online</div>
+        <div style="padding: 20px; background: #f4f8fa;">
             <div id="loginForm">
-                <input id="email" class="retro-input" placeholder="Email" type="email"><br><br>
-                <input id="pass" class="retro-input" placeholder="Пароль" type="password"><br><br>
-                <button class="retro-btn retro-btn-green" style="width:100%" onclick="authAction('login')">Войти</button>
-                <p style="margin-top:15px; font-size:13px; text-align:center;">Впервые тут? <a href="#" style="color:#4f8027; font-weight:bold;" onclick="toggleAuthView(true)">Создать аккаунт</a></p>
+                <input id="email" class="agent-input" placeholder="Ваш Email" type="email"><br><br>
+                <input id="pass" class="agent-input" placeholder="Пароль" type="password"><br><br>
+                <button class="agent-btn agent-btn-blue" style="width:100%;" onclick="authAction('login')">Войти в аккаунт</button>
+                <p style="margin-top:15px; font-size:12px; text-align:center;">Ещё нет профиля? <a href="#" style="color:var(--agent-blue-dark); font-weight:bold;" onclick="toggleAuthView(true)">Регистрация</a></p>
             </div>
             
             <div id="regForm" class="hidden">
-                <input id="regEmail" class="retro-input" placeholder="Email" type="email"><br><br>
-                <input id="regPass" class="retro-input" placeholder="Пароль" type="password"><br><br>
-                <input id="regName" class="retro-input" placeholder="Имя пользователя (без @)"><br><br>
-                <button class="retro-btn retro-btn-green" style="width:100%" onclick="authAction('reg')">Регистрация</button>
-                <p style="margin-top:15px; font-size:13px; text-align:center;"><a href="#" style="color:#4f8027; font-weight:bold;" onclick="toggleAuthView(false)">Назад</a></p>
+                <input id="regEmail" class="agent-input" placeholder="Email" type="email"><br><br>
+                <input id="regPass" class="agent-input" placeholder="Пароль (минимум 6 знаков)" type="password"><br><br>
+                <input id="regName" class="agent-input" placeholder="Никнейм (например: glebb)"><br><br>
+                <button class="agent-btn agent-btn-blue" style="width:100%;" onclick="authAction('reg')">Зарегистрироваться</button>
+                <p style="margin-top:15px; font-size:12px; text-align:center;"><a href="#" style="color:var(--agent-blue-dark); font-weight:bold;" onclick="toggleAuthView(false)">Назад ко входу</a></p>
             </div>
         </div>
     </div>
 
-    <div id="app" class="hidden">
-        <div class="sidebar">
-            <div class="user-profile">
+    <!-- ГЛАВНОЕ ПРИЛОЖЕНИЕ -->
+    <div id="app" class="agent-card hidden">
+        
+        <!-- ДИАЛОГИ И КОНТАКТЫ -->
+        <div id="screen-chats" class="screen-content">
+            <div class="user-info-plate">
                 <img id="myAvatarDisplay" src="" alt="">
                 <div style="flex:1; min-width:0;">
-                    <div id="myCurrentName" style="font-weight:bold; font-size:14px; overflow:hidden; text-overflow:ellipsis;">Загрузка...</div>
+                    <div id="myCurrentName" style="font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis;">Загрузка...</div>
+                    <div id="myCurrentEmail" style="font-size:11px; color:#666;">...</div>
                 </div>
-                <button class="retro-btn" style="padding:4px 8px;" onclick="openModal('settingsModal')">⚙️</button>
-            </div>
-            
-            <button id="gameLauncherBtn" class="retro-btn hidden" style="margin: 4px; background: linear-gradient(180deg, #9b59b6 0%, #8e44ad 100%); color:white; border-color:#6d3185;" onclick="openGame()">🎮 Командный Босс</button>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 10px; background:#ccc; border-bottom:1px solid #bbb;">
-                <span style="font-size:11px; font-weight:bold; color:#444;">ДИАЛОГИ И КАНАЛЫ</span>
-                <button class="retro-btn" style="padding: 2px 8px; font-size:12px;" onclick="openModal('createChatModal')">+</button>
+                <button class="agent-btn" style="padding:4px 6px;" onclick="openModal('createChatModal')"><b>+ Чат</b></button>
             </div>
 
-            <div class="chats-list" id="activeChatsContainer"></div>
+            <!-- ВКЛАДКИ СТАТУСОВ ИЗ АГЕНТА MAIL.RU -->
+            <div class="status-bar">
+                <div class="status-tab active" id="st-online" onclick="changeStatus('online')"><span class="status-icon icon-online"></span>Онлайн</div>
+                <div class="status-tab" id="st-invisible" onclick="changeStatus('invisible')"><span class="status-icon icon-invisible"></span>Невидимый</div>
+                <div class="status-tab" id="st-offline" onclick="changeStatus('offline')"><span class="status-icon icon-offline"></span>Офлайн</div>
+            </div>
+
+            <button id="gameLauncherBtn" class="agent-btn hidden" style="margin:6px; background:linear-gradient(180deg,#9b59b6 0%,#8e44ad 100%); color:white; border-color:#6d3185;" onclick="openGame()">🎮 Запустить Босса</button>
+
+            <div style="padding:5px 12px; background:#e2eff7; font-size:11px; font-weight:bold; color:#47758f;">МОИ КОНТАКТЫ И КАНАЛЫ</div>
+            <div id="activeChatsContainer" style="flex:1; overflow-y:auto;"></div>
         </div>
 
-        <div class="main-chat">
-            <div class="retro-header">
-                <button class="retro-btn" id="backBtn" onclick="backToSidebar()" style="padding:4px 8px; margin-right:5px; display:none;">←</button>
-                <span id="chatTitle" style="font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;">Выберите чат...</span>
+        <!-- ВКЛАДКА ПРОФИЛЯ И НАСТРОЕК -->
+        <div id="screen-profile" class="screen-content hidden" style="padding:15px; background:#f4f8fa; gap:12px;">
+            <h3 style="font-size:14px; color:var(--agent-blue-dark);">Настройки аккаунта</h3>
+            <div>
+                <label style="font-size:11px; font-weight:bold; color:#555;">Изменить никнейм:</label>
+                <input id="settingsNameInput" class="agent-input" style="margin-top:4px;">
+            </div>
+            <div>
+                <label style="font-size:11px; font-weight:bold; color:#555;">Обновить фото профиля:</label>
+                <input type="file" id="settingsAvaFile" class="agent-input" style="margin-top:4px;" accept="image/*">
+            </div>
+            <button class="agent-btn agent-btn-blue" onclick="saveSettings()">Сохранить изменения</button>
+
+            <!-- УЛЬТИМАТИВНАЯ АДМИНКА РАЗРАБОТЧИКА (БАНЫ, ПРАВА, УДАЛЕНИЕ) -->
+            <div id="devAdminPanel" class="hidden" style="margin-top:10px; border-top:2px dashed #b8cbd6; padding-top:12px; display:flex; flex-direction:column; gap:10px;">
+                <h4 style="font-size:12px; color:#c92a2a; font-weight:bold; text-align:center;">👑 ПАНЕЛЬ РАЗРАБОТЧИКА ALPHA 3</h4>
+                <input id="adminTargetUser" class="agent-input" placeholder="Никнейм цели (без @)">
                 
-                <div id="callActionBtns" class="hidden" style="display: flex; gap: 4px;">
-                    <button class="retro-btn" style="padding:4px 8px;" onclick="startCall(false)">📞 Аудио</button>
-                    <button class="retro-btn" style="padding:4px 8px;" onclick="startCall(true)">📹 Видео</button>
+                <div style="display:flex; gap:4px;">
+                    <button class="agent-btn agent-btn-blue" style="flex:1; font-size:11px; padding:5px;" onclick="grantRole('badge')">✓ Галочка</button>
+                    <button class="agent-btn" style="flex:1; font-size:11px; padding:5px; background:linear-gradient(180deg,#f39c12 0%,#d35400 100%); color:white;" onclick="grantRole('gold')">⭐ Gold</button>
+                    <button class="agent-btn" style="flex:1; font-size:11px; padding:5px; background:linear-gradient(180deg,#34495e 0%,#2c3e50 100%); color:white;" onclick="grantRole('dev')">👨‍💻 Dev-права</button>
+                </div>
+                
+                <div style="display:flex; gap:4px;">
+                    <button class="agent-btn" style="flex:1; font-size:11px; background:linear-gradient(180deg,#e74c3c 0%,#c0392b 100%); color:white;" onclick="grantRole('delete')">❌ Удалить юзера</button>
+                    <button class="agent-btn" style="flex:1; font-size:11px; background:linear-gradient(180deg,#000 0%,#222 100%); color:white;" onclick="grantRole('hardware_ban')">🚫 БАН ПО ЖЕЛЕЗУ</button>
+                </div>
+
+                <div style="border-top:1px solid #ccc; padding-top:6px;">
+                    <input id="adminTargetChannel" class="agent-input" placeholder="Имя канала для галочки (без 📢)">
+                    <button class="agent-btn agent-btn-blue" style="width:100%; margin-top:5px; font-size:11px;" onclick="grantChannelBadge()">Выдать галочку каналу</button>
                 </div>
             </div>
-            
-            <div id="chatBodyWrap"></div>
-            
-            <div class="retro-footer">
-                <input id="msgInput" class="retro-input" placeholder="Введите текст...">
-                <button class="retro-btn retro-btn-green" style="padding: 9px 15px;" onclick="postMessage()">Отпр.</button>
+
+            <button class="agent-btn" style="margin-top:auto; background:linear-gradient(180deg,#ff8787 0%,#fa5252 100%); color:white; border-color:#e03131;" onclick="auth.signOut()">Выйти из профиля</button>
+        </div>
+
+        <!-- ЭКРАН ЧАТ-КОМНАТЫ (ВСПЛЫВАЕТ ПРИ КЛИКЕ НА ДИАЛОГ) -->
+        <div id="chatRoomView" class="hidden">
+            <div class="agent-header">
+                <button class="agent-btn" onclick="closeChatRoom()" style="padding:2px 8px; font-size:11px; margin-right:6px;">← Назад</button>
+                <span id="chatTitle" style="font-size:13px; font-weight:bold;">Чат...</span>
+                
+                <div id="callActionBtns" class="hidden" style="position:absolute; right:10px; top:8px; display:flex; gap:4px;">
+                    <button class="agent-btn" style="padding:3px 6px; font-size:11px;" onclick="startCall(false)">📞 Аудио</button>
+                    <button class="agent-btn" style="padding:3px 6px; font-size:11px;" onclick="startCall(true)">📹 Видео</button>
+                </div>
             </div>
+            <div id="chatBodyWrap" class="messages-container"></div>
+            <div style="padding:8px; background:#eef3f7; border-top:1px solid #cbdce6; display:flex; gap:6px;">
+                <input id="msgInput" class="agent-input" placeholder="Напишите сообщение...">
+                <button class="agent-btn agent-btn-blue" onclick="postMessage()">Отпр.</button>
+            </div>
+        </div>
+
+        <!-- НИЖНИЙ ТУЛБАР НАВИГАЦИИ АГЕНТА -->
+        <div class="agent-navbar">
+            <div id="nav-chats" class="nav-item active" onclick="switchTab('chats')"><span>💬</span>Чаты</div>
+            <div id="nav-profile" class="nav-item" onclick="switchTab('profile')"><span>👤</span>Профиль</div>
         </div>
     </div>
 
+    <!-- ИСПРАВЛЕННЫЙ ЭКРАН ЗВОНКОВ С КНОПКАМИ МЬЮТА КАМЕРЫ/МИКРОФОНА -->
     <div id="callScreen" class="modal-overlay hidden">
-        <div class="retro-card modal-content" style="max-width: 420px;">
-            <div class="retro-header" id="callStatus">Вызов...</div>
-            <div style="padding:15px; background:#eee;">
-                <div class="call-container">
+        <div class="agent-card modal-content">
+            <div class="agent-header" id="callStatus">Звонок...</div>
+            <div style="padding:15px; background:#f4f8fa; text-align:center;">
+                <div class="video-box">
                     <video id="remoteVideo" autoplay playsinline></video>
                     <video id="localVideo" autoplay playsinline muted></video>
-                    
-                    <div id="audioPlaceholder" class="hidden">
-                        <div class="audio-pulse">🎙️</div>
-                    </div>
                 </div>
-                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
-                    <button id="answerBtn" class="retro-btn retro-btn-green" onclick="acceptCall()">Ответить</button>
-                    <button class="retro-btn" style="background:linear-gradient(180deg, #ff6b6b 0%, #c92a2a 100%); color:white; border-color:#a61e1e;" onclick="hangUp()">Сбросить</button>
+                
+                <!-- КНОПКИ УПРАВЛЕНИЯ МЕДИАПОТОКАМИ -->
+                <div class="media-controls">
+                    <button id="micBtn" class="media-btn" onclick="toggleMute('audio')">🎙️</button>
+                    <button id="camBtn" class="media-btn" onclick="toggleMute('video')">📷</button>
+                    <button class="media-btn" style="background:#fa5252; color:white;" onclick="hangUp()">❌</button>
                 </div>
+                <button id="answerBtn" class="agent-btn agent-btn-blue" style="width:100%; margin-top:15px; padding:10px;" onclick="acceptCall()">Ответить на вызов</button>
             </div>
         </div>
     </div>
 
+    <!-- ОКНО СОЗДАНИЯ ЧАТА -->
     <div id="createChatModal" class="modal-overlay hidden">
-        <div class="retro-card modal-content">
-            <div class="retro-header">Новый диалог / Канал</div>
-            <div style="padding:20px; background:#eee; display:flex; flex-direction:column; gap:12px;">
-                <input id="modalTargetInput" class="retro-input" placeholder="Никнейм или Имя Канала">
-                <div style="display:flex; gap:8px;">
-                    <button class="retro-btn retro-btn-green" style="flex:1;" onclick="initChat('private')">💬 Личный чат</button>
-                    <button class="retro-btn" style="flex:1; background:linear-gradient(180deg,#f39c12 0%,#d35400 100%); color:white; border-color:#a04000;" onclick="initChat('channel')">📢 Канал</button>
+        <div class="agent-card modal-content">
+            <div class="agent-header">Создать подключение</div>
+            <div style="padding:15px; background:#f4f8fa; display:flex; flex-direction:column; gap:10px;">
+                <input id="modalTargetInput" class="agent-input" placeholder="Никнейм человека или Имя канала">
+                <div style="display:flex; gap:6px;">
+                    <button class="agent-btn agent-btn-blue" style="flex:1;" onclick="initChat('private')">Личный чат</button>
+                    <button class="agent-btn" style="flex:1; background:linear-gradient(180deg,#f39c12 0%,#d35400 100%); color:white; border-color:#a04000;" onclick="initChat('channel')">Создать Канал</button>
                 </div>
-                <button class="retro-btn" onclick="closeModal('createChatModal')">Отмена</button>
+                <button class="agent-btn" onclick="closeModal('createChatModal')">Отмена</button>
             </div>
         </div>
     </div>
 
-    <div id="settingsModal" class="modal-overlay hidden">
-        <div class="retro-card modal-content" style="max-height: 90vh; overflow-y: auto;">
-            <div class="retro-header">Настройки профиля</div>
-            <div style="padding:20px; background:#eee; display:flex; flex-direction:column; gap:12px; text-align:left;">
-                <label style="font-size:12px; font-weight:bold;">Ваш никнейм:</label>
-                <input id="settingsNameInput" class="retro-input">
-                
-                <label style="font-size:12px; font-weight:bold;">Загрузить аватарку:</label>
-                <input type="file" id="settingsAvaFile" class="retro-input" accept="image/*">
-                
-                <button class="retro-btn retro-btn-green" style="width:100%;" onclick="saveSettings()">Сохранить</button>
-                
-                <div id="devAdminPanel" class="hidden" style="margin-top: 10px; border-top: 2px dashed #999; padding-top:12px;">
-                    <h4 style="font-size: 13px; color: #4f8027; margin-bottom: 8px; font-weight:bold; text-align:center;">👑 Управление правами (Dev)</h4>
-                    <input id="adminTargetUser" class="retro-input" placeholder="Введи никнейм юзера">
-                    <div style="display:flex; gap:5px; margin-top: 8px;">
-                        <button class="retro-btn retro-btn-green" style="flex:1; font-size:11px;" onclick="grantRole('badge')">✓ Выдать галочку</button>
-                        <button class="retro-btn" style="flex:1; font-size:11px; background:linear-gradient(180deg, #f39c12 0%, #d35400 100%); color:white;" onclick="grantRole('gold')">+Sava Gold</button>
-                    </div>
-                </div>
-
-                <button class="retro-btn" style="width:100%; margin-top:5px;" onclick="closeModal('settingsModal')">Закрыть</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- КОМАНДНАЯ ИГРА -->
     <div id="gameModal" class="modal-overlay hidden">
-        <div class="retro-card modal-content" style="max-width: 430px;">
-            <div class="retro-header" id="gameLevelDisplay">⚔️ Командный Босс</div>
-            <div style="padding:15px; background:#eee;">
-                <div style="font-size: 13px; font-weight: bold; color: #c92a2a; margin-bottom: 5px;">HP Босса: <span id="bossHpDisplay">100/100</span></div>
-                <canvas id="gameCanvas" width="390" height="220" style="background: #111; border-radius:6px; border:1px solid #444; width:100%;"></canvas>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                    <div style="font-size:13px; font-weight: bold;">Ваше HP: <span id="myHpDisplay" style="color:#2b8a3e;">100</span></div>
-                    <div style="display:flex; gap:5px;">
-                        <button class="retro-btn" style="background:linear-gradient(180deg,#ff6b6b 0%,#c92a2a 100%); color:white;" onclick="gameAttack()">💥 УДАР</button>
-                        <button class="retro-btn" style="background:linear-gradient(180deg,#51cf66 0%,#2b8a3e 100%); color:white;" onclick="gameHeal()">❤️ ОТДЫХ</button>
+        <div class="agent-card modal-content" style="max-width:400px;">
+            <div class="agent-header" id="gameLevelDisplay">⚔️ Босс Альфа 3</div>
+            <div style="padding:12px; background:#f4f8fa; text-align:center;">
+                <div style="font-size:12px; font-weight:bold; color:#c92a2a; margin-bottom:4px;">Жизни Босса: <span id="bossHpDisplay">100/100</span></div>
+                <canvas id="gameCanvas" width="360" height="200" style="background:#111; border-radius:4px; width:100%;"></canvas>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <div style="font-size:12px; font-weight:bold;">Ваше здоровье: <span id="myHpDisplay" style="color:#2b8a3e;">100</span></div>
+                    <div style="display:flex; gap:4px;">
+                        <button class="agent-btn" style="background:#ff6b6b; color:white;" onclick="gameAttack()">💥 УДАР</button>
+                        <button class="agent-btn" style="background:#51cf66; color:white;" onclick="gameHeal()">❤️ ОТДЫХ</button>
                     </div>
                 </div>
-                <button class="retro-btn" style="width:100%; margin-top:10px;" onclick="closeGame()">Выйти</button>
+                <button class="agent-btn" style="width:100%; margin-top:8px;" onclick="closeGame()">Выйти</button>
             </div>
         </div>
     </div>
 
     <script>
+        // Конфиг Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCsU2eJ2aF5oj4uWFbyy0Ez0mekT_At4vU",
             authDomain: "sava-online.firebaseapp.com",
@@ -291,7 +335,7 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // ALPHA 2: Глобальное жесткое закрепление WebRTC переменных на объекте window против Garbage Collector
+        // Жесткое связывание WebRTC потоков на глобальном объекте (Фикс пропадания звука)
         window.webrtcLocalStream = null;
         window.webrtcRemoteStream = null;
         window.webrtcPeerConnection = null;
@@ -299,10 +343,11 @@
         let localUser = null, currentChatId = null, localAvatar = "", localUsername = "", currentChatRef = null;
         let isDeveloper = false, isSavaGold = false, hasVerifiedBadge = false;
         let isVideoCall = true, isCallHost = false, targetUserUid = null;
-        const defaultAva = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ccircle cx="20" cy="20" r="20" fill="%23bbb"/%3E%3C/svg%3E';
+        let micEnabled = true, camEnabled = true;
+        const defaultAva = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ccircle cx="20" cy="20" r="20" fill="%23ccc"/%3E%3C/svg%3E';
         const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
 
-        let gameLoopInterval = null, myGameX = Math.floor(40 + Math.random()*80), myGameY = Math.floor(150 + Math.random()*40);
+        let gameLoopInterval = null, myGameX = Math.floor(30 + Math.random()*80), myGameY = Math.floor(140 + Math.random()*30);
         let myGameHp = 100, bossHp = 100, bossMaxHp = 100, gameLevel = 1, onlinePlayers = {};
         let myGameColor = '#' + Math.floor(Math.random()*16777215).toString(16);
 
@@ -314,30 +359,74 @@
             document.getElementById('regForm').classList.toggle('hidden', !showReg);
         };
 
+        // ГЕНЕРАЦИЯ ЦИФРОВОГО ОТПЕЧАТКА УСТРОЙСТВА (FINGERPRINT) ДЛЯ БАНА ПО ЖЕЛЕЗУ
+        function getDeviceFingerprint() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = "top"; ctx.font = "14px 'Arial'";
+            ctx.fillText("SavaOnlineAlpha3HardwareBan", 2, 2);
+            const str = canvas.toDataURL();
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = (hash << 5) - hash + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return "HW-" + Math.abs(hash) + "-" + navigator.hardwareConcurrency;
+        }
+
+        // Проверка бана при старте
+        async function checkHardwareBan() {
+            const fp = getDeviceFingerprint();
+            const banSnap = await db.ref(`banned_devices/${fp}`).get();
+            if (banSnap.exists()) {
+                document.body.innerHTML = `<div style="color:#c92a2a; font-weight:bold; text-align:center; padding:50px; font-size:18px;">🛑 Ваше устройство заблокировано разработчиком Sava Online по аппаратным признакам! Регистрация и вход невозможны.</div>`;
+                return true;
+            }
+            return false;
+        }
+
         window.authAction = async (type) => {
+            if (await checkHardwareBan()) return;
+
             const email = document.getElementById(type === 'login' ? 'email' : 'regEmail').value.trim();
             const pass = document.getElementById(type === 'login' ? 'pass' : 'regPass').value.trim();
             if(!email || !pass) return alert("Заполните поля!");
 
             try {
                 if (type === 'reg') {
-                    let nick = document.getElementById('regName').value.trim().replace('@', '');
+                    let nick = document.getElementById('regName').value.trim().toLowerCase().replace('@', '');
                     if(!nick) return alert("Введите никнейм!");
                     
-                    const nameCheck = await db.ref(`usernames/${nick.toLowerCase()}`).get();
+                    const nameCheck = await db.ref(`usernames/${nick}`).get();
                     if(nameCheck.exists()) return alert("Никнейм занят!");
 
                     const cred = await auth.createUserWithEmailAndPassword(email, pass);
-                    await db.ref(`users/${cred.user.uid}`).set({ username: nick, avatar: "", isDeveloper: false, isSavaGold: false, hasVerifiedBadge: false });
-                    await db.ref(`usernames/${nick.toLowerCase()}`).set(cred.user.uid);
+                    // ОТПРАВКА ССЫЛКИ ДЛЯ ПОДТВЕРЖДЕНИЯ ПОЧТЫ
+                    await cred.user.sendEmailVerification();
+                    
+                    // Регистрируем отпечаток железа в профиль
+                    const fp = getDeviceFingerprint();
+                    await db.ref(`users/${cred.user.uid}`).set({ username: nick, avatar: "", isDeveloper: false, isSavaGold: false, hasVerifiedBadge: false, fingerprint: fp });
+                    await db.ref(`usernames/${nick}`).set(cred.user.uid);
+                    
+                    alert("На вашу почту отправлено письмо! Подтвердите её, чтобы войти в аккаунт.");
+                    await auth.signOut();
+                    toggleAuthView(false);
                 } else {
-                    await auth.signInWithEmailAndPassword(email, pass);
+                    const cred = await auth.signInWithEmailAndPassword(email, pass);
+                    // БЛОКИРОВКА ВХОДА БЕЗ ПОДТВЕРЖДЕННОЙ ПОЧТЫ
+                    if (!cred.user.emailVerified) {
+                        alert("Вход запрещен! Подтвердите вашу почту по ссылке из письма.");
+                        await auth.signOut();
+                    }
                 }
             } catch (err) { alert("Ошибка: " + err.message); }
         };
 
         auth.onAuthStateChanged(async (user) => {
-            if (user) {
+            if (user && user.emailVerified) {
+                if (await checkHardwareBan()) { await auth.signOut(); return; }
+
                 localUser = user;
                 document.getElementById('authBox').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
@@ -346,7 +435,7 @@
                     let uData = snapshot.val() || {};
                     if (!uData.username) return;
 
-                    // Хардкод суперадмина для разработчика
+                    // Принудительные суперправа для главного разработчика
                     if (uData.username.toLowerCase() === 'user271' && !uData.isDeveloper) {
                         uData.isDeveloper = true;
                         db.ref(`users/${user.uid}`).update({ isDeveloper: true, hasVerifiedBadge: true });
@@ -359,17 +448,22 @@
                     hasVerifiedBadge = uData.hasVerifiedBadge || false;
 
                     document.getElementById('myCurrentName').innerText = `@${localUsername}`;
+                    document.getElementById('myCurrentEmail').innerText = user.email;
                     document.getElementById('settingsNameInput').value = localUsername;
                     document.getElementById('myAvatarDisplay').src = localAvatar || defaultAva;
 
-                    // Открываем админку только разработчикам
                     document.getElementById('devAdminPanel').classList.toggle('hidden', !isDeveloper);
                     document.getElementById('gameLauncherBtn').classList.toggle('hidden', !(isDeveloper || isSavaGold));
+                    
+                    if (uData.status) {
+                        document.querySelectorAll('.status-tab').forEach(el => el.classList.remove('active'));
+                        const savedStatusTab = document.getElementById(`st-${uData.status}`);
+                        if (savedStatusTab) savedStatusTab.classList.add('active');
+                    }
                 });
 
                 loadMyActiveChatsList();
 
-                // Слушатель входящих вызовов
                 db.ref(`userCalls/${user.uid}`).on('value', (snapshot) => {
                     const callData = snapshot.val();
                     if (callData && callData.type === "dialing") {
@@ -377,9 +471,8 @@
                         isCallHost = false;
                         isVideoCall = (callData.callType === 'video');
                         
-                        document.getElementById('audioPlaceholder').classList.toggle('hidden', isVideoCall);
                         openModal('callScreen');
-                        document.getElementById('callStatus').innerText = `${isVideoCall ? 'Видеозвонок' : 'Аудиозвонок'} от ${callData.callerName}`;
+                        document.getElementById('callStatus').innerText = `Вызов от ${callData.callerName}`;
                         document.getElementById('answerBtn').classList.remove('hidden');
                         
                         db.ref(`callRooms/${currentChatId}`).on('value', (roomSnap) => {
@@ -393,23 +486,61 @@
             }
         });
 
-        // ПАНЕЛЬ РАЗРАБОТЧИКА: Выдача галочек и ролей в базу данных
+        // УПРАВЛЕНИЕ ПРАВАМИ, УДАЛЕНИЕМ И БАНАМИ ПО ЖЕЛЕЗУ
         window.grantRole = async (role) => {
             const target = document.getElementById('adminTargetUser').value.trim().toLowerCase();
-            if(!target) return alert("Введите имя пользователя!");
+            if(!target) return alert("Введите никнейм цели!");
 
             const nameSnap = await db.ref(`usernames/${target}`).get();
-            if(!nameSnap.exists()) return alert("Юзер не найден!");
+            if(!nameSnap.exists()) return alert("Пользователь не найден.");
 
             const tUid = nameSnap.val();
-            if(role === 'badge') {
+            
+            if (role === 'badge') {
                 await db.ref(`users/${tUid}`).update({ hasVerifiedBadge: true });
-                alert(`Официальная зеленая галочка выдана пользователю @${target}!`);
-            } else if(role === 'gold') {
+                alert(`Галочка успешно выдана пользователю @${target}!`);
+            } else if (role === 'gold') {
                 await db.ref(`users/${tUid}`).update({ isSavaGold: true });
-                alert(`Подписка Sava Gold выдана @${target}!`);
+                alert(`Статус Sava Gold выдан @${target}!`);
+            } else if (role === 'dev') {
+                await db.ref(`users/${tUid}`).update({ isDeveloper: true });
+                alert(`Права Разработчика выданы @${target}!`);
+            } else if (role === 'delete') {
+                if(confirm(`Удалить все данные пользователя @${target}?`)) {
+                    await db.ref(`users/${tUid}`).remove();
+                    await db.ref(`usernames/${target}`).remove();
+                    alert(`Пользователь @${target} полностью стёрт из базы данных!`);
+                }
+            } else if (role === 'hardware_ban') {
+                const targetProfile = await db.ref(`users/${tUid}`).get();
+                const fp = targetProfile.val().fingerprint;
+                if (fp) {
+                    await db.ref(`banned_devices/${fp}`).set({ bannedUser: target, date: Date.now() });
+                    await db.ref(`users/${tUid}`).remove();
+                    await db.ref(`usernames/${target}`).remove();
+                    alert(`Пользователь @${target} забанен по ЖЕЛЕЗУ (Отпечаток: ${fp})!`);
+                } else {
+                    alert("У этого юзера старый профиль, отпечаток железа отсутствует.");
+                }
             }
             document.getElementById('adminTargetUser').value = "";
+        };
+
+        // ВЫДАЧА ГАЛОЧКИ КАНАЛУ
+        window.grantChannelBadge = async () => {
+            const channelName = document.getElementById('adminTargetChannel').value.trim().toLowerCase();
+            if(!channelName) return alert("Введите имя канала!");
+            await db.ref(`channels_info/channel_${channelName}`).set({ hasBadge: true });
+            alert(`Каналу 📢 ${channelName} успешно присвоена верификация!`);
+            document.getElementById('adminTargetChannel').value = "";
+        };
+
+        // ИЗМЕНЕНИЕ СТАТУСА (ИЗ АГЕНТА MAIL.RU)
+        window.changeStatus = async (statusName) => {
+            if (!localUser) return;
+            document.querySelectorAll('.status-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(`st-${statusName}`).classList.add('active');
+            await db.ref(`users/${localUser.uid}`).update({ status: statusName });
         };
 
         window.initChat = async (type) => {
@@ -418,9 +549,9 @@
 
             let id, label;
             if(type === 'private') {
-                if(target.toLowerCase() === localUsername.toLowerCase()) return alert("Нельзя создать чат с собой.");
+                if(target.toLowerCase() === localUsername.toLowerCase()) return alert("Чат с собой невозможен.");
                 const snap = await db.ref(`usernames/${target.toLowerCase()}`).get();
-                if(!snap.exists()) return alert("Пользователь не найден!");
+                if(!snap.exists()) return alert("Юзер не найден!");
                 id = [localUser.uid, snap.val()].sort().join('_');
                 label = `@${target}`;
             } else {
@@ -443,27 +574,34 @@
                 
                 const item = document.createElement('div');
                 item.className = 'chat-item';
-                item.innerHTML = `<div style="width:8px; height:8px; background:#74ae3e; border-radius:50%"></div> <div style="font-weight:bold; font-size:13px;">${info.title}</div>`;
-                item.onclick = () => {
-                    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
-                    item.classList.add('active');
-                    openChatRoom(chatId, info.title);
-                };
+                item.id = `item-${chatId}`;
+                item.innerHTML = `
+                    <div style="font-size:16px;">${info.type === 'private' ? '👤' : '📢'}</div>
+                    <div style="flex:1; font-weight:bold; font-size:12px; color:#333;">${info.title} <span class="chan-badge" id="badge-${chatId}"></span></div>
+                `;
+                item.onclick = () => openChatRoom(chatId, info.title);
                 container.appendChild(item);
+
+                // Отрисовка верификации канала
+                if(info.type === 'channel') {
+                    db.ref(`channels_info/${chatId}/hasBadge`).on('value', (bSnap) => {
+                        if(bSnap.val() === true) {
+                            const badgeSpan = document.getElementById(`badge-${chatId}`);
+                            if(badgeSpan) badgeSpan.innerHTML = `✓`;
+                            if(badgeSpan) badgeSpan.style.cssText = "color:#227ca8; font-weight:bold; margin-left:3px;";
+                        }
+                    });
+                }
             });
         }
 
         async function openChatRoom(id, title) {
             currentChatId = id;
             document.getElementById('chatTitle').innerText = title;
+            document.getElementById('chatRoomView').classList.remove('hidden');
             
             const isChannel = id.startsWith('channel_');
             document.getElementById('callActionBtns').classList.toggle('hidden', isChannel);
-
-            if(window.innerWidth <= 768) {
-                document.getElementById('app').classList.add('chat-active');
-                document.getElementById('backBtn').style.display = "block";
-            }
 
             if(currentChatRef) currentChatRef.off();
             const msgsBox = document.getElementById('chatBodyWrap');
@@ -477,26 +615,23 @@
                     const isMe = m.sender === localUser.uid;
                     box.className = `msg ${isMe ? 'sent' : 'received'}`;
                     
-                    const msgAva = m.avatar || defaultAva;
                     let authorStyle = "";
                     let badgeIcons = "";
                     
-                    // Динамическая подгрузка флага галочки автора из базы данных пользователей
                     const authorSnap = await db.ref(`users/${m.sender}`).get();
                     const authorData = authorSnap.val() || {};
 
                     if (authorData.hasVerifiedBadge) {
-                        badgeIcons += `<img src="https://png.pngtree.com/png-vector/20251117/ourmid/pngtree-green-circle-with-white-check-mark-symbol-png-image_17947677.webp" style="width:13px; height:13px; vertical-align:middle; margin-left:4px; object-fit:contain;" title="Верифицированный разработчик">`;
+                        badgeIcons += `<span style="color:#227ca8; font-weight:bold; margin-left:4px;" title="Разработчик">✓</span>`;
                     }
                     if (authorData.isSavaGold) {
-                        authorStyle = "color: #d35400; font-weight: bold;";
-                        badgeIcons += `<span style="vertical-align:middle; margin-left:2px; font-size:11px;" title="Sava Gold">👑</span>`;
+                        authorStyle = "color:#d35400; font-weight:bold;";
+                        badgeIcons += `<span style="margin-left:2px; font-size:11px;">👑</span>`;
                     }
 
                     box.innerHTML = `
-                        <img src="${msgAva}" class="msg-avatar" alt="">
                         <div class="msg-bubble">
-                            <b style="font-size:11px; display:inline-block; opacity:0.8; margin-bottom:2px; ${authorStyle}">${m.author}</b>${badgeIcons}
+                            <b style="font-size:11px; display:inline-block; opacity:0.7; ${authorStyle}">${m.author}</b>${badgeIcons}
                             <p style="word-break:break-word; margin-top:2px;">${m.text}</p>
                         </div>
                     `;
@@ -506,39 +641,60 @@
             });
         }
 
-        window.backToSidebar = () => document.getElementById('app').classList.remove('chat-active');
+        window.closeChatRoom = () => document.getElementById('chatRoomView').classList.add('hidden');
 
         window.postMessage = () => {
             const input = document.getElementById('msgInput');
-            if(!input.value.trim() || !currentChatId) return;
+            const txt = input.value.trim();
+            if(!txt || !currentChatId) return;
+
+            // ЖЕСТКИЙ БЛОК НА КАНАЛ SAVA_NEWS: писать может только @glebb
+            if (currentChatId === 'channel_sava_news' && localUsername !== 'glebb') {
+                alert("Ошибка! Доступ на публикацию в канале sava_news имеет только @glebb.");
+                input.value = "";
+                return;
+            }
 
             db.ref(`messages/${currentChatId}`).push({
                 sender: localUser.uid,
                 author: `@${localUsername}`,
-                avatar: localAvatar,
-                text: input.value.trim()
+                text: txt
             });
             input.value = "";
         };
 
-        // --- ИСПРАВЛЕННЫЕ ЗВОНКЫ БЕЗ ПОТЕРИ ЗВУКА ЧЕРЕЗ 5 СЕКУНД ---
+        // --- ИСПРАВЛЕННОЕ УПРАВЛЕНИЕ ЗВУКОМ / КАМЕРОЙ (ВКЛ / ВЫКЛ) ---
+        window.toggleMute = (type) => {
+            if (!window.webrtcLocalStream) return;
+            if (type === 'audio') {
+                micEnabled = !micEnabled;
+                window.webrtcLocalStream.getAudioTracks().forEach(track => track.enabled = micEnabled);
+                document.getElementById('micBtn').classList.toggle('muted', !micEnabled);
+            } else if (type === 'video') {
+                camEnabled = !camEnabled;
+                window.webrtcLocalStream.getVideoTracks().forEach(track => track.enabled = camEnabled);
+                document.getElementById('camBtn').classList.toggle('muted', !camEnabled);
+            }
+        };
+
         window.startCall = async (withVideo) => {
-            if (!currentChatId || currentChatId.startsWith('channel_')) return alert("Звонки доступны только в ЛС!");
             targetUserUid = currentChatId.split('_').find(id => id !== localUser.uid);
             if (!targetUserUid) return;
 
             isVideoCall = withVideo;
             isCallHost = true;
-            
-            document.getElementById('audioPlaceholder').classList.toggle('hidden', isVideoCall);
+            micEnabled = true; camEnabled = true;
+            document.getElementById('micBtn').classList.remove('muted');
+            document.getElementById('camBtn').classList.remove('muted');
+
             openModal('callScreen');
-            document.getElementById('callStatus').innerText = isVideoCall ? "Видеовызов..." : "Аудиовызов...";
+            document.getElementById('callStatus').innerText = "Вызов абонента...";
             document.getElementById('answerBtn').classList.add('hidden');
 
             try {
                 window.webrtcLocalStream = await navigator.mediaDevices.getUserMedia({ video: isVideoCall, audio: true });
                 document.getElementById('localVideo').srcObject = window.webrtcLocalStream;
-            } catch (err) { alert("Медиа устройства недоступны."); closeModal('callScreen'); return; }
+            } catch (err) { alert("Медиа недоступно."); closeModal('callScreen'); return; }
 
             initPeerConnection();
             const offerDescription = await window.webrtcPeerConnection.createOffer();
@@ -558,7 +714,7 @@
                 if (!room) { if (window.webrtcPeerConnection || window.webrtcLocalStream) stopCallTracks(); return; }
                 if (room.answer && window.webrtcPeerConnection && !window.webrtcPeerConnection.currentRemoteDescription) {
                     await window.webrtcPeerConnection.setRemoteDescription(new RTCSessionDescription(room.answer));
-                    document.getElementById('callStatus').innerText = "Разговор пошёл ⚡";
+                    document.getElementById('callStatus').innerText = "Разговор...";
                 }
             });
 
@@ -573,11 +729,7 @@
             document.getElementById('remoteVideo').srcObject = window.webrtcRemoteStream;
 
             window.webrtcLocalStream.getTracks().forEach(track => window.webrtcPeerConnection.addTrack(track, window.webrtcLocalStream));
-            
-            window.webrtcPeerConnection.ontrack = (event) => { 
-                event.streams[0].getTracks().forEach(track => window.webrtcRemoteStream.addTrack(track)); 
-            };
-            
+            window.webrtcPeerConnection.ontrack = (event) => { event.streams[0].getTracks().forEach(track => window.webrtcRemoteStream.addTrack(track)); };
             window.webrtcPeerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     const path = `callRooms/${currentChatId}/${isCallHost ? 'callerCandidates' : 'calleeCandidates'}`;
@@ -589,11 +741,12 @@
         window.acceptCall = async () => {
             document.getElementById('callStatus').innerText = "Соединение...";
             document.getElementById('answerBtn').classList.add('hidden');
+            micEnabled = true; camEnabled = true;
 
             try {
                 window.webrtcLocalStream = await navigator.mediaDevices.getUserMedia({ video: isVideoCall, audio: true });
                 document.getElementById('localVideo').srcObject = window.webrtcLocalStream;
-            } catch (err) { alert("Медиа устройства недоступны."); window.hangUp(); return; }
+            } catch (err) { alert("Камера/микрофон недоступны."); window.hangUp(); return; }
 
             initPeerConnection();
 
@@ -605,10 +758,8 @@
             const answerDescription = await window.webrtcPeerConnection.createAnswer();
             await window.webrtcPeerConnection.setLocalDescription(answerDescription);
 
-            await db.ref(`callRooms/${currentChatId}`).update({
-                answer: { sdp: answerDescription.sdp, type: answerDescription.type }, status: "connected"
-            });
-            document.getElementById('callStatus').innerText = "Разговор пошёл ⚡";
+            await db.ref(`callRooms/${currentChatId}`).update({ answer: { sdp: answerDescription.sdp, type: answerDescription.type }, status: "connected" });
+            document.getElementById('callStatus').innerText = "Разговор...";
 
             db.ref(`callRooms/${currentChatId}/callerCandidates`).on('child_added', (snapshot) => {
                 if (snapshot.exists() && window.webrtcPeerConnection) window.webrtcPeerConnection.addIceCandidate(new RTCIceCandidate(snapshot.val()));
@@ -627,11 +778,6 @@
         };
 
         function stopCallTracks() {
-            if (currentChatId) {
-                db.ref(`callRooms/${currentChatId}`).off();
-                db.ref(`callRooms/${currentChatId}/callerCandidates`).off();
-                db.ref(`callRooms/${currentChatId}/calleeCandidates`).off();
-            }
             if (window.webrtcPeerConnection) { window.webrtcPeerConnection.close(); window.webrtcPeerConnection = null; }
             if (window.webrtcLocalStream) { window.webrtcLocalStream.getTracks().forEach(track => track.stop()); window.webrtcLocalStream = null; }
             document.getElementById('localVideo').srcObject = null;
@@ -639,38 +785,40 @@
             closeModal('callScreen');
         }
 
+        // НАВИГАЦИЯ ВКЛАДОК (НИЖНИЙ БАР ИЗ image_5.png)
+        window.switchTab = (tabName) => {
+            document.querySelectorAll('.screen-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`screen-${tabName}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabName}`).classList.add('active');
+        };
+
         // --- ЛОГИКА МИНИ-ИГРЫ ---
         window.openGame = () => {
-            openModal('gameModal');
-            myGameHp = 100;
-            document.getElementById('myHpDisplay').innerText = myGameHp;
-
+            openModal('gameModal'); myGameHp = 100; document.getElementById('myHpDisplay').innerText = myGameHp;
             db.ref(`game/players/${localUser.uid}`).set({ username: localUsername, x: myGameX, y: myGameY, color: myGameColor, hp: myGameHp });
             db.ref('game/players').on('value', (s) => { onlinePlayers = s.val() || {}; });
             db.ref('game/boss').on('value', (s) => {
                 const data = s.val() || { level: 1, hp: 100 };
                 gameLevel = data.level; bossHp = data.hp; bossMaxHp = data.level * 200;
-                document.getElementById('gameLevelDisplay').innerText = `⚔️ Командный Босс (Уровень ${gameLevel})`;
+                document.getElementById('gameLevelDisplay').innerText = `⚔️ Босс (Уровень ${gameLevel})`;
                 document.getElementById('bossHpDisplay').innerText = `${bossHp}/${bossMaxHp}`;
             });
 
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-
+            const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
             gameLoopInterval = setInterval(() => {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                let bSize = 40 + gameLevel * 5;
-                let bx = 150 + Math.sin(Date.now() / 800) * 100;
-                let by = 60 + Math.cos(Date.now() / 1000) * 30;
+                let bSize = 35 + gameLevel * 4;
+                let bx = 140 + Math.sin(Date.now() / 700) * 80;
+                let by = 50 + Math.cos(Date.now() / 900) * 20;
 
-                ctx.fillStyle = '#c92a2a'; ctx.fillRect(bx, by, bSize, bSize);
-                ctx.strokeStyle = '#fff'; ctx.strokeRect(bx, by, bSize, bSize);
-
+                ctx.fillStyle = '#e74c3c'; ctx.fillRect(bx, by, bSize, bSize);
                 Object.keys(onlinePlayers).forEach(uid => {
                     const p = onlinePlayers[uid];
                     if(p.hp > 0) {
-                        ctx.fillStyle = p.color || '#74ae3e'; ctx.fillRect(p.x, p.y, 14, 14);
-                        ctx.fillStyle = '#fff'; ctx.font = '10px Arial'; ctx.fillText(p.username, p.x - 10, p.y - 4);
+                        ctx.fillStyle = p.color || '#3a97cf'; ctx.fillRect(p.x, p.y, 12, 12);
+                        ctx.fillStyle = '#222'; ctx.font = '9px Arial'; ctx.fillText(p.username, p.x - 8, p.y - 3);
                     }
                 });
                 window.currentBossCoordinates = { x: bx, y: by, size: bSize };
@@ -679,51 +827,37 @@
 
         window.movePlayer = (dx, dy) => {
             if (myGameHp <= 0) return;
-            myGameX = Math.max(5, Math.min(370, myGameX + dx));
-            myGameY = Math.max(5, Math.min(200, myGameY + dy));
+            myGameX = Math.max(5, Math.min(340, myGameX + dx)); myGameY = Math.max(5, Math.min(180, myGameY + dy));
             db.ref(`game/players/${localUser.uid}`).update({ x: myGameX, y: myGameY });
         };
 
         window.gameAttack = () => {
-            if(myGameHp <= 0) return alert("Вы мертвы! Восстановите силы.");
-            if(!window.currentBossCoordinates) return;
+            if(myGameHp <= 0 || !window.currentBossCoordinates) return;
             const b = window.currentBossCoordinates;
-            
-            if(myGameX + 14 >= b.x && myGameX <= b.x + b.size && myGameY + 14 >= b.y && myGameY <= b.y + b.size) {
+            if(myGameX + 12 >= b.x && myGameX <= b.x + b.size && myGameY + 12 >= b.y && myGameY <= b.y + b.size) {
                 db.ref('game/boss').transaction((current) => {
                     if(!current) current = { level: 1, hp: 100 };
-                    current.hp -= 20;
+                    current.hp -= 25;
                     if(current.hp <= 0) { current.level += 1; current.hp = current.level * 200; }
                     return current;
                 });
-                myGameHp = Math.max(0, myGameHp - 15);
-                document.getElementById('myHpDisplay').innerText = myGameHp;
+                myGameHp = Math.max(0, myGameHp - 10); document.getElementById('myHpDisplay').innerText = myGameHp;
                 db.ref(`game/players/${localUser.uid}`).update({ hp: myGameHp });
             } else { alert("Подойдите вплотную к квадрату Босса!"); }
         };
 
-        window.gameHeal = () => {
-            myGameHp = Math.min(100, myGameHp + 25);
-            document.getElementById('myHpDisplay').innerText = myGameHp;
-            db.ref(`game/players/${localUser.uid}`).update({ hp: myGameHp });
-        };
-
-        window.closeGame = () => {
-            closeModal('gameModal');
-            if(gameLoopInterval) clearInterval(gameLoopInterval);
-            db.ref('game/players').off(); db.ref('game/boss').off();
-            if(localUser) db.ref(`game/players/${localUser.uid}`).remove();
-        };
+        window.gameHeal = () => { myGameHp = Math.min(100, myGameHp + 20); document.getElementById('myHpDisplay').innerText = myGameHp; db.ref(`game/players/${localUser.uid}`).update({ hp: myGameHp }); };
+        window.closeGame = () => { closeModal('gameModal'); if(gameLoopInterval) clearInterval(gameLoopInterval); db.ref('game/players').off(); db.ref('game/boss').off(); if(localUser) db.ref(`game/players/${localUser.uid}`).remove(); };
 
         window.saveSettings = async () => {
-            const newNick = document.getElementById('settingsNameInput').value.trim().replace('@', '');
+            const newNick = document.getElementById('settingsNameInput').value.trim().toLowerCase().replace('@', '');
             if(!newNick) return alert("Никнейм пуст!");
 
-            if(newNick.toLowerCase() !== localUsername.toLowerCase()) {
-                const nameCheck = await db.ref(`usernames/${newNick.toLowerCase()}`).get();
+            if(newNick !== localUsername) {
+                const nameCheck = await db.ref(`usernames/${newNick}`).get();
                 if(nameCheck.exists()) return alert("Никнейм занят!");
-                await db.ref(`usernames/${localUsername.toLowerCase()}`).set(null);
-                await db.ref(`usernames/${newNick.toLowerCase()}`).set(localUser.uid);
+                await db.ref(`usernames/${localUsername}`).set(null);
+                await db.ref(`usernames/${newNick}`).set(localUser.uid);
                 await db.ref(`users/${localUser.uid}`).update({ username: newNick });
             }
 
@@ -733,30 +867,30 @@
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = async () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 64; canvas.height = 64;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, 64, 64);
+                        const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64;
+                        canvas.getContext('2d').drawImage(img, 0, 0, 64, 64);
                         localAvatar = canvas.toDataURL('image/jpeg', 0.8);
                         await db.ref(`users/${localUser.uid}`).update({ avatar: localAvatar });
-                        document.getElementById('myAvatarDisplay').src = localAvatar;
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
-            closeModal('settingsModal');
+            alert("Настройки сохранены!");
         };
 
         document.getElementById('msgInput').addEventListener('keydown', e => { if(e.key === 'Enter') postMessage(); });
         window.addEventListener('keydown', (e) => {
             if (!document.getElementById('gameModal').classList.contains('hidden')) {
-                if(e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -12);
-                if(e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 12);
-                if(e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-12, 0);
-                if(e.key === 'ArrowRight' || e.key === 'd') movePlayer(12, 0);
+                if(e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -10);
+                if(e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 10);
+                if(e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-10, 0);
+                if(e.key === 'ArrowRight' || e.key === 'd') movePlayer(10, 0);
             }
         });
+        
+        // Автоматическая проверка бана устройства при открытии
+        checkHardwareBan();
     </script>
 </body>
 </html>
