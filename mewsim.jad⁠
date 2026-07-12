@@ -1,7 +1,7 @@
 MIDlet-Name: МяуСим Котовасия
 MIDlet-Version: 1.0.0
 MIDlet-Vendor: Dynamic Pixels
-MIDlet-Jar-URL: meowsim.jar
+MIDlet-Jar-URL: mewsim.jar
 MIDlet-Jar-Size: 554520
 MicroEdition-Profile: MIDP-2.0
 MicroEdition-Configuration: CLDC-1.1
