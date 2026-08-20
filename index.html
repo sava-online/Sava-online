@@ -1,25 +1,2070 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>WAP Загрузка</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<title>YouTube 2016 — Client</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    min-height: 100%;
+}
+
+body {
+    font-family: Arial, Roboto, Helvetica, sans-serif;
+    background: #f1f1f1;
+    color: #333;
+    font-size: 13px;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+header {
+    height: 50px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.menu-button {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-button:hover {
+    background: #f1f1f1;
+}
+
+.menu-icon {
+    width: 20px;
+    height: 20px;
+    fill: #555;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.logo-svg {
+    width: 105px;
+    height: 28px;
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+.search-box {
+    display: flex;
+    flex: 1;
+    max-width: 610px;
+    margin: 0 auto;
+    height: 30px;
+}
+
+.search-box input {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    padding: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 2px 0 0 2px;
+    background: #fff;
+    color: #333;
+    font-size: 13px;
+    outline: none;
+}
+
+.search-box input:focus {
+    border-color: #167ac6;
+    box-shadow: inset 0 0 2px rgba(22, 122, 198, .3);
+}
+
+.search-box button {
+    width: 64px;
+    height: 30px;
+    border: 1px solid #ccc;
+    border-left: none;
+    background: #f8f8f8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-box button:hover {
+    background: #eee;
+}
+
+.search-icon {
+    width: 16px;
+    height: 16px;
+    fill: #555;
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.layout {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+aside {
+    width: 180px;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #ddd;
+    min-height: calc(100vh - 50px);
+    padding-top: 8px;
+    transition: width .2s ease;
+}
+
+aside.collapsed {
+    width: 58px;
+}
+
+aside.collapsed .nav-text,
+aside.collapsed .sidebar-title {
+    display: none;
+}
+
+aside.collapsed .nav-item {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sidebar-title {
+    padding: 12px 14px 6px;
+    color: #999;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.nav-item {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 14px;
+    color: #444;
+    text-decoration: none;
+    font-size: 12px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: background .15s;
+}
+
+.nav-item:hover {
+    background: #f5f5f5;
+}
+
+.nav-item.active {
+    background: #e9e9e9;
+    border-left-color: #cc181e;
+    color: #222;
+    font-weight: bold;
+}
+
+.nav-item svg {
+    width: 18px;
+    height: 18px;
+    fill: #666;
+    flex-shrink: 0;
+}
+
+.nav-item.active svg {
+    fill: #cc181e;
+}
+
+/* =========================
+   MAIN
+========================= */
+
+main {
+    flex: 1;
+    min-width: 0;
+    padding: 18px;
+}
+
+/* =========================
+   HOME
+========================= */
+
+.page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.page-title {
+    font-size: 18px;
+    font-weight: normal;
+    color: #222;
+}
+
+.search-info {
+    color: #999;
+    font-size: 11px;
+}
+
+/* =========================
+   VIDEO GRID
+========================= */
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 18px 14px;
+}
+
+.video-card {
+    background: transparent;
+    cursor: pointer;
+    min-width: 0;
+    transition: transform .12s ease;
+}
+
+.video-card:hover {
+    transform: translateY(-2px);
+}
+
+.thumbnail-wrapper {
+    position: relative;
+    width: 100%;
+    background: #ddd;
+    overflow: hidden;
+}
+
+.video-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+
+.video-duration {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    background: rgba(0,0,0,.85);
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 4px;
+    font-weight: bold;
+}
+
+.video-info {
+    padding-top: 7px;
+}
+
+.video-card .title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.3;
+    height: 34px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.video-card:hover .title {
+    color: #167ac6;
+}
+
+.video-card .meta {
+    font-size: 11px;
+    color: #777;
+    line-height: 1.5;
+}
+
+.video-card .channel {
+    color: #555;
+}
+
+.video-card .date {
+    color: #999;
+}
+
+/* =========================
+   LOADING
+========================= */
+
+.loading {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+}
+
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid #ddd;
+    border-top-color: #cc181e;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================
+   EMPTY / ERROR
+========================= */
+
+.message-box {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 30px;
+    text-align: center;
+    color: #777;
+}
+
+.message-box strong {
+    display: block;
+    color: #444;
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+.error-box {
+    border-left: 4px solid #cc181e;
+}
+
+/* =========================
+   WATCH PAGE
+========================= */
+
+#watch-page {
+    display: none;
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 12px;
+    color: #167ac6;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.back-btn:hover {
+    text-decoration: underline;
+}
+
+.watch-container {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 14px;
+}
+
+.player-box {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
+}
+
+.player-box iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* =========================
+   VIDEO DETAILS
+========================= */
+
+.video-title {
+    font-size: 18px;
+    font-weight: normal;
+    line-height: 1.35;
+    color: #222;
+    margin: 13px 0 9px;
+}
+
+.video-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    color: #777;
+    font-size: 11px;
+}
+
+.stats-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.like-dislike-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.likes-count {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.like-btn,
+.dislike-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #666;
+}
+
+.like-btn svg,
+.dislike-btn svg {
+    width: 15px;
+    height: 15px;
+    fill: #666;
+}
+
+.like-dislike-bar {
+    width: 150px;
+    height: 3px;
+    background: #ddd;
+}
+
+.like-fill {
+    height: 100%;
+    background: #167ac6;
+    width: 50%;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.video-actions {
+    display: flex;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.action-btn {
+    border: 1px solid #ccc;
+    background: #f8f8f8;
+    color: #555;
+    padding: 7px 12px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.action-btn:hover {
+    background: #eee;
+}
+
+.action-btn.active {
+    color: #cc181e;
+}
+
+/* =========================
+   DESCRIPTION
+========================= */
+
+.description {
+    padding: 14px 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #555;
+    white-space: pre-line;
+}
+
+.description-title {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+/* =========================
+   TOAST
+========================= */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 25px;
+    transform: translateX(-50%) translateY(20px);
+    background: #333;
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: all .25s;
+    z-index: 5000;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 800px) {
+
+    header {
+        padding: 0 9px;
+    }
+
+    .header-left {
+        gap: 7px;
+    }
+
+    .logo-svg {
+        width: 92px;
+    }
+
+    .search-box {
+        margin-left: 8px;
+    }
+
+    aside {
+        position: fixed;
+        left: 0;
+        top: 50px;
+        bottom: 0;
+        z-index: 900;
+        transform: translateX(-100%);
+        transition: transform .2s ease;
+        box-shadow: 3px 0 10px rgba(0,0,0,.12);
+    }
+
+    aside.mobile-open {
+        transform: translateX(0);
+    }
+
+    main {
+        width: 100%;
+        padding: 12px;
+    }
+
+    .video-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 15px 10px;
+    }
+
+    .video-card .title {
+        font-size: 12px;
+    }
+
+    .video-title {
+        font-size: 16px;
+    }
+
+    .video-stats {
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .search-box button {
+        width: 45px;
+    }
+
+    .search-box input {
+        font-size: 12px;
+    }
+
+    .video-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .video-card .title {
+        height: auto;
+        max-height: 34px;
+    }
+
+    .watch-container {
+        padding: 8px;
+    }
+
+    .video-actions {
+        flex-wrap: wrap;
+    }
+}
+</style>
 </head>
-<body bgcolor="#ffffff" text="#000000">
-    <center>
-        <h2>WAP ЗОНА</h2>
-        <hr>
-        <p><b>МяуСим: Котовасия</b></p>
-        
-        <!-- Вот эта ссылка сразу начнет скачивание JAD файла из твоего репозитория -->
-        <a href="mewsim.jad">📥 СКАЧАТЬ ИГРУ (JAD)</a>
-        
-        <br><br>
-        
-        <!-- На всякий случай прямая ссылка на сам JAR файл -->
-        <a href="mewsim.jar">📥 СКАЧАТЬ НАПРЯМУЮ (JAR)</a>
-        
-        <hr>
-        <small>Сайт для старых телефонов</small>
-    </center>
+
+<body>
+
+<header>
+
+    <div class="header-left">
+
+        <button class="menu-button" id="menuButton" title="Меню">
+            <svg class="menu-icon" viewBox="0 0 24 24">
+                <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+            </svg>
+        </button>
+
+        <a href="#" class="logo-container" onclick="showHome(); return false;">
+
+            <svg class="logo-svg" viewBox="0 0 120 30">
+
+                <rect
+                    x="0"
+                    y="4"
+                    width="43"
+                    height="23"
+                    rx="6"
+                    fill="#cc181e"
+                />
+
+                <polygon
+                    points="17,9 17,22 29,15.5"
+                    fill="#fff"
+                />
+
+                <text
+                    x="48"
+                    y="21"
+                    font-family="Arial"
+                    font-weight="bold"
+                    font-size="16"
+                    fill="#222"
+                >
+                    YouTube
+                </text>
+
+            </svg>
+
+        </a>
+
+    </div>
+
+
+    <div class="search-box">
+
+        <input
+            type="text"
+            id="query"
+            placeholder="Поиск"
+            autocomplete="off"
+        >
+
+        <button id="searchButton" title="Поиск">
+
+            <svg
+                class="search-icon"
+                viewBox="0 0 24 24"
+            >
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5
+                16 5.91 13.09 3 9.5 3S3 5.91 3 9.5
+                5.91 16 9.5 16c1.61 0 3.09-.59
+                4.23-1.57l.27.28v.79l5 4.99
+                L20.49 19l-4.99-5zM9.5 14
+                C7.01 14 5 11.99 5 9.5S7.01
+                5 9.5 5 14 7.01 14 9.5
+                11.99 14 9.5 14z"/>
+            </svg>
+
+        </button>
+
+    </div>
+
+</header>
+
+
+<div class="layout">
+
+    <aside id="sidebar">
+
+        <div class="sidebar-title">Навигация</div>
+
+        <a
+            href="#"
+            class="nav-item active"
+            data-page="home"
+            onclick="showHome(); return false;"
+        >
+
+            <svg viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+
+            <span class="nav-text">Главная</span>
+
+        </a>
+
+
+        <a
+            href="#"
+            class="nav-item"
+            onclick="showSubscriptions(); return false;"
+        >
+
+            <svg viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+
+            <span class="nav-text">Подписки</span>
+
+        </a>
+
+
+        <a
+            href="#"
+            class="nav-item"
+            onclick="showHistory(); return false;"
+        >
+
+            <svg viewBox="0 0 24 24">
+                <path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14
+                L9 12H6a7 7 0 1 1 2.05 4.95L6.64
+                18.36A9 9 0 1 0 13 3zm-1
+                5v5l4.25 2.52.75-1.23-3.5-2.08V8H12z"/>
+            </svg>
+
+            <span class="nav-text">История</span>
+
+        </a>
+
+
+        <div class="sidebar-title">Аккаунт</div>
+
+
+        <a
+            href="#"
+            class="nav-item"
+            onclick="showMessage('Раздел профиля пока находится в разработке'); return false;"
+        >
+
+            <svg viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79
+                4-4s-1.79-4-4-4-4 1.79-4
+                4 1.79 4 4 4zm0 2c-2.67
+                0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+
+            <span class="nav-text">Мой канал</span>
+
+        </a>
+
+    </aside>
+
+
+    <main>
+
+        <!-- HOME -->
+
+        <section id="home-page">
+
+            <div class="page-header">
+
+                <h1 class="page-title">
+                    Рекомендованные видео
+                </h1>
+
+                <span
+                    class="search-info"
+                    id="searchInfo"
+                ></span>
+
+            </div>
+
+
+            <div
+                class="video-grid"
+                id="grid"
+            >
+
+                <div class="loading">
+
+                    <div class="spinner"></div>
+
+                    Загрузка видео...
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- WATCH -->
+
+        <section id="watch-page">
+
+            <a
+                class="back-btn"
+                href="#"
+                onclick="showHome(); return false;"
+            >
+                ← Назад
+            </a>
+
+
+            <div class="watch-container">
+
+                <div
+                    class="player-box"
+                    id="player-holder"
+                ></div>
+
+
+                <h1
+                    class="video-title"
+                    id="v-title"
+                ></h1>
+
+
+                <div class="video-stats">
+
+                    <div class="stats-left">
+
+                        <span id="v-views">
+                            -- просмотров
+                        </span>
+
+                        <span id="v-date">
+                            --
+                        </span>
+
+                    </div>
+
+
+                    <div class="like-dislike-container">
+
+                        <div class="likes-count">
+
+                            <div class="like-btn">
+
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2
+                                    h-6.31l.95-4.57.03-.32c0-.41-.17-.79
+                                    -.44-1.06L14.17 1 7.58 7.59C7.22
+                                    7.95 7 8.45 7 9v10c0 1.1.9 2
+                                    2 2h9c.83 0 1.54-.5
+                                    1.84-1.22l3.02-7.05c.09-.23
+                                    .14-.47.14-.73v-1.91l-.01-.01
+                                    L23 10z"/>
+                                </svg>
+
+                                <span id="v-likes">--</span>
+
+                            </div>
+
+
+                            <div class="dislike-btn">
+
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M15 3H6c-.83 0-1.54.5-1.84
+                                    1.22l-3.02 7.05c-.09.23-.14
+                                    .47-.14.73v1.91l.01.01
+                                    L1 14c0 1.1.9 2 2
+                                    2h6.31l-.95 4.57-.03
+                                    3.2c0 .41.17.79.44
+                                    1.06L9.83 23l6.59-6.59c.36
+                                    -.36.58-.86.58-1.41V5c0
+                                    -1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
+                                </svg>
+
+                                <span id="v-dislikes">--</span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="like-dislike-bar">
+
+                            <div
+                                class="like-fill"
+                                id="like-rate"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="video-actions">
+
+                    <button
+                        class="action-btn"
+                        id="likeAction"
+                        onclick="likeVideo()"
+                    >
+                        Нравится
+                    </button>
+
+                    <button
+                        class="action-btn"
+                        onclick="shareVideo()"
+                    >
+                        Поделиться
+                    </button>
+
+                    <button
+                        class="action-btn"
+                        onclick="copyVideoLink()"
+                    >
+                        Скопировать ссылку
+                    </button>
+
+                </div>
+
+
+                <div class="description">
+
+                    <div class="description-title">
+                        О видео
+                    </div>
+
+                    <div id="v-description">
+                        Описание отсутствует.
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<div
+    class="toast"
+    id="toast"
+></div>
+
+
+<script>
+
+/* =========================================
+   НАСТРОЙКИ
+========================================= */
+
+const API_KEY =
+    'AIzaSyCiYIGqaTrcb6_pcu4bS2PkUabj6liKgjw';
+
+const API_URL =
+    'https://www.googleapis.com/youtube/v3/';
+
+
+let currentVideoId = null;
+
+let currentVideoUrl = '';
+
+let searchTimeout = null;
+
+
+/* =========================================
+   ELEMENTS
+========================================= */
+
+const grid =
+    document.getElementById('grid');
+
+const queryInput =
+    document.getElementById('query');
+
+const sidebar =
+    document.getElementById('sidebar');
+
+const menuButton =
+    document.getElementById('menuButton');
+
+
+/* =========================================
+   MENU
+========================================= */
+
+menuButton.addEventListener('click', () => {
+
+    if (window.innerWidth <= 800) {
+
+        sidebar.classList.toggle('mobile-open');
+
+    } else {
+
+        sidebar.classList.toggle('collapsed');
+
+    }
+
+});
+
+
+/* =========================================
+   SEARCH BUTTON
+========================================= */
+
+document
+    .getElementById('searchButton')
+    .addEventListener('click', searchVideos);
+
+
+/* =========================================
+   ENTER SEARCH
+========================================= */
+
+queryInput.addEventListener('keydown', event => {
+
+    if (event.key === 'Enter') {
+
+        event.preventDefault();
+
+        searchVideos();
+
+    }
+
+});
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+async function searchVideos() {
+
+    const q =
+        queryInput.value.trim() || 'Омское ТВ';
+
+    showLoading();
+
+    document.getElementById('searchInfo').textContent =
+        'Поиск: ' + q;
+
+    try {
+
+        const url =
+            API_URL +
+            'search?part=snippet' +
+            '&type=video' +
+            '&maxResults=24' +
+            '&order=relevance' +
+            '&publishedBefore=2017-01-01T00:00:00Z' +
+            '&q=' +
+            encodeURIComponent(q) +
+            '&key=' +
+            encodeURIComponent(API_KEY);
+
+
+        const response =
+            await fetch(url);
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || data.error) {
+
+            throw new Error(
+                data.error?.message ||
+                'Ошибка YouTube API'
+            );
+
+        }
+
+
+        if (!data.items || data.items.length === 0) {
+
+            showEmpty();
+
+            return;
+
+        }
+
+
+        renderGrid(data.items);
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        showError(error.message);
+
+    }
+
+}
+
+
+/* =========================================
+   LOADING
+========================================= */
+
+function showLoading() {
+
+    grid.innerHTML = `
+
+        <div class="loading">
+
+            <div class="spinner"></div>
+
+            Ищем видео...
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================
+   EMPTY
+========================================= */
+
+function showEmpty() {
+
+    grid.innerHTML = `
+
+        <div class="message-box">
+
+            <strong>Ничего не найдено</strong>
+
+            Попробуйте изменить поисковый запрос.
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================
+   ERROR
+========================================= */
+
+function showError(message) {
+
+    grid.innerHTML = `
+
+        <div class="message-box error-box">
+
+            <strong>Не удалось загрузить видео</strong>
+
+            ${escapeHTML(message)}
+
+            <br><br>
+
+            Проверьте API-ключ или интернет-соединение.
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================
+   RENDER GRID
+========================================= */
+
+function renderGrid(items) {
+
+    showHome(false);
+
+    grid.innerHTML = '';
+
+
+    items.forEach(item => {
+
+        if (!item.id || !item.id.videoId) {
+            return;
+        }
+
+
+        const id =
+            item.id.videoId;
+
+        const snippet =
+            item.snippet;
+
+
+        const card =
+            document.createElement('article');
+
+        card.className =
+            'video-card';
+
+
+        const thumbnail =
+            snippet.thumbnails?.medium?.url ||
+            snippet.thumbnails?.default?.url ||
+            '';
+
+
+        const title =
+            escapeHTML(snippet.title);
+
+
+        const channel =
+            escapeHTML(snippet.channelTitle);
+
+
+        const date =
+            formatDate(snippet.publishedAt);
+
+
+        card.innerHTML = `
+
+            <div class="thumbnail-wrapper">
+
+                <img
+                    src="${thumbnail}"
+                    alt=""
+                    loading="lazy"
+                >
+
+            </div>
+
+            <div class="video-info">
+
+                <div class="title">
+                    ${title}
+                </div>
+
+                <div class="meta">
+
+                    <div class="channel">
+                        ${channel}
+                    </div>
+
+                    <div class="date">
+                        ${date}
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        card.addEventListener(
+            'click',
+            () => openVideo(
+                id,
+                snippet.title,
+                snippet.description,
+                snippet.publishedAt
+            )
+        );
+
+
+        grid.appendChild(card);
+
+    });
+
+}
+
+
+/* =========================================
+   OPEN VIDEO
+========================================= */
+
+async function openVideo(
+    id,
+    title,
+    description = '',
+    publishedAt = ''
+) {
+
+    currentVideoId =
+        id;
+
+    currentVideoUrl =
+        'https://www.youtube.com/watch?v=' + id;
+
+
+    document.getElementById('home-page')
+        .style.display = 'none';
+
+
+    document.getElementById('watch-page')
+        .style.display = 'block';
+
+
+    document.getElementById('v-title')
+        .textContent = title;
+
+
+    document.getElementById('v-description')
+        .textContent =
+        description ||
+        'Описание отсутствует.';
+
+
+    document.getElementById('v-date')
+        .textContent =
+        formatDate(publishedAt);
+
+
+    const holder =
+        document.getElementById('player-holder');
+
+
+    holder.innerHTML = `
+
+        <iframe
+
+            src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0"
+
+            title="${escapeHTML(title)}"
+
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+
+            allowfullscreen>
+
+        </iframe>
+
+    `;
+
+
+    document
+        .getElementById('v-views')
+        .textContent = 'Загрузка статистики...';
+
+
+    document
+        .getElementById('v-likes')
+        .textContent = '--';
+
+
+    document
+        .getElementById('v-dislikes')
+        .textContent = '--';
+
+
+    document
+        .getElementById('like-rate')
+        .style.width = '50%';
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+
+
+    addToHistory({
+        id,
+        title,
+        thumbnail:
+            'https://i.ytimg.com/vi/' +
+            id +
+            '/mqdefault.jpg'
+    });
+
+
+    history.pushState(
+        {
+            video: id
+        },
+        '',
+        '#watch/' + id
+    );
+
+
+    await fetchVideoStatistics(id);
+
+}
+
+
+/* =========================================
+   STATISTICS
+========================================= */
+
+async function fetchVideoStatistics(id) {
+
+    try {
+
+        const youtubeUrl =
+            API_URL +
+            'videos?part=statistics,snippet' +
+            '&id=' +
+            encodeURIComponent(id) +
+            '&key=' +
+            encodeURIComponent(API_KEY);
+
+
+        const response =
+            await fetch(youtubeUrl);
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.ok &&
+            data.items &&
+            data.items.length
+        ) {
+
+            const video =
+                data.items[0];
+
+
+            const statistics =
+                video.statistics;
+
+
+            const views =
+                Number(
+                    statistics.viewCount || 0
+                );
+
+
+            const likes =
+                Number(
+                    statistics.likeCount || 0
+                );
+
+
+            document
+                .getElementById('v-views')
+                .textContent =
+                views.toLocaleString('ru-RU') +
+                ' просмотров';
+
+
+            document
+                .getElementById('v-likes')
+                .textContent =
+                likes.toLocaleString('ru-RU');
+
+
+        } else {
+
+            document
+                .getElementById('v-views')
+                .textContent =
+                'Статистика недоступна';
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        document
+            .getElementById('v-views')
+            .textContent =
+            'Статистика недоступна';
+
+    }
+
+
+    /*
+        Возвращаем дизлайки через
+        Return YouTube Dislike.
+    */
+
+    try {
+
+        const response =
+            await fetch(
+                'https://returnyoutubedislikeapi.com/votes?videoId=' +
+                encodeURIComponent(id)
+            );
+
+
+        if (!response.ok) {
+            throw new Error('RYD error');
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const likes =
+            Number(data.likes || 0);
+
+
+        const dislikes =
+            Number(data.dislikes || 0);
+
+
+        document
+            .getElementById('v-likes')
+            .textContent =
+            likes.toLocaleString('ru-RU');
+
+
+        document
+            .getElementById('v-dislikes')
+            .textContent =
+            dislikes.toLocaleString('ru-RU');
+
+
+        const total =
+            likes + dislikes;
+
+
+        const percent =
+            total > 0
+                ? (likes / total) * 100
+                : 50;
+
+
+        document
+            .getElementById('like-rate')
+            .style.width =
+            percent + '%';
+
+    }
+
+    catch (error) {
+
+        console.log(
+            'Дизлайки недоступны'
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   HOME
+========================================= */
+
+function showHome(clear = false) {
+
+    document.getElementById('home-page')
+        .style.display = 'block';
+
+
+    document.getElementById('watch-page')
+        .style.display = 'none';
+
+
+    document.getElementById('player-holder')
+        .innerHTML = '';
+
+
+    setActiveNav('home');
+
+
+    if (window.innerWidth <= 800) {
+        sidebar.classList.remove('mobile-open');
+    }
+
+
+    if (clear) {
+        grid.innerHTML = '';
+    }
+
+}
+
+
+/* =========================================
+   SUBSCRIPTIONS
+========================================= */
+
+function showSubscriptions() {
+
+    document.getElementById('home-page')
+        .style.display = 'block';
+
+
+    document.getElementById('watch-page')
+        .style.display = 'none';
+
+
+    setActiveNav(null);
+
+
+    grid.innerHTML = `
+
+        <div class="message-box">
+
+            <strong>Подписки</strong>
+
+            В этом клиенте раздел подписок
+            пока находится в разработке.
+
+        </div>
+
+    `;
+
+
+    document.getElementById('searchInfo')
+        .textContent = '';
+
+}
+
+
+/* =========================================
+   HISTORY
+========================================= */
+
+function showHistory() {
+
+    document.getElementById('home-page')
+        .style.display = 'block';
+
+
+    document.getElementById('watch-page')
+        .style.display = 'none';
+
+
+    setActiveNav(null);
+
+
+    const historyItems =
+        getHistory();
+
+
+    if (!historyItems.length) {
+
+        grid.innerHTML = `
+
+            <div class="message-box">
+
+                <strong>История пуста</strong>
+
+                Здесь появятся видео,
+                которые вы открывали.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const fakeItems =
+        historyItems.map(item => ({
+
+            id: {
+                videoId: item.id
+            },
+
+            snippet: {
+
+                title: item.title,
+
+                channelTitle:
+                    'История просмотра',
+
+                publishedAt:
+                    '',
+
+                thumbnails: {
+
+                    medium: {
+
+                        url:
+                            item.thumbnail
+
+                    }
+
+                }
+
+            }
+
+        }));
+
+
+    renderGrid(fakeItems);
+
+}
+
+
+/* =========================================
+   NAV
+========================================= */
+
+function setActiveNav(page) {
+
+    document
+        .querySelectorAll('.nav-item')
+        .forEach(item => {
+
+            item.classList.remove('active');
+
+        });
+
+
+    if (page === 'home') {
+
+        document
+            .querySelector(
+                '.nav-item[data-page="home"]'
+            )
+            ?.classList.add('active');
+
+    }
+
+}
+
+
+/* =========================================
+   LIKE BUTTON
+========================================= */
+
+function likeVideo() {
+
+    const button =
+        document.getElementById('likeAction');
+
+
+    button.classList.toggle('active');
+
+
+    if (button.classList.contains('active')) {
+
+        button.textContent =
+            'Понравилось';
+
+    } else {
+
+        button.textContent =
+            'Нравится';
+
+    }
+
+}
+
+
+/* =========================================
+   SHARE
+========================================= */
+
+async function shareVideo() {
+
+    if (!currentVideoUrl) {
+        return;
+    }
+
+
+    if (navigator.share) {
+
+        try {
+
+            await navigator.share({
+
+                title:
+                    document.getElementById(
+                        'v-title'
+                    ).textContent,
+
+                url:
+                    currentVideoUrl
+
+            });
+
+        }
+
+        catch (error) {}
+
+        return;
+
+    }
+
+
+    copyVideoLink();
+
+}
+
+
+/* =========================================
+   COPY LINK
+========================================= */
+
+async function copyVideoLink() {
+
+    if (!currentVideoUrl) {
+        return;
+    }
+
+
+    try {
+
+        await navigator.clipboard.writeText(
+            currentVideoUrl
+        );
+
+
+        showMessage(
+            'Ссылка скопирована'
+        );
+
+    }
+
+    catch (error) {
+
+        showMessage(
+            currentVideoUrl
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   TOAST
+========================================= */
+
+function showMessage(text) {
+
+    const toast =
+        document.getElementById('toast');
+
+
+    toast.textContent =
+        text;
+
+
+    toast.classList.add('show');
+
+
+    clearTimeout(
+        showMessage.timer
+    );
+
+
+    showMessage.timer =
+        setTimeout(() => {
+
+            toast.classList.remove('show');
+
+        }, 2500);
+
+}
+
+
+/* =========================================
+   HISTORY STORAGE
+========================================= */
+
+function getHistory() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                'youtube2016_history'
+            )
+        ) || [];
+
+    }
+
+    catch (error) {
+
+        return [];
+
+    }
+
+}
+
+
+function addToHistory(video) {
+
+    let history =
+        getHistory();
+
+
+    history =
+        history.filter(
+            item =>
+                item.id !== video.id
+        );
+
+
+    history.unshift(video);
+
+
+    history =
+        history.slice(0, 50);
+
+
+    localStorage.setItem(
+        'youtube2016_history',
+        JSON.stringify(history)
+    );
+
+}
+
+
+/* =========================================
+   FORMAT DATE
+========================================= */
+
+function formatDate(date) {
+
+    if (!date) {
+        return '';
+    }
+
+
+    const d =
+        new Date(date);
+
+
+    if (Number.isNaN(d.getTime())) {
+        return '';
+    }
+
+
+    return d.toLocaleDateString(
+        'ru-RU',
+        {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        }
+    );
+
+}
+
+
+/* =========================================
+   ESCAPE HTML
+========================================= */
+
+function escapeHTML(value) {
+
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+}
+
+
+/* =========================================
+   BROWSER BACK BUTTON
+========================================= */
+
+window.addEventListener(
+    'popstate',
+    event => {
+
+        if (
+            event.state &&
+            event.state.video
+        ) {
+
+            showHome();
+
+        } else {
+
+            showHome();
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   MOBILE SIDEBAR CLOSE
+========================================= */
+
+document.addEventListener(
+    'click',
+    event => {
+
+        if (window.innerWidth > 800) {
+            return;
+        }
+
+
+        if (
+            !sidebar.contains(event.target) &&
+            !menuButton.contains(event.target)
+        ) {
+
+            sidebar.classList.remove(
+                'mobile-open'
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   START
+========================================= */
+
+searchVideos();
+
+</script>
+
 </body>
 </html>
