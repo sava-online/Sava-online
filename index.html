@@ -936,7 +936,6 @@ main {
         margin: 0 4px;
     }
 
-    /* Исправление кнопки входа на смартфонах */
     .google-login {
         display: inline-block;
         padding: 0 6px;
@@ -1514,6 +1513,20 @@ main {
 <script>
 
 /* =========================================
+   UTILITIES (ЭКРАНИРОВАНИЕ СИМВОЛОВ)
+========================================= */
+
+function escapeHTML(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+
+/* =========================================
    НАСТРОЙКИ
 ========================================= */
 
@@ -1870,7 +1883,6 @@ async function openVideo(id, title, description = '', publishedAt = '') {
 
     const holder = document.getElementById('player-holder');
 
-    /* Добавлен playsinline=1 и атрибуты корректного воспроизведения */
     holder.innerHTML = `
         <iframe
             src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&playsinline=1&rel=0"
@@ -2268,15 +2280,6 @@ function getCurrentPage() {
     if (document.getElementById('watch-page').style.display === 'block') return 'watch';
     if (document.getElementById('channel-page').style.display === 'block') return 'channel';
     return 'home';
-}
-
-function escapeHTML(value) {
-    return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
 }
 
 /* START APP */
