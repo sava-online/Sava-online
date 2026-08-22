@@ -1356,6 +1356,20 @@ main {
 
         </a>
 
+        <!-- ДОБАВЛЕНА ЯВНАЯ ССЫЛКА НА ВЕБ-АРХИВ -->
+        <a
+            href="#"
+            class="nav-item"
+            onclick="searchWaybackArchive(); return false;"
+        >
+            <svg viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            <span class="nav-text">
+                Поиск в Архиве
+            </span>
+        </a>
+
 
         <div class="sidebar-title">
             Аккаунт
@@ -1616,7 +1630,7 @@ main {
 
 <!-- =========================
      LOGIN MODAL
-========================== -->
+========================= -->
 
 <div
     class="login-modal"
@@ -1673,11 +1687,6 @@ const GOOGLE_CLIENT_ID =
 
 const API_URL =
     'https://www.googleapis.com/youtube/v3/';
-
-/*
-   Мы оставляем только видео,
-   опубликованные до 1 января 2017 года.
-*/
 
 const OLD_YOUTUBE_DATE =
     '2017-01-01T00:00:00Z';
@@ -1932,10 +1941,6 @@ async function loadHome() {
         getHistory();
 
 
-    /*
-       НОВЫЙ ПОЛЬЗОВАТЕЛЬ
-    */
-
     if (!historyItems.length) {
 
         grid.innerHTML = `
@@ -1968,11 +1973,6 @@ async function loadHome() {
 
     }
 
-
-    /*
-       ЕСЛИ ИСТОРИЯ ЕСТЬ —
-       ПЫТАЕМСЯ СДЕЛАТЬ РЕКОМЕНДАЦИИ.
-    */
 
     await loadRecommendations(
         historyItems
@@ -2152,12 +2152,6 @@ async function loadRecommendations(
 
     catch (error) {
 
-        /*
-           Если рекомендации не получили,
-           всё равно НЕ оставляем бесконечную
-           загрузку.
-        */
-
         showEmpty(
             'Рекомендации временно недоступны',
             'Попробуйте посмотреть ещё одно видео или выполнить поиск.'
@@ -2201,11 +2195,6 @@ function renderGrid(
             const snippet =
                 item.snippet;
 
-
-            /*
-               Дополнительная защита.
-               Современные видео не показываем.
-            */
 
             if (
                 snippet.publishedAt &&
@@ -2296,10 +2285,6 @@ function renderGrid(
             `;
 
 
-            /*
-               Открытие видео
-            */
-
             card.addEventListener(
                 'click',
                 function (event) {
@@ -2323,10 +2308,6 @@ function renderGrid(
                 }
             );
 
-
-            /*
-               Открытие канала
-            */
 
             const channelElement =
                 card.querySelector(
@@ -2515,11 +2496,6 @@ async function openVideo(
         true;
 
 
-    /*
-       Если iframe загрузился,
-       оставляем его.
-    */
-
     holder.insertBefore(
         iframe,
         holder.firstChild
@@ -2550,10 +2526,6 @@ async function openVideo(
         '50%';
 
 
-    /*
-       Сохраняем историю.
-    */
-
     addToHistory({
 
         id: id,
@@ -2566,34 +2538,6 @@ async function openVideo(
             '/mqdefault.jpg'
 
     });
-
-
-    /*
-       ВАЖНО:
-       мы не можем узнать из JS,
-       какую страницу YouTube отдал внутри iframe.
-       Поэтому оставляем fallback-кнопку.
-    */
-
-    const errorPanel =
-        document.getElementById(
-            'player-error'
-        );
-
-
-    setTimeout(
-        function () {
-
-            /*
-               Не показываем fallback автоматически
-               сразу после запуска.
-               Пользователь может использовать его,
-               если YouTube показывает проверку.
-            */
-
-        },
-        1500
-    );
 
 
     window.scrollTo({
@@ -2712,10 +2656,6 @@ async function fetchVideoStatistics(
     }
 
 
-    /*
-       Return YouTube Dislike
-    */
-
     try {
 
         const response =
@@ -2800,7 +2740,7 @@ async function fetchVideoStatistics(
 
 
 /* =====================================================
-   CHANNEL (С ИНТЕГРАЦИЕЙ ВЕБ-АРХИВА WAYBACK MACHINE)
+   CHANNEL
 ===================================================== */
 
 async function openChannel(
@@ -2844,10 +2784,6 @@ async function openChannel(
 
     try {
 
-        /*
-           1. Сначала пытаемся получить данные канала через стандартный YouTube API.
-        */
-
         const channelUrl =
             API_URL +
             'channels' +
@@ -2878,7 +2814,6 @@ async function openChannel(
             !channelData.items.length
         ) {
 
-            // Канал удален или не существует в YouTube API — уходим в Веб-Архив!
             throw new Error(
                 'CHANNEL_NOT_FOUND'
             );
@@ -2953,10 +2888,6 @@ async function openChannel(
             `;
 
 
-        /*
-           Видео канала из YouTube API.
-        */
-
         const uploadsPlaylist =
             channel.contentDetails
                 ?.relatedPlaylists
@@ -3008,10 +2939,6 @@ async function openChannel(
 
         }
 
-
-        /*
-           Оставляем только старые видео.
-        */
 
         const oldVideos =
             (videosData.items || [])
@@ -3088,10 +3015,6 @@ async function openChannel(
 
     catch (error) {
 
-        /*
-           ФОЛЛБЭК ДЛЯ УДАЛЕННЫХ КАНАЛОВ (ВЕБ-АРХИВ WAYBACK MACHINE)
-        */
-
         console.log('Канал не найден в YouTube API. Ищем в Wayback Machine...');
 
         loadArchivedChannel(channelId);
@@ -3109,15 +3032,12 @@ async function loadArchivedChannel(channelId) {
 
     try {
 
-        // Формируем вероятные URL старого канала
         let targetUrl = 'youtube.com/channel/' + channelId;
 
-        // Если передано не ID, а пользовательский хэндл/имя (например, omskbird)
         if (!channelId.startsWith('UC') && channelId.length < 24) {
             targetUrl = 'youtube.com/user/' + channelId;
         }
 
-        // Запрос к Wayback Availability API (ищем снимок 2016 года)
         const waybackApiUrl = 'https://archive.org/wayback/available?url=' + encodeURIComponent(targetUrl) + '&timestamp=20160601';
 
         const res = await fetch(waybackApiUrl);
@@ -3130,7 +3050,6 @@ async function loadArchivedChannel(channelId) {
         const snapshot = data.archived_snapshots.closest;
         const archivePageUrl = snapshot.url.replace(/^http:/, 'https:');
 
-        // Парсим заархивированную HTML-страницу канала через бесплатный прокси CORS
         const corsProxy = 'https://api.allorigins.win/raw?url=';
         const htmlRes = await fetch(corsProxy + encodeURIComponent(archivePageUrl));
 
@@ -3142,13 +3061,11 @@ async function loadArchivedChannel(channelId) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(htmlText, 'text/html');
 
-        // Вытаскиваем название канала, аватарку и описание из HTML 2016 года
         const channelTitle = doc.querySelector('.channel-header-title, .branded-page-header-title-link, title')?.textContent?.trim().replace(' - YouTube', '') || channelId;
         
         let avatarUrl = doc.querySelector('.channel-header-profile-image, .appbar-nav-avatar')?.getAttribute('src') || '';
         if (avatarUrl.startsWith('//')) avatarUrl = 'https:' + avatarUrl;
 
-        // Рендерим шапку заархивированного канала
         document.getElementById('channel-header').innerHTML = `
             <div class="wayback-badge">📦 Архивный канал (Восстановлен из Wayback Machine)</div>
             <div class="channel-main">
@@ -3161,7 +3078,6 @@ async function loadArchivedChannel(channelId) {
             </div>
         `;
 
-        // Достаем сохраненные клипы/видео с заархивированной страницы
         const videoElements = doc.querySelectorAll('.yt-lockup-video, .grid-item');
         const archivedVideos = [];
 
@@ -3223,63 +3139,49 @@ async function loadArchivedChannel(channelId) {
 
 }
 
+/* =====================================================
+   ПОРЯДОК: ПОИСК В ВЕБ-АРХИВЕ СТРАНИЦЫ
+===================================================== */
+function searchWaybackArchive() {
+    const q = queryInput.value.trim();
+    if (!q) {
+        showMessage('Введите имя канала или URL в поисковую строку!');
+        return;
+    }
+    openChannel(q);
+}
+
 
 /* =====================================================
-   SUBSCRIPTIONS
+   SUBSCRIPTIONS (ИСПРАВЛЕНО: РАСПОЗНАВАНИЕ АВТОРИЗАЦИИ)
 ===================================================== */
 
 function showSubscriptions() {
 
-    document
-        .getElementById('home-page')
-        .style.display =
-        'block';
+    document.getElementById('home-page').style.display = 'block';
+    document.getElementById('watch-page').style.display = 'none';
+    document.getElementById('channel-page').style.display = 'none';
 
-    document
-        .getElementById('watch-page')
-        .style.display =
-        'none';
+    setActiveNav(null);
 
-    document
-        .getElementById('channel-page')
-        .style.display =
-        'none';
+    if (!currentUser) {
+        grid.innerHTML = `
+            <div class="message-box">
+                <strong>Подписки</strong>
+                <p>Чтобы показывать настоящие подписки Google-аккаунта, сначала войдите через Google.</p>
+                <button class="action-btn" onclick="openLogin()">Войти через Google</button>
+            </div>
+        `;
+    } else {
+        grid.innerHTML = `
+            <div class="message-box">
+                <strong>Подписки пользователя ${escapeHTML(currentUser.name)}</strong>
+                <p>Вы успешно вошли под аккаунтом <b>${escapeHTML(currentUser.email)}</b>. Сторонний клиент использует публичное YouTube API v3 (доступ к закрытому списку подписок с обычным API ключом не предоставляется без проведения авторизации по OAuth 2.0).</p>
+            </div>
+        `;
+    }
 
-
-    setActiveNav(
-        null
-    );
-
-
-    grid.innerHTML = `
-
-        <div class="message-box">
-
-            <strong>
-                Подписки
-            </strong>
-
-            <p>
-                Чтобы показывать настоящие подписки
-                Google-аккаунта, сначала войдите через Google.
-            </p>
-
-            <button
-                class="action-btn"
-                onclick="openLogin()"
-            >
-                Войти через Google
-            </button>
-
-        </div>
-
-    `;
-
-
-    document
-        .getElementById('searchInfo')
-        .textContent = '';
-
+    document.getElementById('searchInfo').textContent = '';
 }
 
 
@@ -3613,10 +3515,6 @@ function initializeGoogleLogin() {
     }
 
 
-    /*
-       Если Google script ещё не успел загрузиться.
-    */
-
     if (
         typeof google === 'undefined' ||
         !google.accounts
@@ -3650,10 +3548,6 @@ function initializeGoogleLogin() {
 
     }
 
-
-    /*
-       Проверяем локальный Preview.
-    */
 
     if (
         location.protocol === 'file:'
@@ -3733,7 +3627,7 @@ function initializeGoogleLogin() {
 
 
 /* =====================================================
-   GOOGLE CALLBACK
+   GOOGLE CALLBACK (ИСПРАВЛЕНО ДЕКОДИРОВАНИЕ ЮНИКОДА)
 ===================================================== */
 
 function handleGoogleLogin(
@@ -3754,25 +3648,16 @@ function handleGoogleLogin(
     }
 
 
-    /*
-       Google Identity Services возвращает
-       JWT credential.
-
-       Для отображения имени здесь
-       читаем payload.
-    */
-
     try {
 
-        const payload =
-            JSON.parse(
-                atob(
-                    response.credential
-                        .split('.')[1]
-                        .replace(/-/g, '+')
-                        .replace(/_/g, '/')
-                )
-            );
+        // Корректный парсинг UTF-8 / Юникода для избежания кракозябр
+        const base64Url = response.credential.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
 
 
         currentUser = {
