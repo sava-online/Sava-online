@@ -548,6 +548,18 @@ main {
     border-left: 4px solid #cc181e;
 }
 
+.wayback-badge {
+    background: #fdf6e3;
+    border: 1px solid #b58900;
+    color: #b58900;
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
 /* =========================
    WATCH
 ========================= */
@@ -658,10 +670,19 @@ main {
     cursor: pointer;
 
     font-size: 12px;
+    margin: 3px;
 }
 
 .youtube-open:hover {
     background: #b3151a;
+}
+
+.wayback-open {
+    background: #444;
+}
+
+.wayback-open:hover {
+    background: #222;
 }
 
 /* =========================
@@ -1348,7 +1369,7 @@ main {
         >
 
             <svg viewBox="0 0 24 24">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
 
             <span class="nav-text">
@@ -2375,6 +2396,10 @@ async function openVideo(
         'https://www.youtube.com/watch?v=' +
         id;
 
+    const waybackUrl = 
+        'https://web.archive.org/web/2016/https://www.youtube.com/watch?v=' + 
+        id;
+
 
     document
         .getElementById('home-page')
@@ -2450,6 +2475,15 @@ async function openVideo(
                 rel="noopener"
             >
                 Открыть на YouTube
+            </a>
+
+            <a
+                class="youtube-open wayback-open"
+                href="${waybackUrl}"
+                target="_blank"
+                rel="noopener"
+            >
+                Открыть в Wayback Machine
             </a>
 
         </div>
@@ -2766,7 +2800,7 @@ async function fetchVideoStatistics(
 
 
 /* =====================================================
-   CHANNEL
+   CHANNEL (С ИНТЕГРАЦИЕЙ ВЕБ-АРХИВА WAYBACK MACHINE)
 ===================================================== */
 
 async function openChannel(
@@ -2811,7 +2845,7 @@ async function openChannel(
     try {
 
         /*
-           Сначала информация о канале.
+           1. Сначала пытаемся получить данные канала через стандартный YouTube API.
         */
 
         const channelUrl =
@@ -2844,8 +2878,9 @@ async function openChannel(
             !channelData.items.length
         ) {
 
+            // Канал удален или не существует в YouTube API — уходим в Веб-Архив!
             throw new Error(
-                'Канал не найден'
+                'CHANNEL_NOT_FOUND'
             );
 
         }
@@ -2919,7 +2954,7 @@ async function openChannel(
 
 
         /*
-           Теперь видео.
+           Видео канала из YouTube API.
         */
 
         const uploadsPlaylist =
@@ -3053,20 +3088,135 @@ async function openChannel(
 
     catch (error) {
 
-        channelGrid.innerHTML = `
+        /*
+           ФОЛЛБЭК ДЛЯ УДАЛЕННЫХ КАНАЛОВ (ВЕБ-АРХИВ WAYBACK MACHINE)
+        */
 
-            <div class="message-box error-box">
+        console.log('Канал не найден в YouTube API. Ищем в Wayback Machine...');
 
-                <strong>
-                    Не удалось загрузить канал
-                </strong>
+        loadArchivedChannel(channelId);
 
-                ${escapeHTML(
-                    error.message
-                )}
+    }
 
+}
+
+
+/* =====================================================
+   WAYBACK MACHINE FALLBACK FUNCTION
+===================================================== */
+
+async function loadArchivedChannel(channelId) {
+
+    try {
+
+        // Формируем вероятные URL старого канала
+        let targetUrl = 'youtube.com/channel/' + channelId;
+
+        // Если передано не ID, а пользовательский хэндл/имя (например, omskbird)
+        if (!channelId.startsWith('UC') && channelId.length < 24) {
+            targetUrl = 'youtube.com/user/' + channelId;
+        }
+
+        // Запрос к Wayback Availability API (ищем снимок 2016 года)
+        const waybackApiUrl = 'https://archive.org/wayback/available?url=' + encodeURIComponent(targetUrl) + '&timestamp=20160601';
+
+        const res = await fetch(waybackApiUrl);
+        const data = await res.json();
+
+        if (!data.archived_snapshots || !data.archived_snapshots.closest) {
+            throw new Error('Канал не найден ни в YouTube API, ни в Веб-Архиве.');
+        }
+
+        const snapshot = data.archived_snapshots.closest;
+        const archivePageUrl = snapshot.url.replace(/^http:/, 'https:');
+
+        // Парсим заархивированную HTML-страницу канала через бесплатный прокси CORS
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        const htmlRes = await fetch(corsProxy + encodeURIComponent(archivePageUrl));
+
+        if (!htmlRes.ok) {
+            throw new Error('Не удалось загрузить сохраненную копию канала из Веб-Архива.');
+        }
+
+        const htmlText = await htmlRes.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+
+        // Вытаскиваем название канала, аватарку и описание из HTML 2016 года
+        const channelTitle = doc.querySelector('.channel-header-title, .branded-page-header-title-link, title')?.textContent?.trim().replace(' - YouTube', '') || channelId;
+        
+        let avatarUrl = doc.querySelector('.channel-header-profile-image, .appbar-nav-avatar')?.getAttribute('src') || '';
+        if (avatarUrl.startsWith('//')) avatarUrl = 'https:' + avatarUrl;
+
+        // Рендерим шапку заархивированного канала
+        document.getElementById('channel-header').innerHTML = `
+            <div class="wayback-badge">📦 Архивный канал (Восстановлен из Wayback Machine)</div>
+            <div class="channel-main">
+                <img class="channel-avatar" src="${avatarUrl || 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'}" alt="">
+                <div>
+                    <div class="channel-name">${escapeHTML(channelTitle)}</div>
+                    <div class="channel-subs">Сохраненная версия от ${snapshot.timestamp.substring(0,4)} года</div>
+                    <div class="channel-description">Этот канал был удален или заблокирован на YouTube. Данные загружены из Internet Archive.</div>
+                </div>
             </div>
+        `;
 
+        // Достаем сохраненные клипы/видео с заархивированной страницы
+        const videoElements = doc.querySelectorAll('.yt-lockup-video, .grid-item');
+        const archivedVideos = [];
+
+        videoElements.forEach(el => {
+            const linkEl = el.querySelector('a[href*="/watch"]');
+            const titleEl = el.querySelector('.yt-lockup-title a, .title');
+            const imgEl = el.querySelector('img');
+
+            if (linkEl && titleEl) {
+                const href = linkEl.getAttribute('href') || '';
+                const match = href.match(/v=([a-zA-Z0-9_-]{11})/);
+
+                if (match && match[1]) {
+                    const videoId = match[1];
+                    let thumb = imgEl?.getAttribute('src') || imgEl?.getAttribute('data-thumb') || '';
+                    if (thumb.startsWith('//')) thumb = 'https:' + thumb;
+
+                    archivedVideos.push({
+                        id: { videoId: videoId },
+                        snippet: {
+                            title: titleEl.textContent.trim(),
+                            description: 'Архивное видео',
+                            channelTitle: channelTitle,
+                            channelId: channelId,
+                            publishedAt: '2016-01-01T00:00:00Z',
+                            thumbnails: { medium: { url: thumb || ('https://i.ytimg.com/vi/' + videoId + '/mqdefault.jpg') } }
+                        }
+                    });
+                }
+            }
+        });
+
+        if (archivedVideos.length > 0) {
+            renderGrid(archivedVideos, channelGrid);
+        } else {
+            channelGrid.innerHTML = `
+                <div class="message-box">
+                    <strong>Список видео ограничен</strong>
+                    <p>Канал сохранен в архиве, но ссылки на его видеофайлы фрагментированы. Нажмите кнопку ниже, чтобы открыть исходный снимок канала на Wayback Machine.</p>
+                    <a class="youtube-open wayback-open" href="${archivePageUrl}" target="_blank" rel="noopener">
+                        Открыть архивную страницу
+                    </a>
+                </div>
+            `;
+        }
+
+    } catch (err) {
+
+        console.error(err);
+
+        channelGrid.innerHTML = `
+            <div class="message-box error-box">
+                <strong>Не удалось загрузить канал</strong>
+                <p>${escapeHTML(err.message)}</p>
+            </div>
         `;
 
     }
