@@ -42,6 +42,7 @@ header {
 
     display: flex;
     align-items: center;
+    justify-content: space-between;
 
     padding: 0 16px;
 
@@ -119,7 +120,7 @@ header {
 
     max-width: 610px;
 
-    margin: 0 auto;
+    margin: 0 10px;
 
     height: 32px;
 }
@@ -164,6 +165,8 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
+
+    flex-shrink: 0;
 }
 
 .search-box button:hover {
@@ -181,8 +184,6 @@ header {
 /* GOOGLE LOGIN */
 
 .google-login {
-    margin-left: 10px;
-
     height: 32px;
 
     border: 1px solid #ccc;
@@ -198,6 +199,7 @@ header {
     white-space: nowrap;
 
     font-size: 12px;
+    flex-shrink: 0;
 }
 
 .google-login:hover {
@@ -219,8 +221,23 @@ header {
 
 
 /* =========================================
-   SIDEBAR
+   SIDEBAR & OVERLAY
 ========================================= */
+
+.overlay {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    z-index: 1400;
+}
+
+.overlay.show {
+    display: block;
+}
 
 aside {
     width: 180px;
@@ -235,7 +252,7 @@ aside {
 
     padding-top: 8px;
 
-    transition: width .2s ease;
+    transition: width .2s ease, transform .2s ease;
 
     z-index: 1500;
 }
@@ -898,7 +915,7 @@ main {
 
 
 /* =========================================
-   MOBILE
+   MOBILE RESPONSIVENESS (FIXED)
 ========================================= */
 
 @media (max-width: 800px) {
@@ -912,15 +929,18 @@ main {
     }
 
     .youtube-logo {
-        width: 91px;
+        width: 80px;
     }
 
     .search-box {
-        margin-left: 6px;
+        margin: 0 4px;
     }
 
+    /* Исправление кнопки входа на смартфонах */
     .google-login {
-        display: none;
+        display: inline-block;
+        padding: 0 6px;
+        font-size: 11px;
     }
 
     aside {
@@ -937,8 +957,6 @@ main {
         z-index: 1900;
 
         transform: translateX(-100%);
-
-        transition: transform .2s ease;
 
         box-shadow:
             3px 0 10px rgba(0,0,0,.12);
@@ -984,8 +1002,12 @@ main {
 
 @media (max-width: 480px) {
 
+    .youtube-logo {
+        display: none;
+    }
+
     .search-box button {
-        width: 45px;
+        width: 40px;
     }
 
     .search-box input {
@@ -1012,6 +1034,11 @@ main {
         align-items: flex-start;
 
         flex-direction: column;
+    }
+
+    .google-login {
+        font-size: 10px;
+        padding: 0 4px;
     }
 
 }
@@ -1115,12 +1142,12 @@ main {
         id="googleLoginButton"
         type="button"
     >
-        Войти через Google
+        Войти
     </button>
 
 </header>
 
-
+<div class="overlay" id="overlay"></div>
 
 <!-- =========================================
      LAYOUT
@@ -1496,22 +1523,8 @@ const API_KEY =
 const API_URL =
     'https://www.googleapis.com/youtube/v3/';
 
-
-/*
-    Твой Google OAuth Client ID.
-*/
-
 const GOOGLE_CLIENT_ID =
     '516502583798-ejalrjeafted9qpd6q6cfrhd8m4lbupp.apps.googleusercontent.com';
-
-
-/*
-    ВАЖНО:
-
-    Наш клиент работает ТОЛЬКО с 2016 годом.
-
-    После 01.01.2017 видео не показываем.
-*/
 
 const YEAR_START =
     '2016-01-01T00:00:00Z';
@@ -1519,21 +1532,11 @@ const YEAR_START =
 const YEAR_END =
     '2017-01-01T00:00:00Z';
 
-
-const YOUTUBE_LOGO =
-    'https://upload.wikimedia.org/wikipedia/commons/e/e1/Logo_of_YouTube_%282015-2017%29.svg';
-
-
 let currentVideoId = null;
-
 let currentVideoUrl = '';
-
 let currentChannelId = null;
-
 let previousPage = 'home';
-
 let googleTokenClient = null;
-
 let googleAccessToken = null;
 
 
@@ -1541,219 +1544,92 @@ let googleAccessToken = null;
    ELEMENTS
 ========================================= */
 
-const grid =
-    document.getElementById('grid');
-
-const channelGrid =
-    document.getElementById('channel-grid');
-
-const queryInput =
-    document.getElementById('query');
-
-const sidebar =
-    document.getElementById('sidebar');
-
-const menuButton =
-    document.getElementById('menuButton');
-
-const googleLoginButton =
-    document.getElementById('googleLoginButton');
+const grid = document.getElementById('grid');
+const channelGrid = document.getElementById('channel-grid');
+const queryInput = document.getElementById('query');
+const sidebar = document.getElementById('sidebar');
+const menuButton = document.getElementById('menuButton');
+const googleLoginButton = document.getElementById('googleLoginButton');
+const overlay = document.getElementById('overlay');
 
 
 /* =========================================
-   MENU
+   MENU MOBILE TOGGLE
 ========================================= */
 
-menuButton.addEventListener(
-    'click',
-    function(event) {
-
-        event.preventDefault();
-
-        event.stopPropagation();
-
-
-        if (window.innerWidth <= 800) {
-
-            sidebar.classList.toggle(
-                'mobile-open'
-            );
-
-        } else {
-
-            sidebar.classList.toggle(
-                'collapsed'
-            );
-
-        }
-
+function toggleSidebar() {
+    if (window.innerWidth <= 800) {
+        const isOpen = sidebar.classList.toggle('mobile-open');
+        overlay.classList.toggle('show', isOpen);
+    } else {
+        sidebar.classList.toggle('collapsed');
     }
-);
+}
 
+menuButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleSidebar();
+});
 
-/* =========================================
-   CLOSE MOBILE MENU
-========================================= */
-
-document.addEventListener(
-    'click',
-    function(event) {
-
-        if (window.innerWidth > 800) {
-            return;
-        }
-
-
-        if (
-            !sidebar.contains(event.target) &&
-            !menuButton.contains(event.target)
-        ) {
-
-            sidebar.classList.remove(
-                'mobile-open'
-            );
-
-        }
-
-    }
-);
+overlay.addEventListener('click', function() {
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('show');
+});
 
 
 /* =========================================
    SEARCH BUTTON
 ========================================= */
 
-document
-    .getElementById('searchButton')
-    .addEventListener(
-        'click',
-        searchEverything
-    );
+document.getElementById('searchButton').addEventListener('click', searchEverything);
 
-
-/* =========================================
-   ENTER
-========================================= */
-
-queryInput.addEventListener(
-    'keydown',
-    function(event) {
-
-        if (event.key === 'Enter') {
-
-            event.preventDefault();
-
-            searchEverything();
-
-        }
-
+queryInput.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        searchEverything();
     }
-);
+});
 
 
 /* =========================================
    GOOGLE LOGIN
 ========================================= */
 
-googleLoginButton.addEventListener(
-    'click',
-    startGoogleLogin
-);
-
+googleLoginButton.addEventListener('click', startGoogleLogin);
 
 function startGoogleLogin() {
-
-    if (
-        typeof google === 'undefined' ||
-        !google.accounts
-    ) {
-
-        showMessage(
-            'Google ещё загружается. Попробуйте через несколько секунд.'
-        );
-
+    if (typeof google === 'undefined' || !google.accounts) {
+        showMessage('Google ещё загружается. Попробуйте через несколько секунд.');
         return;
-
     }
-
 
     if (!googleTokenClient) {
-
-        googleTokenClient =
-            google.accounts.oauth2.initTokenClient({
-
-                client_id:
-                    GOOGLE_CLIENT_ID,
-
-                scope:
-                    'https://www.googleapis.com/auth/youtube.readonly',
-
-                callback:
-                    function(response) {
-
-                        if (
-                            response &&
-                            response.access_token
-                        ) {
-
-                            googleAccessToken =
-                                response.access_token;
-
-                            localStorage.setItem(
-                                'yt2016_google_token',
-                                googleAccessToken
-                            );
-
-                            googleLoginButton.textContent =
-                                'Google подключён';
-
-                            showMessage(
-                                'Google аккаунт подключён'
-                            );
-
-                        }
-
-                    }
-
-            });
-
+        googleTokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: GOOGLE_CLIENT_ID,
+            scope: 'https://www.googleapis.com/auth/youtube.readonly',
+            callback: function(response) {
+                if (response && response.access_token) {
+                    googleAccessToken = response.access_token;
+                    localStorage.setItem('yt2016_google_token', googleAccessToken);
+                    googleLoginButton.textContent = 'Подключено';
+                    showMessage('Google аккаунт подключён');
+                }
+            }
+        });
     }
 
-
-    googleTokenClient.requestAccessToken({
-        prompt: 'consent'
-    });
-
+    googleTokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
-
-/* =========================================
-   CHECK GOOGLE TOKEN
-========================================= */
-
 function loadGoogleToken() {
-
     try {
-
-        const token =
-            localStorage.getItem(
-                'yt2016_google_token'
-            );
-
+        const token = localStorage.getItem('yt2016_google_token');
         if (token) {
-
-            googleAccessToken =
-                token;
-
-            googleLoginButton.textContent =
-                'Google подключён';
-
+            googleAccessToken = token;
+            googleLoginButton.textContent = 'Подключено';
         }
-
-    }
-
-    catch (error) {}
-
+    } catch (error) {}
 }
 
 
@@ -1762,161 +1638,49 @@ function loadGoogleToken() {
 ========================================= */
 
 async function searchEverything() {
-
-    const q =
-        queryInput.value.trim();
-
+    const q = queryInput.value.trim();
 
     if (!q) {
-
         showHome();
-
         return;
-
     }
 
-
-    /*
-        Если пользователь вставил
-        прямую ссылку YouTube.
-    */
-
-    const videoId =
-        extractVideoId(q);
-
-
+    const videoId = extractVideoId(q);
     if (videoId) {
-
-        await openVideoFromId(
-            videoId
-        );
-
+        await openVideoFromId(videoId);
         return;
-
     }
 
-
-    const channelId =
-        extractChannelId(q);
-
-
+    const channelId = extractChannelId(q);
     if (channelId) {
-
         openChannel(channelId);
-
         return;
-
     }
-
 
     showLoading(grid);
-
-
-    document.getElementById(
-        'searchInfo'
-    ).textContent =
-        'Поиск: ' + q;
-
+    document.getElementById('searchInfo').textContent = 'Поиск: ' + q;
 
     try {
+        const videoUrl = API_URL + 'search?part=snippet&type=video&maxResults=24&order=relevance&publishedAfter=' + encodeURIComponent(YEAR_START) + '&publishedBefore=' + encodeURIComponent(YEAR_END) + '&q=' + encodeURIComponent(q) + '&key=' + encodeURIComponent(API_KEY);
+        const channelUrl = API_URL + 'search?part=snippet&type=channel&maxResults=8&q=' + encodeURIComponent(q) + '&key=' + encodeURIComponent(API_KEY);
 
-        /*
-            Ищем видео.
-            Только 2016 год.
-        */
+        const [videoResponse, channelResponse] = await Promise.all([
+            fetch(videoUrl),
+            fetch(channelUrl)
+        ]);
 
-        const videoUrl =
-            API_URL +
-            'search?part=snippet' +
-            '&type=video' +
-            '&maxResults=24' +
-            '&order=relevance' +
-            '&publishedAfter=' +
-            encodeURIComponent(
-                YEAR_START
-            ) +
-            '&publishedBefore=' +
-            encodeURIComponent(
-                YEAR_END
-            ) +
-            '&q=' +
-            encodeURIComponent(q) +
-            '&key=' +
-            encodeURIComponent(API_KEY);
+        const videoData = await videoResponse.json();
+        const channelData = await channelResponse.json();
 
-
-        /*
-            Отдельно ищем каналы.
-        */
-
-        const channelUrl =
-            API_URL +
-            'search?part=snippet' +
-            '&type=channel' +
-            '&maxResults=8' +
-            '&q=' +
-            encodeURIComponent(q) +
-            '&key=' +
-            encodeURIComponent(API_KEY);
-
-
-        const [
-            videoResponse,
-            channelResponse
-        ] =
-            await Promise.all([
-                fetch(videoUrl),
-                fetch(channelUrl)
-            ]);
-
-
-        const videoData =
-            await videoResponse.json();
-
-
-        const channelData =
-            await channelResponse.json();
-
-
-        if (
-            videoData.error ||
-            channelData.error
-        ) {
-
-            throw new Error(
-                videoData.error?.message ||
-                channelData.error?.message ||
-                'Ошибка YouTube API'
-            );
-
+        if (videoData.error || channelData.error) {
+            throw new Error(videoData.error?.message || channelData.error?.message || 'Ошибка YouTube API');
         }
 
-
-        const videos =
-            videoData.items || [];
-
-        const channels =
-            channelData.items || [];
-
-
-        renderSearchResults(
-            videos,
-            channels
-        );
-
-    }
-
-    catch (error) {
-
+        renderSearchResults(videoData.items || [], channelData.items || []);
+    } catch (error) {
         console.error(error);
-
-        showError(
-            grid,
-            error.message
-        );
-
+        showError(grid, error.message);
     }
-
 }
 
 
@@ -1924,121 +1688,40 @@ async function searchEverything() {
    SEARCH RESULTS
 ========================================= */
 
-function renderSearchResults(
-    videos,
-    channels
-) {
-
+function renderSearchResults(videos, channels) {
     showPage('home');
-
-
     grid.innerHTML = '';
 
-
-    if (
-        !videos.length &&
-        !channels.length
-    ) {
-
+    if (!videos.length && !channels.length) {
         showEmpty(grid);
-
         return;
-
     }
 
+    channels.forEach(channel => {
+        const id = channel.id.channelId;
+        if (!id) return;
 
-    /*
-        Сначала каналы.
-    */
+        const snippet = channel.snippet;
+        const card = document.createElement('article');
+        card.className = 'channel-card';
 
-    channels.forEach(
-        channel => {
+        const avatar = snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '';
 
-            const id =
-                channel.id.channelId;
+        card.innerHTML = `
+            <img class="channel-avatar" src="${escapeHTML(avatar)}" alt="">
+            <div>
+                <div class="channel-card-title">${escapeHTML(snippet.title)}</div>
+                <div class="channel-card-description">${escapeHTML(snippet.description || 'Канал YouTube')}</div>
+            </div>
+        `;
 
-            if (!id) {
-                return;
-            }
+        card.addEventListener('click', function() { openChannel(id); });
+        grid.appendChild(card);
+    });
 
-
-            const snippet =
-                channel.snippet;
-
-
-            const card =
-                document.createElement(
-                    'article'
-                );
-
-
-            card.className =
-                'channel-card';
-
-
-            const avatar =
-                snippet.thumbnails?.medium?.url ||
-                snippet.thumbnails?.default?.url ||
-                '';
-
-
-            card.innerHTML = `
-
-                <img
-                    class="channel-avatar"
-                    src="${escapeHTML(avatar)}"
-                    alt=""
-                >
-
-                <div>
-
-                    <div class="channel-card-title">
-                        ${escapeHTML(snippet.title)}
-                    </div>
-
-                    <div class="channel-card-description">
-                        ${escapeHTML(
-                            snippet.description ||
-                            'Канал YouTube'
-                        )}
-                    </div>
-
-                </div>
-
-            `;
-
-
-            card.addEventListener(
-                'click',
-                function() {
-
-                    openChannel(id);
-
-                }
-            );
-
-
-            grid.appendChild(card);
-
-        }
-    );
-
-
-    /*
-        Затем видео.
-    */
-
-    videos.forEach(
-        item => {
-
-            addVideoCard(
-                grid,
-                item
-            );
-
-        }
-    );
-
+    videos.forEach(item => {
+        addVideoCard(grid, item);
+    });
 }
 
 
@@ -2046,101 +1729,34 @@ function renderSearchResults(
    VIDEO CARD
 ========================================= */
 
-function addVideoCard(
-    target,
-    item
-) {
+function addVideoCard(target, item) {
+    if (!item.id || !item.id.videoId) return;
 
-    if (
-        !item.id ||
-        !item.id.videoId
-    ) {
+    const id = item.id.videoId;
+    const snippet = item.snippet;
+    const card = document.createElement('article');
+    card.className = 'video-card';
 
-        return;
-
-    }
-
-
-    const id =
-        item.id.videoId;
-
-
-    const snippet =
-        item.snippet;
-
-
-    const card =
-        document.createElement(
-            'article'
-        );
-
-
-    card.className =
-        'video-card';
-
-
-    const thumbnail =
-        snippet.thumbnails?.medium?.url ||
-        snippet.thumbnails?.high?.url ||
-        '';
-
+    const thumbnail = snippet.thumbnails?.medium?.url || snippet.thumbnails?.high?.url || '';
 
     card.innerHTML = `
-
         <div class="thumbnail-wrapper">
-
-            <img
-                src="${escapeHTML(thumbnail)}"
-                alt=""
-                loading="lazy"
-            >
-
+            <img src="${escapeHTML(thumbnail)}" alt="" loading="lazy">
         </div>
-
         <div class="video-info">
-
-            <div class="title">
-                ${escapeHTML(snippet.title)}
-            </div>
-
+            <div class="title">${escapeHTML(snippet.title)}</div>
             <div class="meta">
-
-                <div class="channel">
-                    ${escapeHTML(
-                        snippet.channelTitle
-                    )}
-                </div>
-
-                <div class="date">
-                    ${formatDate(
-                        snippet.publishedAt
-                    )}
-                </div>
-
+                <div class="channel">${escapeHTML(snippet.channelTitle)}</div>
+                <div class="date">${formatDate(snippet.publishedAt)}</div>
             </div>
-
         </div>
-
     `;
 
-
-    card.addEventListener(
-        'click',
-        function() {
-
-            openVideo(
-                id,
-                snippet.title,
-                snippet.description,
-                snippet.publishedAt
-            );
-
-        }
-    );
-
+    card.addEventListener('click', function() {
+        openVideo(id, snippet.title, snippet.description, snippet.publishedAt);
+    });
 
     target.appendChild(card);
-
 }
 
 
@@ -2148,487 +1764,145 @@ function addVideoCard(
    OPEN CHANNEL
 ========================================= */
 
-async function openChannel(
-    channelId
-) {
+async function openChannel(channelId) {
+    if (!channelId) return;
 
-    if (!channelId) {
-        return;
-    }
-
-
-    previousPage =
-        getCurrentPage();
-
-
-    currentChannelId =
-        channelId;
-
-
+    previousPage = getCurrentPage();
+    currentChannelId = channelId;
     showPage('channel');
 
-
-    document.getElementById(
-        'channel-header'
-    ).innerHTML = `
-
+    document.getElementById('channel-header').innerHTML = `
         <div class="loading">
             <div class="spinner"></div>
             Загрузка канала...
         </div>
-
     `;
-
-
     channelGrid.innerHTML = '';
 
-
     try {
+        const channelUrl = API_URL + 'channels?part=snippet,statistics&id=' + encodeURIComponent(channelId) + '&key=' + encodeURIComponent(API_KEY);
+        const videosUrl = API_URL + 'search?part=snippet&type=video&channelId=' + encodeURIComponent(channelId) + '&maxResults=50&order=date&publishedAfter=' + encodeURIComponent(YEAR_START) + '&publishedBefore=' + encodeURIComponent(YEAR_END) + '&key=' + encodeURIComponent(API_KEY);
 
-        /*
-            Данные канала.
-        */
+        const [channelResponse, videosResponse] = await Promise.all([
+            fetch(channelUrl),
+            fetch(videosUrl)
+        ]);
 
-        const channelUrl =
-            API_URL +
-            'channels?part=snippet,statistics' +
-            '&id=' +
-            encodeURIComponent(channelId) +
-            '&key=' +
-            encodeURIComponent(API_KEY);
+        const channelData = await channelResponse.json();
+        const videosData = await videosResponse.json();
 
-
-        /*
-            ВАЖНО:
-
-            Видео канала ограничиваем
-            именно 2016 годом.
-        */
-
-        const videosUrl =
-            API_URL +
-            'search?part=snippet' +
-            '&type=video' +
-            '&channelId=' +
-            encodeURIComponent(channelId) +
-            '&maxResults=50' +
-            '&order=date' +
-            '&publishedAfter=' +
-            encodeURIComponent(
-                YEAR_START
-            ) +
-            '&publishedBefore=' +
-            encodeURIComponent(
-                YEAR_END
-            ) +
-            '&key=' +
-            encodeURIComponent(API_KEY);
-
-
-        const [
-            channelResponse,
-            videosResponse
-        ] =
-            await Promise.all([
-                fetch(channelUrl),
-                fetch(videosUrl)
-            ]);
-
-
-        const channelData =
-            await channelResponse.json();
-
-
-        const videosData =
-            await videosResponse.json();
-
-
-        if (
-            channelData.error ||
-            videosData.error
-        ) {
-
-            throw new Error(
-                channelData.error?.message ||
-                videosData.error?.message ||
-                'Ошибка загрузки канала'
-            );
-
+        if (channelData.error || videosData.error) {
+            throw new Error(channelData.error?.message || videosData.error?.message || 'Ошибка загрузки канала');
         }
 
-
-        if (
-            !channelData.items ||
-            !channelData.items.length
-        ) {
-
-            throw new Error(
-                'Канал не найден'
-            );
-
+        if (!channelData.items || !channelData.items.length) {
+            throw new Error('Канал не найден');
         }
 
+        const channel = channelData.items[0];
+        const snippet = channel.snippet;
+        const statistics = channel.statistics || {};
+        const avatar = snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || snippet.thumbnails?.default?.url || '';
+        const subscribers = Number(statistics.subscriberCount || 0);
+        const videoCount = Number(statistics.videoCount || 0);
 
-        const channel =
-            channelData.items[0];
-
-
-        const snippet =
-            channel.snippet;
-
-
-        const statistics =
-            channel.statistics || {};
-
-
-        const avatar =
-            snippet.thumbnails?.high?.url ||
-            snippet.thumbnails?.medium?.url ||
-            snippet.thumbnails?.default?.url ||
-            '';
-
-
-        const subscribers =
-            Number(
-                statistics.subscriberCount || 0
-            );
-
-
-        const videoCount =
-            Number(
-                statistics.videoCount || 0
-            );
-
-
-        document.getElementById(
-            'channel-header'
-        ).innerHTML = `
-
-            <img
-                class="channel-big-avatar"
-                src="${escapeHTML(avatar)}"
-                alt=""
-            >
-
+        document.getElementById('channel-header').innerHTML = `
+            <img class="channel-big-avatar" src="${escapeHTML(avatar)}" alt="">
             <div>
-
-                <h1 class="channel-name">
-                    ${escapeHTML(
-                        snippet.title
-                    )}
-                </h1>
-
+                <h1 class="channel-name">${escapeHTML(snippet.title)}</h1>
                 <div class="channel-stats">
-
-                    ${subscribers.toLocaleString(
-                        'ru-RU'
-                    )}
-                    подписчиков
-
-                    ·
-
-                    ${videoCount.toLocaleString(
-                        'ru-RU'
-                    )}
-                    видео
-
+                    ${subscribers.toLocaleString('ru-RU')} подписчиков · ${videoCount.toLocaleString('ru-RU')} видео
                 </div>
-
-                <div class="channel-description">
-                    ${escapeHTML(
-                        snippet.description ||
-                        'Описание отсутствует.'
-                    )}
-                </div>
-
+                <div class="channel-description">${escapeHTML(snippet.description || 'Описание отсутствует.')}</div>
             </div>
-
         `;
-
 
         channelGrid.innerHTML = '';
-
-
-        const videos =
-            videosData.items || [];
-
+        const videos = videosData.items || [];
 
         if (!videos.length) {
-
             channelGrid.innerHTML = `
-
                 <div class="message-box">
-
-                    <strong>
-                        Видео за 2016 год не найдены
-                    </strong>
-
-                    Этот клиент показывает
-                    только материалы 2016 года.
-
+                    <strong>Видео за 2016 год не найдены</strong>
+                    Этот клиент показывает только материалы 2016 года.
                 </div>
-
             `;
-
-            updateUrl(
-                '#channel/' + channelId
-            );
-
+            updateUrl('#channel/' + channelId);
             return;
-
         }
 
+        videos.forEach(item => { addVideoCard(channelGrid, item); });
+        updateUrl('#channel/' + channelId);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        videos.forEach(
-            item => {
-
-                addVideoCard(
-                    channelGrid,
-                    item
-                );
-
-            }
-        );
-
-
-        updateUrl(
-            '#channel/' + channelId
-        );
-
-
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-
-    }
-
-    catch (error) {
-
+    } catch (error) {
         console.error(error);
-
-        document.getElementById(
-            'channel-header'
-        ).innerHTML = `
-
+        document.getElementById('channel-header').innerHTML = `
             <div class="message-box error-box">
-
-                <strong>
-                    Не удалось загрузить канал
-                </strong>
-
-                ${escapeHTML(
-                    error.message
-                )}
-
+                <strong>Не удалось загрузить канал</strong>
+                ${escapeHTML(error.message)}
             </div>
-
         `;
-
     }
-
 }
 
 
 /* =========================================
-   OPEN VIDEO
+   OPEN VIDEO (PLAYER FIXED FOR MOBILE)
 ========================================= */
 
-async function openVideo(
-    id,
-    title,
-    description = '',
-    publishedAt = ''
-) {
+async function openVideo(id, title, description = '', publishedAt = '') {
 
-    /*
-        Дополнительная защита:
-        если видео не 2016 года,
-        не открываем его.
-    */
-
-    if (
-        publishedAt &&
-        !is2016(publishedAt)
-    ) {
-
-        showMessage(
-            'Этот клиент показывает только видео 2016 года.'
-        );
-
+    if (publishedAt && !is2016(publishedAt)) {
+        showMessage('Этот клиент показывает только видео 2016 года.');
         return;
-
     }
 
-
-    currentVideoId =
-        id;
-
-
-    currentVideoUrl =
-        'https://www.youtube.com/watch?v=' +
-        id;
-
-
-    previousPage =
-        getCurrentPage();
-
+    currentVideoId = id;
+    currentVideoUrl = 'https://www.youtube.com/watch?v=' + id;
+    previousPage = getCurrentPage();
 
     showPage('watch');
 
+    document.getElementById('v-title').textContent = title;
+    document.getElementById('v-description').textContent = description || 'Описание отсутствует.';
+    document.getElementById('v-date').textContent = formatDate(publishedAt);
 
-    document.getElementById(
-        'v-title'
-    ).textContent =
-        title;
+    const holder = document.getElementById('player-holder');
 
-
-    document.getElementById(
-        'v-description'
-    ).textContent =
-        description ||
-        'Описание отсутствует.';
-
-
-    document.getElementById(
-        'v-date'
-    ).textContent =
-        formatDate(publishedAt);
-
-
-    const holder =
-        document.getElementById(
-            'player-holder'
-        );
-
-
+    /* Добавлен playsinline=1 и атрибуты корректного воспроизведения */
     holder.innerHTML = `
-
         <iframe
-
-            src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0"
-
+            src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&playsinline=1&rel=0"
             title="${escapeHTML(title)}"
-
-            allow="
-                accelerometer;
-                autoplay;
-                clipboard-write;
-                encrypted-media;
-                gyroscope;
-                picture-in-picture;
-                web-share
-            "
-
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen>
-
         </iframe>
-
     `;
 
-
-    document.getElementById(
-        'v-views'
-    ).textContent =
-        'Загрузка статистики...';
-
-
-    document.getElementById(
-        'v-likes'
-    ).textContent =
-        '--';
-
-
-    document.getElementById(
-        'v-dislikes'
-    ).textContent =
-        '--';
-
-
-    document.getElementById(
-        'like-rate'
-    ).style.width =
-        '50%';
-
+    document.getElementById('v-views').textContent = 'Загрузка статистики...';
+    document.getElementById('v-likes').textContent = '--';
+    document.getElementById('v-dislikes').textContent = '--';
+    document.getElementById('like-rate').style.width = '50%';
 
     addToHistory({
-
         id: id,
-
         title: title,
-
-        thumbnail:
-            'https://i.ytimg.com/vi/' +
-            id +
-            '/mqdefault.jpg'
-
+        thumbnail: 'https://i.ytimg.com/vi/' + id + '/mqdefault.jpg'
     });
-
-
-    /*
-        Запоминаем первое просмотренное видео.
-
-        Именно после него главная
-        начинает показывать рекомендации.
-    */
 
     try {
-
-        const watched =
-            JSON.parse(
-                localStorage.getItem(
-                    'yt2016_watched'
-                ) || '[]'
-            );
-
-
-        const exists =
-            watched.some(
-                item =>
-                    item.id === id
-            );
-
-
-        if (!exists) {
-
-            watched.unshift({
-
-                id: id,
-
-                title: title
-
-            });
-
+        const watched = JSON.parse(localStorage.getItem('yt2016_watched') || '[]');
+        if (!watched.some(item => item.id === id)) {
+            watched.unshift({ id: id, title: title });
         }
+        localStorage.setItem('yt2016_watched', JSON.stringify(watched.slice(0, 20)));
+    } catch (error) {}
 
+    updateUrl('#watch/' + id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        localStorage.setItem(
-            'yt2016_watched',
-            JSON.stringify(
-                watched.slice(0, 20)
-            )
-        );
-
-    }
-
-    catch (error) {}
-
-
-    updateUrl(
-        '#watch/' + id
-    );
-
-
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
-
-
-    await fetchVideoStatistics(
-        id
-    );
-
+    await fetchVideoStatistics(id);
 }
 
 
@@ -2636,92 +1910,28 @@ async function openVideo(
    OPEN VIDEO BY ID
 ========================================= */
 
-async function openVideoFromId(
-    id
-) {
-
+async function openVideoFromId(id) {
     try {
+        const url = API_URL + 'videos?part=snippet,statistics&id=' + encodeURIComponent(id) + '&key=' + encodeURIComponent(API_KEY);
+        const response = await fetch(url);
+        const data = await response.json();
 
-        const url =
-            API_URL +
-            'videos?part=snippet,statistics' +
-            '&id=' +
-            encodeURIComponent(id) +
-            '&key=' +
-            encodeURIComponent(API_KEY);
-
-
-        const response =
-            await fetch(url);
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            data.error
-        ) {
-
-            throw new Error(
-                data.error?.message ||
-                'Видео не найдено'
-            );
-
+        if (!response.ok || data.error || !data.items || !data.items.length) {
+            throw new Error(data.error?.message || 'Видео не найдено');
         }
 
+        const video = data.items[0];
+        const snippet = video.snippet;
 
-        if (
-            !data.items ||
-            !data.items.length
-        ) {
-
-            throw new Error(
-                'Видео не найдено'
-            );
-
-        }
-
-
-        const video =
-            data.items[0];
-
-
-        const snippet =
-            video.snippet;
-
-
-        if (!is2016(
-            snippet.publishedAt
-        )) {
-
-            showMessage(
-                'Это видео не из 2016 года.'
-            );
-
+        if (!is2016(snippet.publishedAt)) {
+            showMessage('Это видео не из 2016 года.');
             return;
-
         }
 
-
-        openVideo(
-            id,
-            snippet.title,
-            snippet.description,
-            snippet.publishedAt
-        );
-
+        openVideo(id, snippet.title, snippet.description, snippet.publishedAt);
+    } catch (error) {
+        showMessage(error.message);
     }
-
-    catch (error) {
-
-        showMessage(
-            error.message
-        );
-
-    }
-
 }
 
 
@@ -2729,1435 +1939,348 @@ async function openVideoFromId(
    STATISTICS
 ========================================= */
 
-async function fetchVideoStatistics(
-    id
-) {
+async function fetchVideoStatistics(id) {
+    try {
+        const url = API_URL + 'videos?part=statistics&id=' + encodeURIComponent(id) + '&key=' + encodeURIComponent(API_KEY);
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (response.ok && data.items && data.items.length) {
+            const statistics = data.items[0].statistics;
+            const views = Number(statistics.viewCount || 0);
+            const likes = Number(statistics.likeCount || 0);
+
+            document.getElementById('v-views').textContent = views.toLocaleString('ru-RU') + ' просмотров';
+            document.getElementById('v-likes').textContent = likes.toLocaleString('ru-RU');
+        }
+    } catch (error) {
+        document.getElementById('v-views').textContent = 'Статистика недоступна';
+    }
 
     try {
+        const response = await fetch('https://returnyoutubedislikeapi.com/votes?videoId=' + encodeURIComponent(id));
+        if (response.ok) {
+            const data = await response.json();
+            const likes = Number(data.likes || 0);
+            const dislikes = Number(data.dislikes || 0);
 
-        const url =
-            API_URL +
-            'videos?part=statistics' +
-            '&id=' +
-            encodeURIComponent(id) +
-            '&key=' +
-            encodeURIComponent(API_KEY);
+            document.getElementById('v-likes').textContent = likes.toLocaleString('ru-RU');
+            document.getElementById('v-dislikes').textContent = dislikes.toLocaleString('ru-RU');
 
-
-        const response =
-            await fetch(url);
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            response.ok &&
-            data.items &&
-            data.items.length
-        ) {
-
-            const statistics =
-                data.items[0].statistics;
-
-
-            const views =
-                Number(
-                    statistics.viewCount || 0
-                );
-
-
-            const likes =
-                Number(
-                    statistics.likeCount || 0
-                );
-
-
-            document.getElementById(
-                'v-views'
-            ).textContent =
-
-                views.toLocaleString(
-                    'ru-RU'
-                ) +
-
-                ' просмотров';
-
-
-            document.getElementById(
-                'v-likes'
-            ).textContent =
-
-                likes.toLocaleString(
-                    'ru-RU'
-                );
-
+            const total = likes + dislikes;
+            const percent = total > 0 ? (likes / total) * 100 : 50;
+            document.getElementById('like-rate').style.width = percent + '%';
         }
-
+    } catch (error) {
+        console.log('Дизлайки недоступны');
     }
-
-    catch (error) {
-
-        document.getElementById(
-            'v-views'
-        ).textContent =
-            'Статистика недоступна';
-
-    }
-
-
-    /*
-        Return YouTube Dislike.
-    */
-
-    try {
-
-        const response =
-            await fetch(
-                'https://returnyoutubedislikeapi.com/votes?videoId=' +
-                encodeURIComponent(id)
-            );
-
-
-        if (!response.ok) {
-            return;
-        }
-
-
-        const data =
-            await response.json();
-
-
-        const likes =
-            Number(
-                data.likes || 0
-            );
-
-
-        const dislikes =
-            Number(
-                data.dislikes || 0
-            );
-
-
-        document.getElementById(
-            'v-likes'
-        ).textContent =
-
-            likes.toLocaleString(
-                'ru-RU'
-            );
-
-
-        document.getElementById(
-            'v-dislikes'
-        ).textContent =
-
-            dislikes.toLocaleString(
-                'ru-RU'
-            );
-
-
-        const total =
-            likes + dislikes;
-
-
-        const percent =
-            total > 0
-                ? likes / total * 100
-                : 50;
-
-
-        document.getElementById(
-            'like-rate'
-        ).style.width =
-            percent + '%';
-
-    }
-
-    catch (error) {
-
-        console.log(
-            'Дизлайки недоступны'
-        );
-
-    }
-
 }
 
 
 /* =========================================
-   HOME
+   HOME & RECOMMENDATIONS
 ========================================= */
 
 function showHome() {
-
-    previousPage =
-        'home';
-
-
-    showPage(
-        'home'
-    );
-
-
+    previousPage = 'home';
+    showPage('home');
     loadRecommendations();
-
-
-    updateUrl(
-        '#home'
-    );
-
+    updateUrl('#home');
 }
-
-
-/* =========================================
-   RECOMMENDATIONS
-========================================= */
 
 async function loadRecommendations() {
-
-    const watched =
-        getWatched();
-
-
-    /*
-        Пока пользователь ничего
-        не посмотрел.
-    */
+    const watched = getWatched();
 
     if (!watched.length) {
-
-        document.getElementById(
-            'homeTitle'
-        ).textContent =
-            'Рекомендованные видео';
-
-
-        document.getElementById(
-            'searchInfo'
-        ).textContent = '';
-
-
+        document.getElementById('homeTitle').textContent = 'Рекомендованные видео';
+        document.getElementById('searchInfo').textContent = '';
         grid.innerHTML = `
-
             <div class="message-box">
-
-                <strong>
-                    Пока мы вас ничего не знаем
-                </strong>
-
-                Посмотрите любое видео,
-                чтобы мы могли подобрать
-                для вас рекомендации.
-
-                <br><br>
-
-                Просто воспользуйтесь поиском
-                сверху.
-
+                <strong>Пока мы ничего о вас не знаем</strong>
+                Посмотрите любое видео, чтобы мы могли подобрать для вас рекомендации.
+                <br><br>Просто воспользуйтесь поиском сверху.
             </div>
-
         `;
-
         return;
-
     }
 
-
-    /*
-        Берём последнее просмотренное
-        видео и ищем похожее.
-
-        Всё равно ограничиваем 2016 годом.
-    */
-
-    const last =
-        watched[0];
-
-
-    showLoading(
-        grid
-    );
-
-
-    document.getElementById(
-        'homeTitle'
-    ).textContent =
-        'Рекомендованные видео';
-
+    const last = watched[0];
+    showLoading(grid);
+    document.getElementById('homeTitle').textContent = 'Рекомендованные видео';
 
     try {
+        const url = API_URL + 'search?part=snippet&type=video&maxResults=24&order=relevance&publishedAfter=' + encodeURIComponent(YEAR_START) + '&publishedBefore=' + encodeURIComponent(YEAR_END) + '&q=' + encodeURIComponent(last.title) + '&key=' + encodeURIComponent(API_KEY);
+        const response = await fetch(url);
+        const data = await response.json();
 
-        const url =
-            API_URL +
-            'search?part=snippet' +
-            '&type=video' +
-            '&maxResults=24' +
-            '&order=relevance' +
-            '&publishedAfter=' +
-            encodeURIComponent(
-                YEAR_START
-            ) +
-            '&publishedBefore=' +
-            encodeURIComponent(
-                YEAR_END
-            ) +
-            '&q=' +
-            encodeURIComponent(
-                last.title
-            ) +
-            '&key=' +
-            encodeURIComponent(
-                API_KEY
-            );
-
-
-        const response =
-            await fetch(url);
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            data.error
-        ) {
-
-            throw new Error(
-                data.error?.message ||
-                'Ошибка рекомендаций'
-            );
-
+        if (!response.ok || data.error) {
+            throw new Error(data.error?.message || 'Ошибка рекомендаций');
         }
 
-
-        let items =
-            data.items || [];
-
-
-        /*
-            Не показываем то самое видео,
-            которое пользователь уже смотрел.
-        */
-
-        items =
-            items.filter(
-                item =>
-                    item.id?.videoId !==
-                    last.id
-            );
-
-
+        let items = (data.items || []).filter(item => item.id?.videoId !== last.id);
         grid.innerHTML = '';
 
-
         if (!items.length) {
-
             grid.innerHTML = `
-
                 <div class="message-box">
-
-                    <strong>
-                        Пока мало рекомендаций
-                    </strong>
-
-                    Попробуйте посмотреть ещё
-                    одно видео 2016 года.
-
+                    <strong>Пока мало рекомендаций</strong>
+                    Попробуйте посмотреть ещё одно видео 2016 года.
                 </div>
-
             `;
-
             return;
-
         }
 
-
-        items.forEach(
-            item => {
-
-                addVideoCard(
-                    grid,
-                    item
-                );
-
-            }
-        );
-
+        items.forEach(item => { addVideoCard(grid, item); });
+    } catch (error) {
+        showError(grid, error.message);
     }
-
-    catch (error) {
-
-        showError(
-            grid,
-            error.message
-        );
-
-    }
-
 }
 
 
 /* =========================================
-   SUBSCRIPTIONS
+   SUBSCRIPTIONS & MY CHANNEL
 ========================================= */
 
 function showSubscriptions() {
-
-    showPage(
-        'home'
-    );
-
-
-    document.getElementById(
-        'homeTitle'
-    ).textContent =
-        'Подписки';
-
-
-    document.getElementById(
-        'searchInfo'
-    ).textContent = '';
-
-
+    showPage('home');
+    document.getElementById('homeTitle').textContent = 'Подписки';
+    document.getElementById('searchInfo').textContent = '';
     grid.innerHTML = `
-
         <div class="message-box">
-
-            <strong>
-                Подписки
-            </strong>
-
-            Для просмотра личных подписок
-            нужно войти через Google.
-
-            <br><br>
-
-            Нажмите
-            «Войти через Google»
-            в верхней части страницы.
-
+            <strong>Подписки</strong>
+            Для просмотра личных подписок нужно войти через Google.
+            <br><br>Нажмите «Войти» в верхней части страницы.
         </div>
-
     `;
-
 }
-
-
-/* =========================================
-   MY CHANNEL
-========================================= */
 
 async function showMyChannel() {
-
     if (!googleAccessToken) {
-
-        showMessage(
-            'Сначала войдите через Google.'
-        );
-
+        showMessage('Сначала войдите через Google.');
         return;
-
     }
-
 
     try {
+        const response = await fetch(API_URL + 'channels?part=snippet,statistics&mine=true', {
+            headers: { Authorization: 'Bearer ' + googleAccessToken }
+        });
+        const data = await response.json();
 
-        const response =
-            await fetch(
-                API_URL +
-                'channels?part=snippet,statistics&mine=true',
-                {
-
-                    headers: {
-
-                        Authorization:
-                            'Bearer ' +
-                            googleAccessToken
-
-                    }
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            !response.ok ||
-            data.error
-        ) {
-
-            throw new Error(
-                data.error?.message ||
-                'Не удалось получить канал'
-            );
-
+        if (!response.ok || data.error || !data.items || !data.items.length) {
+            throw new Error(data.error?.message || 'Канал не найден');
         }
 
-
-        if (
-            !data.items ||
-            !data.items.length
-        ) {
-
-            showMessage(
-                'У этого Google аккаунта нет YouTube-канала.'
-            );
-
-            return;
-
-        }
-
-
-        openChannel(
-            data.items[0].id
-        );
-
+        openChannel(data.items[0].id);
+    } catch (error) {
+        showMessage(error.message);
     }
-
-    catch (error) {
-
-        showMessage(
-            error.message
-        );
-
-    }
-
 }
 
 
 /* =========================================
-   HISTORY
+   HISTORY & ACTIONS
 ========================================= */
 
 function showHistory() {
-
-    showPage(
-        'home'
-    );
-
-
-    document.getElementById(
-        'homeTitle'
-    ).textContent =
-        'История';
-
-
-    document.getElementById(
-        'searchInfo'
-    ).textContent = '';
-
-
-    const history =
-        getHistory();
-
-
+    showPage('home');
+    document.getElementById('homeTitle').textContent = 'История';
+    document.getElementById('searchInfo').textContent = '';
+    const history = getHistory();
     grid.innerHTML = '';
 
-
     if (!history.length) {
-
         grid.innerHTML = `
-
             <div class="message-box">
-
-                <strong>
-                    История пуста
-                </strong>
-
-                Здесь появятся видео,
-                которые вы открывали.
-
+                <strong>История пуста</strong>
+                Здесь появятся видео, которые вы открывали.
             </div>
-
         `;
-
         return;
-
     }
 
-
-    history.forEach(
-        item => {
-
-            addVideoCard(
-                grid,
-                {
-
-                    id: {
-
-                        videoId:
-                            item.id
-
-                    },
-
-                    snippet: {
-
-                        title:
-                            item.title,
-
-                        channelTitle:
-                            'История просмотра',
-
-                        publishedAt:
-                            '',
-
-                        thumbnails: {
-
-                            medium: {
-
-                                url:
-                                    item.thumbnail
-
-                            }
-
-                        }
-
-                    }
-
-                }
-            );
-
-        }
-    );
-
+    history.forEach(item => {
+        addVideoCard(grid, {
+            id: { videoId: item.id },
+            snippet: { title: item.title, channelTitle: 'История просмотра', publishedAt: '', thumbnails: { medium: { url: item.thumbnail } } }
+        });
+    });
 }
-
-
-/* =========================================
-   LIKE
-========================================= */
 
 function likeVideo() {
-
-    const button =
-        document.getElementById(
-            'likeAction'
-        );
-
-
-    button.classList.toggle(
-        'active'
-    );
-
-
-    button.textContent =
-        button.classList.contains(
-            'active'
-        )
-            ? 'Понравилось'
-            : 'Нравится';
-
+    const button = document.getElementById('likeAction');
+    button.classList.toggle('active');
+    button.textContent = button.classList.contains('active') ? 'Понравилось' : 'Нравится';
 }
-
-
-/* =========================================
-   SHARE
-========================================= */
 
 async function shareVideo() {
-
-    if (!currentVideoUrl) {
-        return;
-    }
-
-
+    if (!currentVideoUrl) return;
     if (navigator.share) {
-
         try {
-
             await navigator.share({
-
-                title:
-                    document.getElementById(
-                        'v-title'
-                    ).textContent,
-
-                url:
-                    currentVideoUrl
-
+                title: document.getElementById('v-title').textContent,
+                url: currentVideoUrl
             });
-
-        }
-
-        catch (error) {}
-
-        return;
-
+            return;
+        } catch (error) {}
     }
-
-
     copyVideoLink();
-
 }
-
-
-/* =========================================
-   COPY
-========================================= */
 
 async function copyVideoLink() {
-
-    if (!currentVideoUrl) {
-        return;
-    }
-
-
+    if (!currentVideoUrl) return;
     try {
-
-        await navigator.clipboard.writeText(
-            currentVideoUrl
-        );
-
-
-        showMessage(
-            'Ссылка скопирована'
-        );
-
+        await navigator.clipboard.writeText(currentVideoUrl);
+        showMessage('Ссылка скопирована');
+    } catch (error) {
+        showMessage(currentVideoUrl);
     }
-
-    catch (error) {
-
-        showMessage(
-            currentVideoUrl
-        );
-
-    }
-
 }
 
 
 /* =========================================
-   PAGE SWITCH
+   NAVIGATION & UTILS
 ========================================= */
 
-function showPage(
-    page
-) {
-
-    document.getElementById(
-        'home-page'
-    ).style.display =
-        page === 'home'
-            ? 'block'
-            : 'none';
-
-
-    document.getElementById(
-        'watch-page'
-    ).style.display =
-        page === 'watch'
-            ? 'block'
-            : 'none';
-
-
-    document.getElementById(
-        'channel-page'
-    ).style.display =
-        page === 'channel'
-            ? 'block'
-            : 'none';
-
+function showPage(page) {
+    document.getElementById('home-page').style.display = page === 'home' ? 'block' : 'none';
+    document.getElementById('watch-page').style.display = page === 'watch' ? 'block' : 'none';
+    document.getElementById('channel-page').style.display = page === 'channel' ? 'block' : 'none';
 
     if (page !== 'watch') {
-
-        document.getElementById(
-            'player-holder'
-        ).innerHTML = '';
-
+        document.getElementById('player-holder').innerHTML = '';
     }
-
 
     if (window.innerWidth <= 800) {
-
-        sidebar.classList.remove(
-            'mobile-open'
-        );
-
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('show');
     }
 
-
-    setActiveNav(
-        page
-    );
-
+    setActiveNav(page);
 }
 
-
-/* =========================================
-   ACTIVE NAV
-========================================= */
-
-function setActiveNav(
-    page
-) {
-
-    document
-        .querySelectorAll(
-            '.nav-item'
-        )
-        .forEach(
-            item => {
-
-                item.classList.remove(
-                    'active'
-                );
-
-            }
-        );
-
-
+function setActiveNav(page) {
+    document.querySelectorAll('.nav-item').forEach(item => { item.classList.remove('active'); });
     if (page === 'home') {
-
-        document
-            .querySelector(
-                '.nav-item[data-page="home"]'
-            )
-            ?.classList.add(
-                'active'
-            );
-
+        document.querySelector('.nav-item[data-page="home"]')?.classList.add('active');
     }
-
 }
-
-
-/* =========================================
-   BACK
-========================================= */
 
 function goBack() {
-
-    if (
-        previousPage === 'channel' &&
-        currentChannelId
-    ) {
-
-        openChannel(
-            currentChannelId
-        );
-
+    if (previousPage === 'channel' && currentChannelId) {
+        openChannel(currentChannelId);
         return;
-
     }
-
-
     showHome();
-
 }
 
-
-/* =========================================
-   URL
-========================================= */
-
-function updateUrl(
-    hash
-) {
-
-    try {
-
-        history.pushState(
-            {},
-            '',
-            hash
-        );
-
-    }
-
-    catch (error) {}
-
+function updateUrl(hash) {
+    try { history.pushState({}, '', hash); } catch (error) {}
 }
-
-
-/* =========================================
-   READ URL
-========================================= */
 
 async function openFromHash() {
+    const hash = location.hash;
 
-    const hash =
-        location.hash;
-
-
-    if (
-        hash.startsWith(
-            '#watch/'
-        )
-    ) {
-
-        const id =
-            hash.substring(
-                '#watch/'.length
-            );
-
-
-        if (id) {
-
-            await openVideoFromId(
-                id
-            );
-
-            return;
-
-        }
-
+    if (hash.startsWith('#watch/')) {
+        const id = hash.substring('#watch/'.length);
+        if (id) { await openVideoFromId(id); return; }
     }
 
-
-    if (
-        hash.startsWith(
-            '#channel/'
-        )
-    ) {
-
-        const id =
-            hash.substring(
-                '#channel/'.length
-            );
-
-
-        if (id) {
-
-            openChannel(
-                id
-            );
-
-            return;
-
-        }
-
+    if (hash.startsWith('#channel/')) {
+        const id = hash.substring('#channel/'.length);
+        if (id) { openChannel(id); return; }
     }
-
 
     showHome();
-
 }
 
-
-/* =========================================
-   BROWSER BACK
-========================================= */
-
-window.addEventListener(
-    'popstate',
-    function() {
-
-        openFromHash();
-
-    }
-);
-
-
-/* =========================================
-   HISTORY STORAGE
-========================================= */
+window.addEventListener('popstate', openFromHash);
 
 function getHistory() {
-
-    try {
-
-        return JSON.parse(
-            localStorage.getItem(
-                'youtube2016_history'
-            )
-        ) || [];
-
-    }
-
-    catch (error) {
-
-        return [];
-
-    }
-
+    try { return JSON.parse(localStorage.getItem('youtube2016_history')) || []; } catch (error) { return []; }
 }
 
-
-function addToHistory(
-    video
-) {
-
-    let history =
-        getHistory();
-
-
-    history =
-        history.filter(
-            item =>
-                item.id !==
-                video.id
-        );
-
-
-    history.unshift(
-        video
-    );
-
-
-    history =
-        history.slice(
-            0,
-            50
-        );
-
-
-    localStorage.setItem(
-        'youtube2016_history',
-        JSON.stringify(
-            history
-        )
-    );
-
+function addToHistory(video) {
+    let history = getHistory().filter(item => item.id !== video.id);
+    history.unshift(video);
+    localStorage.setItem('youtube2016_history', JSON.stringify(history.slice(0, 50)));
 }
-
-
-/* =========================================
-   WATCHED
-========================================= */
 
 function getWatched() {
+    try { return JSON.parse(localStorage.getItem('yt2016_watched')) || []; } catch (error) { return []; }
+}
 
+function showLoading(target) {
+    target.innerHTML = `<div class="loading"><div class="spinner"></div>Ищем видео...</div>`;
+}
+
+function showEmpty(target) {
+    target.innerHTML = `<div class="message-box"><strong>Ничего не найдено</strong>Попробуйте изменить поисковый запрос.</div>`;
+}
+
+function showError(target, message) {
+    target.innerHTML = `<div class="message-box error-box"><strong>Не удалось загрузить данные</strong>${escapeHTML(message)}<br><br>Проверьте API-ключ и интернет-соединение.</div>`;
+}
+
+function showMessage(text) {
+    const toast = document.getElementById('toast');
+    toast.textContent = text;
+    toast.classList.add('show');
+    clearTimeout(showMessage.timer);
+    showMessage.timer = setTimeout(() => { toast.classList.remove('show'); }, 3000);
+}
+
+function formatDate(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function is2016(date) {
+    if (!date) return false;
+    const d = new Date(date);
+    return (!Number.isNaN(d.getTime()) && d >= new Date(YEAR_START) && d < new Date(YEAR_END));
+}
+
+function extractVideoId(value) {
     try {
-
-        return JSON.parse(
-            localStorage.getItem(
-                'yt2016_watched'
-            )
-        ) || [];
-
-    }
-
-    catch (error) {
-
-        return [];
-
-    }
-
-}
-
-
-/* =========================================
-   LOADING
-========================================= */
-
-function showLoading(
-    target
-) {
-
-    target.innerHTML = `
-
-        <div class="loading">
-
-            <div class="spinner"></div>
-
-            Ищем видео...
-
-        </div>
-
-    `;
-
-}
-
-
-/* =========================================
-   EMPTY
-========================================= */
-
-function showEmpty(
-    target
-) {
-
-    target.innerHTML = `
-
-        <div class="message-box">
-
-            <strong>
-                Ничего не найдено
-            </strong>
-
-            Попробуйте изменить
-            поисковый запрос.
-
-        </div>
-
-    `;
-
-}
-
-
-/* =========================================
-   ERROR
-========================================= */
-
-function showError(
-    target,
-    message
-) {
-
-    target.innerHTML = `
-
-        <div class="message-box error-box">
-
-            <strong>
-                Не удалось загрузить данные
-            </strong>
-
-            ${escapeHTML(
-                message
-            )}
-
-            <br><br>
-
-            Проверьте API-ключ
-            и интернет-соединение.
-
-        </div>
-
-    `;
-
-}
-
-
-/* =========================================
-   TOAST
-========================================= */
-
-function showMessage(
-    text
-) {
-
-    const toast =
-        document.getElementById(
-            'toast'
-        );
-
-
-    toast.textContent =
-        text;
-
-
-    toast.classList.add(
-        'show'
-    );
-
-
-    clearTimeout(
-        showMessage.timer
-    );
-
-
-    showMessage.timer =
-        setTimeout(
-            function() {
-
-                toast.classList.remove(
-                    'show'
-                );
-
-            },
-            3000
-        );
-
-}
-
-
-/* =========================================
-   DATE
-========================================= */
-
-function formatDate(
-    date
-) {
-
-    if (!date) {
-        return '';
-    }
-
-
-    const d =
-        new Date(
-            date
-        );
-
-
-    if (
-        Number.isNaN(
-            d.getTime()
-        )
-    ) {
-
-        return '';
-
-    }
-
-
-    return d.toLocaleDateString(
-        'ru-RU',
-        {
-
-            day:
-                '2-digit',
-
-            month:
-                '2-digit',
-
-            year:
-                'numeric'
-
+        const url = new URL(value);
+        if (url.hostname.includes('youtube.com')) {
+            if (url.pathname === '/watch') return url.searchParams.get('v');
+            if (url.pathname.startsWith('/shorts/')) return url.pathname.split('/')[2];
         }
-    );
-
-}
-
-
-/* =========================================
-   IS 2016
-========================================= */
-
-function is2016(
-    date
-) {
-
-    if (!date) {
-        return false;
-    }
-
-
-    const d =
-        new Date(
-            date
-        );
-
-
-    return (
-        !Number.isNaN(
-            d.getTime()
-        ) &&
-        d >= new Date(
-            YEAR_START
-        ) &&
-        d < new Date(
-            YEAR_END
-        )
-    );
-
-}
-
-
-/* =========================================
-   VIDEO URL
-========================================= */
-
-function extractVideoId(
-    value
-) {
-
-    try {
-
-        const url =
-            new URL(
-                value
-            );
-
-
-        if (
-            url.hostname.includes(
-                'youtube.com'
-            )
-        ) {
-
-            if (
-                url.pathname ===
-                '/watch'
-            ) {
-
-                return url.searchParams.get(
-                    'v'
-                );
-
-            }
-
-
-            if (
-                url.pathname.startsWith(
-                    '/shorts/'
-                )
-            ) {
-
-                return url.pathname
-                    .split('/')[2];
-
-            }
-
-        }
-
-
-        if (
-            url.hostname ===
-            'youtu.be'
-        ) {
-
-            return url.pathname
-                .substring(1);
-
-        }
-
-    }
-
-    catch (error) {}
-
-
+        if (url.hostname === 'youtu.be') return url.pathname.substring(1);
+    } catch (error) {}
     return null;
-
 }
 
-
-/* =========================================
-   CHANNEL URL
-========================================= */
-
-function extractChannelId(
-    value
-) {
-
+function extractChannelId(value) {
     try {
-
-        const url =
-            new URL(
-                value
-            );
-
-
-        if (
-            !url.hostname.includes(
-                'youtube.com'
-            )
-        ) {
-
-            return null;
-
-        }
-
-
-        const parts =
-            url.pathname
-                .split('/')
-                .filter(Boolean);
-
-
-        if (
-            parts[0] ===
-            'channel' &&
-            parts[1]
-        ) {
-
-            return parts[1];
-
-        }
-
-    }
-
-    catch (error) {}
-
-
+        const url = new URL(value);
+        if (!url.hostname.includes('youtube.com')) return null;
+        const parts = url.pathname.split('/').filter(Boolean);
+        if (parts[0] === 'channel' && parts[1]) return parts[1];
+    } catch (error) {}
     return null;
-
 }
-
-
-/* =========================================
-   CURRENT PAGE
-========================================= */
 
 function getCurrentPage() {
-
-    if (
-        document.getElementById(
-            'watch-page'
-        ).style.display ===
-        'block'
-    ) {
-
-        return 'watch';
-
-    }
-
-
-    if (
-        document.getElementById(
-            'channel-page'
-        ).style.display ===
-        'block'
-    ) {
-
-        return 'channel';
-
-    }
-
-
+    if (document.getElementById('watch-page').style.display === 'block') return 'watch';
+    if (document.getElementById('channel-page').style.display === 'block') return 'channel';
     return 'home';
-
 }
 
-
-/* =========================================
-   ESCAPE HTML
-========================================= */
-
-function escapeHTML(
-    value
-) {
-
-    return String(
-        value || ''
-    )
-        .replace(
-            /&/g,
-            '&amp;'
-        )
-        .replace(
-            /</g,
-            '&lt;'
-        )
-        .replace(
-            />/g,
-            '&gt;'
-        )
-        .replace(
-            /"/g,
-            '&quot;'
-        )
-        .replace(
-            /'/g,
-            '&#039;'
-        );
-
+function escapeHTML(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
-
-/* =========================================
-   START
-========================================= */
-
+/* START APP */
 loadGoogleToken();
-
-
-/*
-    Не делаем searchVideos()
-    при запуске.
-
-    Именно поэтому больше не будет
-    бесконечной загрузки на главной.
-*/
-
 openFromHash();
 
 </script>
