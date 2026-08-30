@@ -189,11 +189,13 @@
     .action-btn.liked { color: var(--like-red); }
     .action-btn.liked svg { fill: var(--like-red); stroke: var(--like-red); }
 
-    .comments-section { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: block; }
+    .comments-section { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); display: none; }
     .comment-item { display: flex; gap: 8px; font-size: 12px; margin-bottom: 8px; align-items: flex-start; }
     .comment-item b { white-space: nowrap; }
 
-    /* ===== ЧАТ ===== */
+    /* ===== ЧАТ И ДИАЛОГИ ===== */
+    .dialog-card { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .dialog-card:hover { background: #f4f5f7; }
     .fullscreen-chat { position: fixed; inset: 0; background: #fff; z-index: 2000; display: none; flex-direction: column; }
     .chat-top-bar { 
       padding: 10px 15px; 
@@ -234,8 +236,7 @@
     .chat-bubble.out { background: var(--accent); color: #fff; align-self: flex-end; }
     .chat-bubble .chat-time { font-size: 10px; opacity: 0.6; margin-top: 4px; align-self: flex-end; }
     .chat-bubble .quoted-text { font-size: 11px; background: rgba(0,0,0,0.06); padding: 4px 6px; border-left: 2px solid var(--accent); margin-bottom: 4px; border-radius: 2px; }
-    .chat-bubble img { max-width: 100%; border-radius: 4px; margin-top: 4px; }
-    .chat-bubble video { max-width: 100%; border-radius: 4px; margin-top: 4px; }
+    .chat-bubble img, .chat-bubble video { max-width: 100%; border-radius: 4px; margin-top: 4px; }
     
     .chat-input-container { border-top: 1px solid var(--border); background: #fff; display: flex; flex-direction: column; }
     .chat-input-bar { padding: 8px 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -256,7 +257,11 @@
     .call-overlay .call-btn-mute { background: #555; color: #fff; }
     .call-overlay .call-btn-mute.active { background: var(--accent); }
 
-    /* ===== МОДАЛЬНЫЕ ОКНА ===== */
+    /* ===== МОДАЛЬНЫЕ ОКНА И ПОИСК ===== */
+    .search-results-box { background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 10px; margin-bottom: 15px; }
+    .search-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .search-item:last-child { border-bottom: none; }
+
     .fullscreen-page { position: fixed; inset: 0; background: var(--page-bg); z-index: 1500; display: none; flex-direction: column; overflow-y: auto; }
     .page-header-bar { background: var(--header-bg); padding: 10px 15px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
 
@@ -433,10 +438,7 @@
                   <span class="spinner"></span>
                   <span class="btn-text">Опубликовать</span>
                 </button>
-                <span class="publish-status" id="publishStatus">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                  Опубликовано!
-                </span>
+                <span class="publish-status" id="publishStatus"></span>
               </div>
             </div>
           </div>
@@ -516,7 +518,7 @@
     <div class="chat-body" id="chatMessages"></div>
     <div class="typing-indicator" id="typingIndicator">печатает...</div>
     <div class="chat-input-container">
-      <div class="reply-preview-bar" id="replyPreviewBar" style="display:none;">
+      <div class="reply-preview-bar" id="replyPreviewBar" style="display:none; padding:4px 12px; background:#f0f0f0; font-size:11px; justify-content:space-between;">
         <span id="replyPreviewText">Ответ...</span>
         <span style="cursor:pointer;" onclick="cancelReply()">&times;</span>
       </div>
@@ -661,31 +663,35 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    const storage = firebase.storage();
 
-    // ===== НАСТРОЙКИ FIRESTORE ДЛЯ ОПТИМИЗАЦИИ =====
     db.settings({ 
       cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED,
       ignoreUndefinedProperties: true 
     });
     
-    // Включаем оффлайн-персистентность
-    db.enablePersistence({ synchronizeTabs: true })
-      .catch((err) => {
-        console.warn('Persistence error:', err);
-      });
+    db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+      console.warn('Persistence error:', err);
+    });
 
-    // ===== IMGBB =====
     const IMGBB_API_KEY = 'fa3d56b9fb97bfbbe162c367ace448d1';
 
-    // ===== КЭШ ДАННЫХ =====
-    const cache = {
-      users: [],
-      communities: {},
-      posts: { wall: [], feed: [] },
-      chats: {},
-      lastUpdate: { users: 0, communities: 0, posts: 0 }
-    };
+    // ===== ОБЪЯВЛЕНИЕ ГЛОБАЛЬНЫХ ПЕРЕМЕННЫХ =====
+    let allUsers = [];
+    let allCommunities = {};
+    let currentUser = null;
+    let currentUserData = null;
+    let notifications = [];
+    let activeChatTargetId = null;
+    let currentOpenProfileId = null;
+    let replyTargetText = null;
+    let chatUnsubscribe = null;
+    let isCallActive = false;
+    let isMuted = false;
+    let typingTimeout = null;
+    
+    const postCache = { wall: [], feed: [] };
+    let lastPostUpdate = 0;
+    const SAVA_COIN_ID = 'savacoin_official';
 
     // ============================================================
     // ===== АВТОРИЗАЦИЯ =====
@@ -740,15 +746,10 @@
       try {
         const cred = await auth.createUserWithEmailAndPassword(email, password);
         const uid = cred.user.uid;
-
         let avatarUrl = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + uid;
 
         if (avatarFile) {
-          try {
-            avatarUrl = await uploadToImgbb(avatarFile);
-          } catch (e) {
-            console.warn('Ошибка загрузки аватара:', e);
-          }
+          try { avatarUrl = await uploadToImgbb(avatarFile); } catch (e) { console.warn(e); }
         }
 
         await db.collection('users').doc(uid).set({
@@ -765,27 +766,6 @@
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Подписка на Sava Coin
-        const commRef = db.collection('communities').doc(SAVA_COIN_ID);
-        const commDoc = await commRef.get();
-        if (!commDoc.exists) {
-          await commRef.set({
-            name: 'SavaCoin Official',
-            type: 'Кликер',
-            avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=savacoin',
-            subscribersCount: 1,
-            subscribers: [uid],
-            isCoinGame: true,
-            posts: [],
-            owner: 'admin'
-          });
-        } else {
-          await commRef.update({
-            subscribersCount: firebase.firestore.FieldValue.increment(1),
-            subscribers: firebase.firestore.FieldValue.arrayUnion(uid)
-          });
-        }
-
       } catch (error) {
         errorEl.textContent = error.message;
         errorEl.style.display = 'block';
@@ -794,16 +774,8 @@
 
     async function logOut() {
       try {
-        if (chatUnsubscribe) {
-          chatUnsubscribe();
-          chatUnsubscribe = null;
-        }
+        if (chatUnsubscribe) { chatUnsubscribe(); chatUnsubscribe = null; }
         await auth.signOut();
-        // Очищаем кэш
-        cache.users = [];
-        cache.communities = {};
-        cache.posts.wall = [];
-        cache.posts.feed = [];
       } catch (error) {
         console.error('Ошибка выхода:', error);
       }
@@ -822,37 +794,24 @@
     }
 
     // ============================================================
-    // ===== ЗАГРУЗКА НА IMGBB (ОПТИМИЗИРОВАННАЯ) =====
+    // ===== ЗАГРУЗКА И СЖАТИЕ ФАЙЛОВ =====
     // ============================================================
     async function uploadToImgbb(file) {
-      // Сжимаем изображение перед загрузкой
       let imageFile = file;
-      
       if (file.type.startsWith('image/')) {
-        try {
-          imageFile = await compressImage(file);
-        } catch (e) {
-          console.warn('Ошибка сжатия, используем оригинал:', e);
-        }
+        try { imageFile = await compressImage(file); } catch (e) { console.warn(e); }
       }
 
       const formData = new FormData();
       formData.append('key', IMGBB_API_KEY);
       formData.append('image', imageFile);
 
-      const response = await fetch('https://api.imgbb.com/1/upload', {
-        method: 'POST',
-        body: formData
-      });
+      const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
       const data = await response.json();
-      if (data.success) {
-        return data.data.url;
-      } else {
-        throw new Error('Ошибка загрузки на imgbb');
-      }
+      if (data.success) return data.data.url;
+      throw new Error('Ошибка загрузки');
     }
 
-    // ===== СЖАТИЕ ИЗОБРАЖЕНИЙ =====
     function compressImage(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -862,172 +821,75 @@
           img.src = e.target.result;
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            const MAX_HEIGHT = 800;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
+            let width = img.width, height = img.height;
+            const MAX = 800;
+            if (width > height && width > MAX) { height *= MAX / width; width = MAX; }
+            else if (height > MAX) { width *= MAX / height; height = MAX; }
+            canvas.width = width; canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
-            
-            canvas.toBlob((blob) => {
-              if (blob) {
-                resolve(blob);
-              } else {
-                reject(new Error('Ошибка сжатия'));
-              }
-            }, 'image/jpeg', 0.7);
+            canvas.toBlob((b) => b ? resolve(b) : reject(), 'image/jpeg', 0.7);
           };
-          img.onerror = reject;
         };
-        reader.onerror = reject;
       });
     }
 
     // ============================================================
-    // ===== ПЕРЕМЕННЫЕ =====
-    // ============================================================
-    let currentUser = null;
-    let currentUserData = null;
-    let notifications = [];
-    let activeChatTargetId = null;
-    let currentOpenProfileId = null;
-    let replyTargetText = null;
-    let chatUnsubscribe = null;
-    let isCallActive = false;
-    let isMuted = false;
-    let typingTimeout = null;
-    let isInitialLoad = true;
-
-    const SAVA_COIN_ID = 'savacoin_official';
-
-    // ============================================================
-    // ===== AUTH LISTENER =====
+    // ===== СЛУШАТЕЛЬ СОСТОЯНИЯ AUTH =====
     // ============================================================
     auth.onAuthStateChanged(async (user) => {
-      try {
-        if (user) {
-          document.getElementById('authOverlay').style.display = 'none';
-          document.getElementById('appScreen').style.display = 'flex';
-          
-          currentUser = user;
-          
-          // Загружаем все данные параллельно
-          await Promise.all([
-            loadUserData(user.uid),
-            loadAllUsers(),
-            loadCommunities()
-          ]);
-          
-          renderProfile();
-          renderMyFriendsList();
-          renderDialogsList();
-          renderCommunitiesList();
-          renderGlobalFeed();
-          renderPlaylists();
-          
-          document.getElementById('headerUser').textContent = '@' + (currentUserData?.name || 'user');
-          
-          // Подписка на Sava Coin (фоновая)
-          const commRef = db.collection('communities').doc(SAVA_COIN_ID);
-          const commDoc = await commRef.get();
-          if (commDoc.exists) {
-            const data = commDoc.data();
-            if (!data.subscribers?.includes(user.uid)) {
-              await commRef.update({
-                subscribersCount: firebase.firestore.FieldValue.increment(1),
-                subscribers: firebase.firestore.FieldValue.arrayUnion(user.uid)
-              });
-            }
-          }
-          
-          isInitialLoad = false;
-        } else {
-          document.getElementById('authOverlay').style.display = 'flex';
-          document.getElementById('appScreen').style.display = 'none';
-          currentUser = null;
-          currentUserData = null;
-          if (chatUnsubscribe) {
-            chatUnsubscribe();
-            chatUnsubscribe = null;
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка в auth listener:', error);
+      if (user) {
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'flex';
+        currentUser = user;
+        
+        await Promise.all([loadUserData(user.uid), loadAllUsers(), loadCommunities()]);
+        
+        renderProfile();
+        renderMyFriendsList();
+        renderDialogsList();
+        renderCommunitiesList();
+        renderGlobalFeed();
+        renderPlaylists();
+        
+        document.getElementById('headerUser').textContent = '@' + (currentUserData?.name || 'user');
+      } else {
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('appScreen').style.display = 'none';
+        currentUser = null;
+        currentUserData = null;
       }
     });
 
     // ============================================================
-    // ===== ЗАГРУЗКА ДАННЫХ (ОПТИМИЗИРОВАННАЯ) =====
+    // ===== ЗАГРУЗКА ДАННЫХ =====
     // ============================================================
     async function loadUserData(uid) {
       try {
         const doc = await db.collection('users').doc(uid).get();
-        if (doc.exists) {
-          currentUserData = { id: uid, ...doc.data() };
-        } else {
-          currentUserData = { id: uid, name: 'User', email: '', avatar: '', city: '', status: '', bday: '', about: '', friends: [], savaCoinBalance: 0, privatePosts: false };
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки пользователя:', error);
-        currentUserData = { id: uid, name: 'User', email: '', avatar: '', city: '', status: '', bday: '', about: '', friends: [], savaCoinBalance: 0, privatePosts: false };
+        currentUserData = doc.exists ? { id: uid, ...doc.data() } : { id: uid, name: 'User', friends: [] };
+      } catch (e) {
+        currentUserData = { id: uid, name: 'User', friends: [] };
       }
     }
 
     async function loadAllUsers() {
       try {
-        // Используем кэш
-        if (cache.users.length > 0 && Date.now() - cache.lastUpdate.users < 60000) {
-          allUsers = cache.users;
-          return;
-        }
-        
         const snapshot = await db.collection('users').get();
         allUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        cache.users = allUsers;
-        cache.lastUpdate.users = Date.now();
-      } catch (error) {
-        console.error('Ошибка загрузки пользователей:', error);
-        allUsers = cache.users.length > 0 ? cache.users : [];
-      }
+      } catch (e) { allUsers = []; }
     }
 
     async function loadCommunities() {
       try {
-        if (Object.keys(cache.communities).length > 0 && Date.now() - cache.lastUpdate.communities < 60000) {
-          allCommunities = cache.communities;
-          return;
-        }
-        
         const snapshot = await db.collection('communities').get();
         allCommunities = {};
-        snapshot.docs.forEach(doc => {
-          allCommunities[doc.id] = { id: doc.id, ...doc.data() };
-        });
-        cache.communities = allCommunities;
-        cache.lastUpdate.communities = Date.now();
-      } catch (error) {
-        console.error('Ошибка загрузки сообществ:', error);
-        allCommunities = Object.keys(cache.communities).length > 0 ? cache.communities : {};
-      }
+        snapshot.docs.forEach(doc => allCommunities[doc.id] = { id: doc.id, ...doc.data() });
+      } catch (e) { allCommunities = {}; }
     }
 
     // ============================================================
-    // ===== ПРОФИЛЬ =====
+    // ===== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ =====
     // ============================================================
     function renderProfile() {
       if (!currentUserData) return;
@@ -1038,25 +900,16 @@
       document.getElementById('displayStatus').textContent = currentUserData.status || 'Не указано';
       document.getElementById('displayBday').textContent = currentUserData.bday || 'Не указан';
       document.getElementById('displayAbout').textContent = currentUserData.about || 'Не указано';
-      
-      document.getElementById('inputCity').value = currentUserData.city || '';
-      document.getElementById('inputStatus').value = currentUserData.status || '';
-      document.getElementById('inputBday').value = currentUserData.bday || '';
-      document.getElementById('inputAbout').value = currentUserData.about || '';
     }
 
     async function updateAvatar(input) {
-      if (!input.files || !input.files[0] || !currentUser) return;
+      if (!input.files?.[0] || !currentUser) return;
       try {
-        const file = input.files[0];
-        const url = await uploadToImgbb(file);
+        const url = await uploadToImgbb(input.files[0]);
         await db.collection('users').doc(currentUser.uid).update({ avatar: url });
         currentUserData.avatar = url;
         document.getElementById('userProfileAvatar').src = url;
-        alert('Аватар обновлен!');
-      } catch (error) {
-        alert('Ошибка: ' + error.message);
-      }
+      } catch (e) { alert('Ошибка: ' + e.message); }
     }
 
     function toggleEditProfile() {
@@ -1072,21 +925,14 @@
         bday: document.getElementById('inputBday').value,
         about: document.getElementById('inputAbout').value
       };
-      try {
-        await db.collection('users').doc(currentUser.uid).update(updates);
-        Object.assign(currentUserData, updates);
-        renderProfile();
-        toggleEditProfile();
-        alert('Данные сохранены!');
-      } catch (error) {
-        alert('Ошибка: ' + error.message);
-      }
+      await db.collection('users').doc(currentUser.uid).update(updates);
+      Object.assign(currentUserData, updates);
+      renderProfile();
+      toggleEditProfile();
     }
 
     function togglePrivatePosts(val) {
-      if (!currentUser) return;
-      db.collection('users').doc(currentUser.uid).update({ privatePosts: val });
-      currentUserData.privatePosts = val;
+      if (currentUser) db.collection('users').doc(currentUser.uid).update({ privatePosts: val });
     }
 
     // ============================================================
@@ -1095,110 +941,79 @@
     function renderMyFriendsList() {
       const container = document.getElementById('myFriendsGrid');
       const countEl = document.getElementById('myFriendsCount');
+      const friends = allUsers.filter(u => currentUserData?.friends?.includes(u.id));
       
-      if (!currentUserData || !currentUserData.friends) {
-        container.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет друзей</div>';
-        countEl.textContent = '0';
-        return;
-      }
-
-      const friends = allUsers.filter(u => currentUserData.friends.includes(u.id));
       countEl.textContent = friends.length;
-
-      if (friends.length === 0) {
-        container.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет друзей</div>';
-        return;
-      }
-
-      container.innerHTML = friends.map(f => `
-        <div class="friend-item-card" onclick="openUserProfile('${f.id}')">
-          <img src="${f.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + f.id}">
-          <span>${f.name?.split(' ')[0] || 'User'}</span>
-        </div>
-      `).join('');
+      container.innerHTML = friends.length === 0 ? '<div style="font-size:12px; color:var(--text-sub);">Нет друзей</div>' :
+        friends.map(f => `
+          <div class="friend-item-card" onclick="openUserProfile('${f.id}')">
+            <img src="${f.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + f.id}">
+            <span>${f.name?.split(' ')[0] || 'User'}</span>
+          </div>
+        `).join('');
     }
 
     function openAllFriendsModal() {
-      if (!currentUserData || !currentUserData.friends) return;
-      const friends = allUsers.filter(u => currentUserData.friends.includes(u.id));
+      const friends = allUsers.filter(u => currentUserData?.friends?.includes(u.id));
       const list = document.getElementById('allFriendsListContent');
-
-      if (friends.length === 0) {
-        list.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет друзей</div>';
-      } else {
-        list.innerHTML = friends.map(f => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid var(--border);">
-            <div style="display:flex; gap:8px; align-items:center;">
-              <img src="${f.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + f.id}" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
-              <div>
-                <b style="font-size:13px;">${f.name || 'User'}</b>
-                <div style="font-size:11px; color:var(--text-sub);">@${f.name || 'user'}</div>
-              </div>
-            </div>
-            <button class="btn btn-gray" style="padding:3px 8px; font-size:11px;" onclick="closeAllFriendsModal(); openUserProfile('${f.id}');">Профиль</button>
-          </div>
-        `).join('');
-      }
+      list.innerHTML = friends.map(f => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid var(--border);">
+          <span>${f.name}</span>
+          <button class="btn btn-gray" onclick="closeAllFriendsModal(); openUserProfile('${f.id}');">Профиль</button>
+        </div>
+      `).join('');
       document.getElementById('allFriendsModal').style.display = 'flex';
     }
 
-    function closeAllFriendsModal() {
-      document.getElementById('allFriendsModal').style.display = 'none';
-    }
+    function closeAllFriendsModal() { document.getElementById('allFriendsModal').style.display = 'none'; }
 
     async function sendFriendRequest(userId) {
       if (!currentUser) return;
-      try {
-        await db.collection('friendRequests').add({
-          from: currentUser.uid,
-          to: userId,
-          status: 'pending',
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert('Заявка отправлена!');
-      } catch (error) {
-        alert('Ошибка: ' + error.message);
-      }
+      await db.collection('users').doc(currentUser.uid).update({
+        friends: firebase.firestore.FieldValue.arrayUnion(userId)
+      });
+      await db.collection('users').doc(userId).update({
+        friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+      });
+      currentUserData.friends.push(userId);
+      alert('Пользователь добавлен в друзья!');
+      openUserProfile(userId);
+      renderMyFriendsList();
+    }
+
+    async function removeFriend(userId) {
+      if (!currentUser) return;
+      await db.collection('users').doc(currentUser.uid).update({
+        friends: firebase.firestore.FieldValue.arrayRemove(userId)
+      });
+      await db.collection('users').doc(userId).update({
+        friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+      });
+      currentUserData.friends = currentUserData.friends.filter(id => id !== userId);
+      alert('Удален из друзей');
+      openUserProfile(userId);
+      renderMyFriendsList();
     }
 
     // ============================================================
-    // ===== ПОСТЫ (ОПТИМИЗИРОВАННЫЕ) =====
+    // ===== ПОСТЫ =====
     // ============================================================
-    let postCache = { wall: [], feed: [] };
-    let lastPostUpdate = 0;
-
     async function createPost() {
       if (!currentUser) return;
-      
       const text = document.getElementById('postText').value.trim();
       const fileInput = document.getElementById('postMediaFile');
       const btn = document.getElementById('publishBtn');
-      
-      if (!text && !fileInput.files[0]) {
-        showPublishStatus(false, 'Напишите текст или добавьте файл');
-        return;
-      }
+
+      if (!text && !fileInput.files[0]) return;
 
       btn.classList.add('loading');
       btn.disabled = true;
-      document.getElementById('publishStatus').style.display = 'none';
 
       try {
         let mediaUrl = null;
-        if (fileInput.files[0]) {
-          try {
-            const file = fileInput.files[0];
-            mediaUrl = await uploadToImgbb(file);
-          } catch (error) {
-            showPublishStatus(false, 'Ошибка загрузки файла: ' + error.message);
-            btn.classList.remove('loading');
-            btn.disabled = false;
-            return;
-          }
-        }
+        if (fileInput.files[0]) mediaUrl = await uploadToImgbb(fileInput.files[0]);
 
-        // Добавляем пост с явным await для гарантии сохранения
-        const postRef = await db.collection('posts').add({
+        await db.collection('posts').add({
           userId: currentUser.uid,
           authorName: currentUserData.name || 'User',
           authorAvatar: currentUserData.avatar || '',
@@ -1210,329 +1025,118 @@
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Проверяем, что пост действительно сохранился
-        const savedPost = await postRef.get();
-        if (!savedPost.exists) {
-          throw new Error('Пост не сохранился');
-        }
-
         document.getElementById('postText').value = '';
         document.getElementById('postMediaFile').value = '';
-        
-        showPublishStatus(true, 'Опубликовано!');
-        
-        // Обновляем кэш и UI
-        postCache.wall = [];
-        postCache.feed = [];
         renderWallPosts();
         renderGlobalFeed();
-        
-      } catch (error) {
-        console.error('Ошибка публикации:', error);
-        showPublishStatus(false, 'Ошибка: ' + error.message);
+      } catch (e) {
+        alert('Ошибка: ' + e.message);
       } finally {
         btn.classList.remove('loading');
         btn.disabled = false;
       }
     }
 
-    function showPublishStatus(success, message) {
-      const statusEl = document.getElementById('publishStatus');
-      statusEl.className = 'publish-status ' + (success ? 'success' : 'error');
-      statusEl.innerHTML = `
-        ${success ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
-        ${message || (success ? 'Опубликовано!' : 'Ошибка!')}
-      `;
-      statusEl.style.display = 'inline-flex';
-      
-      setTimeout(() => {
-        statusEl.style.display = 'none';
-      }, 3000);
-    }
-
     async function renderWallPosts() {
       if (!currentUser) return;
       const container = document.getElementById('wallPosts');
-      
-      // Используем кэш
-      if (postCache.wall.length > 0 && Date.now() - lastPostUpdate < 30000) {
-        container.innerHTML = postCache.wall;
-        return;
-      }
-      
       container.innerHTML = '<div class="loading-spinner">Загрузка...</div>';
 
       try {
-        const snapshot = await db.collection('posts')
-          .where('userId', '==', currentUser.uid)
-          .orderBy('timestamp', 'desc')
-          .limit(20)
-          .get();
-
-        if (snapshot.empty) {
-          const html = '<div style="font-size:12px; color:var(--text-sub);">У вас пока нет постов</div>';
-          container.innerHTML = html;
-          postCache.wall = html;
-          return;
-        }
-
-        const html = snapshot.docs.map(doc => {
-          const p = doc.data();
-          const postId = doc.id;
-          let mediaHtml = '';
-          if (p.media) {
-            mediaHtml = p.media.match(/\.(mp4|webm|ogg|mov)/i) ? 
-              `<video src="${p.media}" controls style="max-width:100%; margin-top:8px; border-radius:4px;"></video>` :
-              `<img src="${p.media}" style="max-width:100%; margin-top:8px; border-radius:4px;" loading="lazy">`;
-          }
-
-          return `
-            <div class="card" id="post_${postId}">
-              <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
-                <img src="${p.authorAvatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=default'}" class="avatar-small">
-                <div>
-                  <b>${p.authorName || 'User'}</b>
-                  <div style="font-size:11px; color:var(--text-sub);">${p.timestamp?.toDate?.()?.toLocaleString() || 'Недавно'}</div>
-                </div>
-              </div>
-              <p style="font-size:13px; word-break:break-word;">${p.text || ''}</p>
-              ${mediaHtml}
-              <div class="post-actions">
-                <div class="action-btn" onclick="toggleLike(this, '${postId}')">
-                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                  <span class="count">${p.likes || 0}</span>
-                </div>
-                <div class="action-btn" onclick="toggleComments('post_${postId}')">
-                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  <span class="comments-count">${p.comments?.length || 0}</span>
-                </div>
-                <div class="action-btn" onclick="repostPost(this, '${postId}')">
-                  <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                  <span class="repost-count">${p.reposts || 0}</span>
-                </div>
-                <div class="action-btn" onclick="openShareModal('${postId}')">
-                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                </div>
-              </div>
-              <div class="comments-section" id="comments_post_${postId}">
-                <div class="comments-list"></div>
-                <div style="display:flex; gap:6px; margin-top:8px;">
-                  <input type="text" class="form-control" style="font-size:12px; padding:6px;" placeholder="Комментарий..." onkeypress="if(event.key==='Enter') addComment('${postId}', this)">
-                  <button class="btn" style="padding:4px 10px; font-size:11px;" onclick="addComment('${postId}', this.previousElementSibling)">OK</button>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
+        const snapshot = await db.collection('posts').where('userId', '==', currentUser.uid).get();
+        if (snapshot.empty) { container.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет постов</div>'; return; }
         
+        let html = '';
+        snapshot.docs.forEach(doc => { html += renderSinglePostHTML(doc.id, doc.data()); });
         container.innerHTML = html;
-        postCache.wall = html;
-        lastPostUpdate = Date.now();
-      } catch (error) {
-        console.error('Ошибка загрузки постов:', error);
-        container.innerHTML = '<div style="color:red;">Ошибка загрузки</div>';
-      }
+      } catch (e) { container.innerHTML = 'Ошибка загрузки'; }
     }
 
     async function renderGlobalFeed() {
       const container = document.getElementById('globalFeedPosts');
-      
-      // Используем кэш
-      if (postCache.feed.length > 0 && Date.now() - lastPostUpdate < 30000) {
-        container.innerHTML = postCache.feed;
-        return;
-      }
-      
       container.innerHTML = '<div class="loading-spinner">Загрузка...</div>';
 
       try {
-        const snapshot = await db.collection('posts')
-          .orderBy('timestamp', 'desc')
-          .limit(30)
-          .get();
+        const snapshot = await db.collection('posts').limit(20).get();
+        if (snapshot.empty) { container.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Лента пуста</div>'; return; }
 
-        if (snapshot.empty) {
-          const html = '<div style="font-size:12px; color:var(--text-sub);">Нет постов в ленте</div>';
-          container.innerHTML = html;
-          postCache.feed = html;
-          return;
-        }
-
-        const html = snapshot.docs.map(doc => {
-          const p = doc.data();
-          const postId = doc.id;
-          let mediaHtml = '';
-          if (p.media) {
-            mediaHtml = p.media.match(/\.(mp4|webm|ogg|mov)/i) ? 
-              `<video src="${p.media}" controls style="max-width:100%; margin-top:8px; border-radius:4px;"></video>` :
-              `<img src="${p.media}" style="max-width:100%; margin-top:8px; border-radius:4px;" loading="lazy">`;
-          }
-
-          return `
-            <div class="card" id="feed_post_${postId}">
-              <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
-                <img src="${p.authorAvatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=default'}" class="avatar-small" onclick="openUserProfile('${p.userId}')">
-                <div>
-                  <b>${p.authorName || 'User'}</b>
-                  <div style="font-size:11px; color:var(--text-sub);">${p.timestamp?.toDate?.()?.toLocaleString() || 'Недавно'}</div>
-                </div>
-              </div>
-              <p style="font-size:13px; word-break:break-word;">${p.text || ''}</p>
-              ${mediaHtml}
-              <div class="post-actions">
-                <div class="action-btn" onclick="toggleLike(this, '${postId}')">
-                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                  <span class="count">${p.likes || 0}</span>
-                </div>
-                <div class="action-btn" onclick="toggleComments('feed_post_${postId}')">
-                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-                  <span class="comments-count">${p.comments?.length || 0}</span>
-                </div>
-                <div class="action-btn" onclick="openShareModal('${postId}')">
-                  <svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-                </div>
-              </div>
-              <div class="comments-section" id="comments_feed_post_${postId}">
-                <div class="comments-list"></div>
-                <div style="display:flex; gap:6px; margin-top:8px;">
-                  <input type="text" class="form-control" style="font-size:12px; padding:6px;" placeholder="Комментарий..." onkeypress="if(event.key==='Enter') addComment('${postId}', this)">
-                  <button class="btn" style="padding:4px 10px; font-size:11px;" onclick="addComment('${postId}', this.previousElementSibling)">OK</button>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-        
+        let html = '';
+        snapshot.docs.forEach(doc => { html += renderSinglePostHTML(doc.id, doc.data()); });
         container.innerHTML = html;
-        postCache.feed = html;
-        lastPostUpdate = Date.now();
-      } catch (error) {
-        console.error('Ошибка загрузки ленты:', error);
-        container.innerHTML = '<div style="color:red;">Ошибка загрузки</div>';
-      }
+      } catch (e) { container.innerHTML = 'Ошибка загрузки'; }
     }
 
-    // ============================================================
-    // ===== ЛАЙКИ, КОММЕНТАРИИ, РЕПОСТЫ =====
-    // ============================================================
+    function renderSinglePostHTML(postId, p) {
+      let mediaHtml = '';
+      if (p.media) {
+        mediaHtml = `<img src="${p.media}" style="max-width:100%; margin-top:8px; border-radius:4px;">`;
+      }
+      return `
+        <div class="card" id="post_${postId}">
+          <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+            <img src="${p.authorAvatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=default'}" class="avatar-small">
+            <div><b>${p.authorName || 'User'}</b></div>
+          </div>
+          <p style="font-size:13px;">${p.text || ''}</p>
+          ${mediaHtml}
+          <div class="post-actions">
+            <div class="action-btn" onclick="toggleLike(this, '${postId}')">❤️ <span class="count">${p.likes || 0}</span></div>
+            <div class="action-btn" onclick="toggleComments('${postId}')">💬 <span>${p.comments?.length || 0}</span></div>
+          </div>
+          <div class="comments-section" id="comments_${postId}">
+            <div class="comments-list">
+              ${(p.comments || []).map(c => `<div class="comment-item"><b>${c.name}:</b> ${c.text}</div>`).join('')}
+            </div>
+            <div style="display:flex; gap:6px; margin-top:8px;">
+              <input type="text" class="form-control" style="font-size:12px;" placeholder="Коммент..." onkeypress="if(event.key==='Enter') addComment('${postId}', this)">
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     async function toggleLike(btn, postId) {
       btn.classList.toggle('liked');
       const count = btn.querySelector('.count');
       const delta = btn.classList.contains('liked') ? 1 : -1;
       count.textContent = parseInt(count.textContent) + delta;
-      
-      try {
-        await db.collection('posts').doc(postId).update({
-          likes: firebase.firestore.FieldValue.increment(delta)
-        });
-      } catch (error) {
-        console.error('Ошибка лайка:', error);
-      }
+      await db.collection('posts').doc(postId).update({ likes: firebase.firestore.FieldValue.increment(delta) });
     }
 
     async function addComment(postId, input) {
       const text = input.value.trim();
       if (!text || !currentUser) return;
-      
-      try {
-        await db.collection('posts').doc(postId).update({
-          comments: firebase.firestore.FieldValue.arrayUnion({
-            userId: currentUser.uid,
-            name: currentUserData.name || 'User',
-            text: text,
-            timestamp: new Date().toISOString()
-          })
-        });
-        input.value = '';
-        // Обновляем кэш
-        postCache.wall = [];
-        postCache.feed = [];
-        renderWallPosts();
-        renderGlobalFeed();
-      } catch (error) {
-        alert('Ошибка: ' + error.message);
-      }
-    }
-
-    async function repostPost(btn, postId) {
-      if (!currentUser) return;
-      const count = btn.querySelector('.repost-count');
-      count.textContent = parseInt(count.textContent) + 1;
-      
-      try {
-        const doc = await db.collection('posts').doc(postId).get();
-        const data = doc.data();
-        
-        await db.collection('posts').add({
-          userId: currentUser.uid,
-          authorName: currentUserData.name || 'User',
-          authorAvatar: currentUserData.avatar || '',
-          text: `Репост: ${data.text || ''}`,
-          media: data.media || null,
-          likes: 0,
-          comments: [],
-          reposts: 0,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        await db.collection('posts').doc(postId).update({
-          reposts: firebase.firestore.FieldValue.increment(1)
-        });
-        
-        postCache.wall = [];
-        postCache.feed = [];
-        renderWallPosts();
-        renderGlobalFeed();
-      } catch (error) {
-        console.error('Ошибка репоста:', error);
-      }
+      await db.collection('posts').doc(postId).update({
+        comments: firebase.firestore.FieldValue.arrayUnion({
+          name: currentUserData.name || 'User', text: text
+        })
+      });
+      input.value = '';
+      renderWallPosts(); renderGlobalFeed();
     }
 
     function toggleComments(postId) {
       const sec = document.getElementById(`comments_${postId}`);
-      if (sec) {
-        sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
-      }
+      if (sec) sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
     }
 
     // ============================================================
-    // ===== ПОЛЬЗОВАТЕЛИ =====
+    // ===== ПРОФИЛЬ ЧУЖОЙ =====
     // ============================================================
     async function openUserProfile(userId) {
       if (!userId) userId = currentUser?.uid;
       if (!userId) return;
       
       let user = allUsers.find(u => u.id === userId);
-      if (!user) {
-        try {
-          const doc = await db.collection('users').doc(userId).get();
-          if (doc.exists) {
-            user = { id: userId, ...doc.data() };
-          } else {
-            alert('Пользователь не найден');
-            return;
-          }
-        } catch (error) {
-          alert('Ошибка: ' + error.message);
-          return;
-        }
-      }
+      if (!user) return;
 
       currentOpenProfileId = userId;
-      const isOwnProfile = userId === currentUser?.uid;
-
       document.getElementById('viewUserAvatar').src = user.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId;
       document.getElementById('viewUserName').textContent = user.name || 'User';
-      document.getElementById('viewUserTag').textContent = '@' + (user.name || 'user');
-      document.getElementById('viewUserCity').textContent = user.city || '-';
-      document.getElementById('viewUserStatus').textContent = user.status || '-';
-      document.getElementById('viewUserBday').textContent = user.bday || '-';
-      document.getElementById('viewUserAbout').textContent = user.about || '-';
-      document.getElementById('userPageHeaderTitle').textContent = user.name || 'Профиль';
-
+      
       const actionsContainer = document.getElementById('userProfileActions');
-      if (isOwnProfile) {
-        actionsContainer.innerHTML = '<span style="font-size:12px; color:var(--text-sub);">Это ваш профиль</span>';
+      if (userId === currentUser?.uid) {
+        actionsContainer.innerHTML = '<span>Мой профиль</span>';
       } else {
         const isFriend = currentUserData?.friends?.includes(userId);
         actionsContainer.innerHTML = `
@@ -1540,115 +1144,23 @@
             ${isFriend ? 'Удалить из друзей' : 'Добавить в друзья'}
           </button>
           <button class="btn btn-gray" onclick="closeUserProfilePage(); openFullscreenChat('${userId}');">Написать</button>
-          <button class="btn btn-call" onclick="startCallWith('${userId}')">📞 Позвонить</button>
         `;
       }
-
-      // Друзья пользователя
-      const friendsGrid = document.getElementById('viewUserFriendsGrid');
-      const friendsCount = document.getElementById('viewUserFriendsCount');
-      const userFriends = allUsers.filter(u => user.friends?.includes(u.id));
-      friendsCount.textContent = userFriends.length;
-      
-      friendsGrid.innerHTML = userFriends.length === 0 ? 
-        '<div style="font-size:12px; color:var(--text-sub);">Нет друзей</div>' :
-        userFriends.map(f => `
-          <div class="friend-item-card" onclick="openUserProfile('${f.id}')">
-            <img src="${f.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + f.id}">
-            <span>${f.name?.split(' ')[0] || 'User'}</span>
-          </div>
-        `).join('');
-
-      // Посты пользователя
-      const postsContainer = document.getElementById('viewUserPosts');
-      try {
-        const snapshot = await db.collection('posts')
-          .where('userId', '==', userId)
-          .orderBy('timestamp', 'desc')
-          .limit(10)
-          .get();
-
-        if (snapshot.empty) {
-          postsContainer.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет записей</div>';
-        } else {
-          postsContainer.innerHTML = snapshot.docs.map(doc => {
-            const p = doc.data();
-            let mediaHtml = '';
-            if (p.media) {
-              mediaHtml = p.media.match(/\.(mp4|webm|ogg|mov)/i) ? 
-                `<video src="${p.media}" controls style="max-width:100%; margin-top:6px; border-radius:4px;"></video>` :
-                `<img src="${p.media}" style="max-width:100%; margin-top:6px; border-radius:4px;" loading="lazy">`;
-            }
-            return `
-              <div style="background:#f9fafb; padding:10px; border-radius:4px; margin-bottom:8px; border:1px solid var(--border); font-size:13px;">
-                <div style="font-size:11px; color:var(--text-sub); margin-bottom:4px;">${p.timestamp?.toDate?.()?.toLocaleString() || 'Недавно'}</div>
-                ${p.text || ''}
-                ${mediaHtml}
-              </div>
-            `;
-          }).join('');
-        }
-      } catch (error) {
-        postsContainer.innerHTML = '<div style="color:red;">Ошибка загрузки</div>';
-      }
-
       document.getElementById('userProfilePage').style.display = 'flex';
     }
 
-    function closeUserProfilePage() {
-      document.getElementById('userProfilePage').style.display = 'none';
-      currentOpenProfileId = null;
-    }
-
-    async function createFriendPost() {
-      const text = document.getElementById('friendPostText').value.trim();
-      if (!text || !currentOpenProfileId) return;
-
-      try {
-        await db.collection('posts').add({
-          userId: currentOpenProfileId,
-          authorName: currentUserData.name || 'User',
-          authorAvatar: currentUserData.avatar || '',
-          text: `📝 ${currentUserData.name}: ${text}`,
-          media: null,
-          likes: 0,
-          comments: [],
-          reposts: 0,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        document.getElementById('friendPostText').value = '';
-        openUserProfile(currentOpenProfileId);
-        alert('Запись опубликована!');
-      } catch (error) {
-        alert('Ошибка: ' + error.message);
-      }
-    }
+    function closeUserProfilePage() { document.getElementById('userProfilePage').style.display = 'none'; }
 
     // ============================================================
     // ===== МЕССЕНДЖЕР =====
     // ============================================================
     function renderDialogsList() {
       const container = document.getElementById('friendsDialogList');
-      
-      if (!currentUserData || !currentUserData.friends) {
-        container.innerHTML = '<div style="padding:12px; font-size:13px; color:var(--text-sub);">Нет друзей для чата</div>';
-        return;
-      }
-
-      const friends = allUsers.filter(u => currentUserData.friends.includes(u.id));
-      
-      if (friends.length === 0) {
-        container.innerHTML = '<div style="padding:12px; font-size:13px; color:var(--text-sub);">Нет друзей для чата</div>';
-        return;
-      }
-
-      container.innerHTML = friends.map(f => `
+      const friends = allUsers.filter(u => currentUserData?.friends?.includes(u.id));
+      container.innerHTML = friends.length === 0 ? 'Нет диалогов' : friends.map(f => `
         <div class="dialog-card" onclick="openFullscreenChat('${f.id}')">
           <img src="${f.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + f.id}" class="avatar-small">
-          <div style="flex:1;">
-            <div style="font-weight:bold; font-size:13px;">${f.name || 'User'}</div>
-            <div style="font-size:11px; color:var(--text-sub);">@${f.name || 'user'}</div>
-          </div>
+          <b>${f.name}</b>
         </div>
       `).join('');
     }
@@ -1657,573 +1169,115 @@
       activeChatTargetId = targetId;
       const user = allUsers.find(u => u.id === targetId);
       document.getElementById('activeChatName').textContent = user?.name || 'Собеседник';
-      document.getElementById('chatAvatar').src = user?.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=default';
-      
-      if (chatUnsubscribe) {
-        chatUnsubscribe();
-        chatUnsubscribe = null;
-      }
+      document.getElementById('chatAvatar').src = user?.avatar || '';
 
+      if (chatUnsubscribe) chatUnsubscribe();
       const chatId = [currentUser.uid, targetId].sort().join('_');
-      chatUnsubscribe = db.collection('chats').doc(chatId)
-        .onSnapshot((doc) => {
-          if (doc.exists) {
-            const data = doc.data();
-            renderChatMessages(data.messages || []);
-          } else {
-            renderChatMessages([]);
-          }
-        });
+      chatUnsubscribe = db.collection('chats').doc(chatId).onSnapshot(doc => {
+        renderChatMessages(doc.exists ? doc.data().messages || [] : []);
+      });
 
       document.getElementById('fullscreenChatModal').style.display = 'flex';
-      document.getElementById('chatTextInput').focus();
     }
 
     function closeFullscreenChat() {
-      if (chatUnsubscribe) {
-        chatUnsubscribe();
-        chatUnsubscribe = null;
-      }
+      if (chatUnsubscribe) chatUnsubscribe();
       document.getElementById('fullscreenChatModal').style.display = 'none';
-      activeChatTargetId = null;
     }
 
     function renderChatMessages(messages) {
       const msgs = document.getElementById('chatMessages');
-      
-      if (!messages || messages.length === 0) {
-        msgs.innerHTML = '<div style="text-align:center; color:var(--text-sub); padding:20px;">Начните диалог</div>';
-        return;
-      }
-
-      msgs.innerHTML = messages.map(m => {
-        const isOut = m.sender === currentUser.uid;
-        const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
-        
-        let content = m.text || '';
-        if (m.media) {
-          if (m.media.match(/\.(mp4|webm|ogg|mov)/i)) {
-            content += `<video src="${m.media}" controls style="max-width:100%; border-radius:4px; margin-top:4px;"></video>`;
-          } else {
-            content += `<img src="${m.media}" style="max-width:100%; border-radius:4px; margin-top:4px;" loading="lazy">`;
-          }
-        }
-        
-        return `
-          <div class="chat-bubble ${isOut ? 'out' : 'in'}">
-            ${m.quote ? `<div class="quoted-text">${m.quote}</div>` : ''}
-            ${content}
-            <div class="chat-time">${time}</div>
-          </div>
-        `;
-      }).join('');
-
+      msgs.innerHTML = messages.map(m => `
+        <div class="chat-bubble ${m.sender === currentUser.uid ? 'out' : 'in'}">
+          ${m.text || ''}
+        </div>
+      `).join('');
       msgs.scrollTop = msgs.scrollHeight;
     }
 
     async function sendChatMessage() {
       const input = document.getElementById('chatTextInput');
-      if (!input.value.trim() || !activeChatTargetId || !currentUser) return;
-
+      if (!input.value.trim() || !activeChatTargetId) return;
       const text = input.value.trim();
       input.value = '';
 
       const chatId = [currentUser.uid, activeChatTargetId].sort().join('_');
-      const message = {
-        sender: currentUser.uid,
-        text: text,
-        quote: replyTargetText || null,
-        timestamp: new Date().toISOString()
-      };
-
-      try {
-        await db.collection('chats').doc(chatId).set({
-          participants: [currentUser.uid, activeChatTargetId],
-          messages: firebase.firestore.FieldValue.arrayUnion(message)
-        }, { merge: true });
-        
-        cancelReply();
-        playKlekSound();
-      } catch (error) {
-        console.error('Ошибка отправки:', error);
-        alert('Ошибка отправки сообщения');
-      }
-    }
-
-    async function sendChatMedia(input) {
-      if (!input.files || !input.files[0] || !activeChatTargetId || !currentUser) return;
-
-      try {
-        const file = input.files[0];
-        let url = await uploadToImgbb(file);
-        
-        const chatId = [currentUser.uid, activeChatTargetId].sort().join('_');
-        const message = {
-          sender: currentUser.uid,
-          text: '',
-          media: url,
-          timestamp: new Date().toISOString()
-        };
-
-        await db.collection('chats').doc(chatId).set({
-          participants: [currentUser.uid, activeChatTargetId],
-          messages: firebase.firestore.FieldValue.arrayUnion(message)
-        }, { merge: true });
-
-        input.value = '';
-        playKlekSound();
-      } catch (error) {
-        alert('Ошибка: ' + error.message);
-      }
-    }
-
-    // ===== ТАЙПИНГ =====
-    function typingHandler() {
-      if (!activeChatTargetId || !currentUser) return;
-      
-      const chatId = [currentUser.uid, activeChatTargetId].sort().join('_');
-      const typingRef = db.collection('chats').doc(chatId);
-      
-      typingRef.update({
-        typing: {
-          [currentUser.uid]: true,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }
-      }).catch(() => {});
-      
-      clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => {
-        typingRef.update({
-          [`typing.${currentUser.uid}`]: firebase.firestore.FieldValue.delete()
-        }).catch(() => {});
-      }, 2000);
+      await db.collection('chats').doc(chatId).set({
+        messages: firebase.firestore.FieldValue.arrayUnion({
+          sender: currentUser.uid, text: text, timestamp: new Date().toISOString()
+        })
+      }, { merge: true });
     }
 
     // ============================================================
-    // ===== ЗВОНКИ =====
+    // ===== ЗВОНКИ, СООБЩЕСТВА, ПОИСК И НАВИГАЦИЯ =====
     // ============================================================
     function startCall() {
       if (!activeChatTargetId) return;
-      startCallWith(activeChatTargetId);
-    }
-
-    function startCallWith(userId) {
-      const user = allUsers.find(u => u.id === userId);
-      if (!user) return;
-
-      isCallActive = true;
-      document.getElementById('callAvatar').src = user.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + userId;
-      document.getElementById('callName').textContent = user.name || 'User';
-      document.getElementById('callStatus').textContent = 'Звонок...';
       document.getElementById('callOverlay').style.display = 'flex';
-
-      let seconds = 0;
-      const interval = setInterval(() => {
-        seconds++;
-        if (seconds > 3) {
-          document.getElementById('callStatus').textContent = '📞 Разговор';
-        }
-        if (seconds > 10) {
-          clearInterval(interval);
-          endCall();
-        }
-      }, 1000);
-
-      window._callInterval = interval;
     }
+    function endCall() { document.getElementById('callOverlay').style.display = 'none'; }
+    function toggleMute() {}
+    function typingHandler() {}
+    function cancelReply() {}
+    function openNotificationsModal() { document.getElementById('notificationsModal').style.display = 'flex'; }
+    function closeNotificationsModal() { document.getElementById('notificationsModal').style.display = 'none'; }
 
-    function endCall() {
-      isCallActive = false;
-      if (window._callInterval) {
-        clearInterval(window._callInterval);
-        window._callInterval = null;
-      }
-      document.getElementById('callOverlay').style.display = 'none';
-    }
-
-    function toggleMute() {
-      isMuted = !isMuted;
-      const btn = document.getElementById('callMuteBtn');
-      btn.classList.toggle('active', isMuted);
-    }
-
-    function cancelReply() {
-      replyTargetText = null;
-      document.getElementById('replyPreviewBar').style.display = 'none';
-    }
-
-    // ============================================================
-    // ===== КОММУНИТИ =====
-    // ============================================================
     function renderCommunitiesList() {
       const container = document.getElementById('myGroupsList');
-      
-      if (Object.keys(allCommunities).length === 0) {
-        container.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет сообществ</div>';
-        return;
-      }
-
-      container.innerHTML = Object.keys(allCommunities).map(key => {
-        const comm = allCommunities[key];
-        const isSubscribed = comm.subscribers?.includes(currentUser?.uid);
-        const isOwner = comm.owner === currentUser?.uid;
-
-        return `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid var(--border); border-radius:4px;">
-            <div>
-              <b>${comm.name || 'Без названия'}</b>
-              <div style="font-size:11px; color:var(--text-sub);">${comm.type || 'Сообщество'} • ${comm.subscribersCount || 0} подписчиков</div>
-            </div>
-            <button class="btn ${isOwner ? '' : 'btn-gray'}" style="padding:4px 10px; font-size:11px;" onclick="openCommunityView('${key}')">
-              ${isOwner ? 'Управлять' : (isSubscribed ? 'Открыть' : 'Подписаться')}
-            </button>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function openCommunityView(commId) {
-      const comm = allCommunities[commId];
-      if (!comm) return;
-
-      const isSubscribed = comm.subscribers?.includes(currentUser?.uid);
-      const isOwner = comm.owner === currentUser?.uid;
-
-      document.getElementById('commHeaderTitle').textContent = comm.type || 'Сообщество';
-      document.getElementById('commName').textContent = comm.name || 'Без названия';
-      document.getElementById('commSubscribers').textContent = `${comm.subscribersCount || 0} подписчиков`;
-      document.getElementById('commAvatar').src = comm.avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + commId;
-
-      const clickerCard = document.getElementById('savaCoinClickerCard');
-      if (comm.isCoinGame) {
-        clickerCard.style.display = 'block';
-        document.getElementById('savaCoinBalance').textContent = currentUserData?.savaCoinBalance || 0;
-      } else {
-        clickerCard.style.display = 'none';
-      }
-
-      const btnsContainer = document.getElementById('commActionBtns');
-      if (isOwner) {
-        btnsContainer.innerHTML = '<span style="font-size:12px; color:var(--accent); font-weight:bold;">Администратор</span>';
-        document.getElementById('commCreatePostCard').style.display = 'block';
-      } else {
-        btnsContainer.innerHTML = `
-          <button class="btn" onclick="toggleCommSubscribe('${commId}')" id="commSubBtn_${commId}">
-            ${isSubscribed ? 'Отписаться' : 'Подписаться'}
-          </button>
-        `;
-        document.getElementById('commCreatePostCard').style.display = 'none';
-      }
-
-      renderCommunityPosts(comm);
-      document.getElementById('communityPage').style.display = 'flex';
-      document.getElementById('communityPage').dataset.activeComm = commId;
-    }
-
-    async function toggleCommSubscribe(commId) {
-      if (!currentUser) return;
-      const comm = allCommunities[commId];
-      if (!comm) return;
-
-      const isSubscribed = comm.subscribers?.includes(currentUser.uid);
-      const update = isSubscribed ? {
-        subscribersCount: firebase.firestore.FieldValue.increment(-1),
-        subscribers: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-      } : {
-        subscribersCount: firebase.firestore.FieldValue.increment(1),
-        subscribers: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-      };
-
-      await db.collection('communities').doc(commId).update(update);
-      await loadCommunities();
-      renderCommunitiesList();
-      openCommunityView(commId);
-    }
-
-    async function createCommunityPost() {
-      const commId = document.getElementById('communityPage').dataset.activeComm;
-      const text = document.getElementById('commPostText').value.trim();
-      if (!text || !commId) return;
-
-      try {
-        await db.collection('communities').doc(commId).update({
-          posts: firebase.firestore.FieldValue.arrayUnion({
-            text: text,
-            author: currentUserData.name || 'User',
-            timestamp: new Date().toISOString()
-          })
-        });
-        document.getElementById('commPostText').value = '';
-        await loadCommunities();
-        openCommunityView(commId);
-        alert('Пост опубликован!');
-      } catch (error) {
-        alert('Ошибка: ' + error.message);
-      }
-    }
-
-    function renderCommunityPosts(comm) {
-      const container = document.getElementById('commPostsList');
-      const posts = comm.posts || [];
-
-      if (posts.length === 0) {
-        container.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет записей</div>';
-        return;
-      }
-
-      container.innerHTML = posts.map(p => `
-        <div class="card" style="margin:0;">
-          <div style="font-size:11px; color:var(--text-sub); margin-bottom:4px;">${p.timestamp || 'Недавно'}</div>
-          <div style="font-size:13px;">${p.text || ''}</div>
+      container.innerHTML = Object.keys(allCommunities).map(k => `
+        <div class="dialog-card" onclick="openCommunityView('${k}')">
+          <b>${allCommunities[k].name}</b>
         </div>
       `).join('');
     }
 
-    function closeCommunityPage() {
-      document.getElementById('communityPage').style.display = 'none';
+    function openCommunityView(commId) {
+      const comm = allCommunities[commId];
+      if (!comm) return;
+      document.getElementById('commName').textContent = comm.name;
+      document.getElementById('communityPage').style.display = 'flex';
     }
-
-    // ============================================================
-    // ===== SAVA COIN =====
-    // ============================================================
-    async function tapSavaCoin() {
-      if (!currentUser) return;
-      currentUserData.savaCoinBalance = (currentUserData.savaCoinBalance || 0) + 1;
-      document.getElementById('savaCoinBalance').textContent = currentUserData.savaCoinBalance;
-      
-      await db.collection('users').doc(currentUser.uid).update({
-        savaCoinBalance: firebase.firestore.FieldValue.increment(1)
-      });
-    }
-
-    // ============================================================
-    // ===== МУЗЫКА =====
-    // ============================================================
-    function renderPlaylists() {
-      const container = document.getElementById('playlistsContainer');
-      container.innerHTML = `
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn btn-gray" onclick="createPlaylist()">+ Новый плейлист</button>
-        </div>
-        <div style="margin-top:15px; font-size:13px; color:var(--text-sub);">
-          Загрузите свои треки через "Создать плейлист"
-        </div>
-      `;
-    }
-
-    function createPlaylist() {
-      const name = prompt("Название плейлиста:");
-      if (!name) return;
-      alert('Плейлист "' + name + '" создан (локально)');
-      renderPlaylists();
-    }
-
-    // ============================================================
-    // ===== ПОИСК (ОПТИМИЗИРОВАННЫЙ) =====
-    // ============================================================
-    let searchTimeout = null;
+    function closeCommunityPage() { document.getElementById('communityPage').style.display = 'none'; }
 
     function handleGlobalSearch() {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        const q = document.getElementById('globalSearchInput').value.toLowerCase().trim();
-        const block = document.getElementById('searchResultsBlock');
-        const list = document.getElementById('searchResultsList');
+      const q = document.getElementById('globalSearchInput').value.toLowerCase().trim();
+      const block = document.getElementById('searchResultsBlock');
+      const list = document.getElementById('searchResultsList');
+      if (!q) { block.style.display = 'none'; return; }
 
-        if (!q) { block.style.display = 'none'; return; }
-
-        let results = [];
-        
-        // Поиск среди пользователей
-        allUsers.forEach(u => {
-          if (u.name?.toLowerCase().includes(q) || (u.email && u.email.toLowerCase().includes(q))) {
-            results.push({ name: u.name || 'User', type: 'Пользователь', id: u.id, action: 'openUser' });
-          }
-        });
-
-        // Поиск среди сообществ
-        Object.keys(allCommunities).forEach(key => {
-          const c = allCommunities[key];
-          if (c.name?.toLowerCase().includes(q)) {
-            results.push({ name: c.name, type: c.type || 'Сообщество', id: key, action: 'openComm' });
-          }
-        });
-
-        if (results.length === 0) {
-          list.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Ничего не найдено</div>';
-        } else {
-          list.innerHTML = results.slice(0, 10).map(item => `
-            <div class="search-item">
-              <div>
-                <b>${item.name}</b> <span style="font-size:11px; color:var(--text-sub);">(${item.type})</span>
-              </div>
-              <button class="btn btn-gray" style="padding:3px 8px; font-size:11px;" onclick="${item.action === 'openUser' ? `openUserProfile('${item.id}')` : `openCommunityView('${item.id}')`}">
-                Открыть
-              </button>
-            </div>
-          `).join('');
-        }
-        block.style.display = 'block';
-      }, 300);
+      const results = allUsers.filter(u => u.name?.toLowerCase().includes(q));
+      list.innerHTML = results.map(u => `
+        <div class="search-item">
+          <span>${u.name}</span>
+          <button class="btn btn-gray" onclick="openUserProfile('${u.id}')">Открыть</button>
+        </div>
+      `).join('');
+      block.style.display = 'block';
     }
 
-    // ============================================================
-    // ===== НАВИГАЦИЯ =====
-    // ============================================================
     function nav(tab, el) {
       document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
       if (el) el.classList.add('active');
 
-      document.getElementById('tabProfile').style.display = tab === 'profile' ? 'block' : 'none';
-      document.getElementById('tabFeed').style.display = tab === 'feed' ? 'block' : 'none';
-      document.getElementById('tabMessenger').style.display = tab === 'messenger' ? 'block' : 'none';
-      document.getElementById('tabMusic').style.display = tab === 'music' ? 'block' : 'none';
-      document.getElementById('tabPublics').style.display = tab === 'publics' ? 'block' : 'none';
-      document.getElementById('tabSettings').style.display = tab === 'settings' ? 'block' : 'none';
+      ['tabProfile', 'tabFeed', 'tabMessenger', 'tabMusic', 'tabPublics', 'tabSettings'].forEach(t => {
+        document.getElementById(t).style.display = 'none';
+      });
 
+      const activeMap = {
+        profile: 'tabProfile', feed: 'tabFeed', messenger: 'tabMessenger',
+        music: 'tabMusic', publics: 'tabPublics', settings: 'tabSettings'
+      };
+
+      document.getElementById(activeMap[tab]).style.display = 'block';
       if (tab === 'profile') renderWallPosts();
       if (tab === 'feed') renderGlobalFeed();
       if (tab === 'messenger') renderDialogsList();
       if (tab === 'publics') renderCommunitiesList();
-      if (tab === 'music') renderPlaylists();
     }
 
-    // ============================================================
-    // ===== УВЕДОМЛЕНИЯ =====
-    // ============================================================
-    function addNotification(text) {
-      notifications.unshift({ id: Date.now(), text });
-      updateNotifBadge();
-      playKlekSound();
-    }
-
-    function updateNotifBadge() {
-      const badge = document.getElementById('notifBadge');
-      if (notifications.length > 0) {
-        badge.textContent = notifications.length;
-        badge.style.display = 'block';
-      } else {
-        badge.style.display = 'none';
-      }
-    }
-
-    function openNotificationsModal() {
-      const list = document.getElementById('notificationsList');
-      if (notifications.length === 0) {
-        list.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет уведомлений</div>';
-      } else {
-        list.innerHTML = notifications.map(n => `
-          <div style="padding:8px; border-bottom:1px solid var(--border); font-size:12px;">${n.text}</div>
-        `).join('');
-      }
-      document.getElementById('notificationsModal').style.display = 'flex';
-    }
-
-    function closeNotificationsModal() {
-      document.getElementById('notificationsModal').style.display = 'none';
-    }
-
-    // ============================================================
-    // ===== ВСПОМОГАТЕЛЬНЫЕ =====
-    // ============================================================
-    function openCreateGroupModal() {
-      const name = prompt("Название сообщества:");
-      if (!name || !currentUser) return;
-      
-      db.collection('communities').add({
-        name: name,
-        type: 'Сообщество',
-        avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + Date.now(),
-        subscribersCount: 1,
-        subscribers: [currentUser.uid],
-        owner: currentUser.uid,
-        isCoinGame: false,
-        posts: [],
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        alert('Сообщество создано!');
-        loadCommunities();
-        renderCommunitiesList();
-      }).catch(error => {
-        alert('Ошибка: ' + error.message);
-      });
-    }
-
-    function openShareModal(postId) {
-      const list = document.getElementById('shareFriendsList');
-      const friends = allUsers.filter(u => currentUserData?.friends?.includes(u.id));
-      
-      if (friends.length === 0) {
-        list.innerHTML = '<div style="font-size:12px; color:var(--text-sub);">Нет друзей для отправки</div>';
-      } else {
-        list.innerHTML = friends.map(f => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border:1px solid var(--border); border-radius:4px;">
-            <div style="display:flex; gap:8px; align-items:center;">
-              <img src="${f.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + f.id}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
-              <b style="font-size:13px;">${f.name || 'User'}</b>
-            </div>
-            <button class="btn" style="padding:4px 8px; font-size:11px;" onclick="sharePostWithFriend('${f.id}', '${postId}')">Отправить</button>
-          </div>
-        `).join('');
-      }
-      document.getElementById('sharePostModal').style.display = 'flex';
-    }
-
-    async function sharePostWithFriend(friendId, postId) {
-      try {
-        const doc = await db.collection('posts').doc(postId).get();
-        const data = doc.data();
-        
-        const chatId = [currentUser.uid, friendId].sort().join('_');
-        await db.collection('chats').doc(chatId).set({
-          participants: [currentUser.uid, friendId],
-          messages: firebase.firestore.FieldValue.arrayUnion({
-            sender: currentUser.uid,
-            text: `📎 Поделился(ась) записью: ${data.text || ''}`,
-            media: data.media || null,
-            timestamp: new Date().toISOString(),
-            isShared: true
-          })
-        }, { merge: true });
-        
-        closeShareModal();
-        alert('Пост отправлен в чат!');
-        playKlekSound();
-      } catch (error) {
-        alert('Ошибка: ' + error.message);
-      }
-    }
-
-    function closeShareModal() {
-      document.getElementById('sharePostModal').style.display = 'none';
-    }
-
-    function playKlekSound() {
-      if (!document.getElementById('settingSounds')?.checked) return;
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.08);
-      } catch (e) {}
-    }
-
-    // ============================================================
-    // ===== ИНИЦИАЛИЗАЦИЯ =====
-    // ============================================================
-    document.addEventListener('DOMContentLoaded', () => {
-      // Тестовые данные
-      document.getElementById('loginEmail').value = 'test@test.com';
-      document.getElementById('loginPassword').value = '123456';
-    });
+    function renderPlaylists() {}
+    function openCreateGroupModal() {}
   </script>
 </body>
 </html>
