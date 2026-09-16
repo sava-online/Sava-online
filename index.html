@@ -1,471 +1,1955 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Форум любителей Савелия</title>
-    <style>
-        * { box-sizing: border-box; font-family: Tahoma, Arial, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #dbe2ed; color: #222222; font-size: 13px; padding-bottom: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background-color: #e5ebf2; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); min-height: 100vh; }
-        .header { background: #536f96; color: #ffffff; padding: 12px; border-bottom: 2px solid #364e70; text-align: center; }
-        .logo-title { font-size: 18px; font-weight: bold; }
-        
-        /* Меню */
-        details.main-menu { background: #d8e0ec; border-bottom: 1px solid #b3c0d2; }
-        details.main-menu summary { padding: 10px; font-weight: bold; color: #2b3e55; cursor: pointer; list-style: none; background: #f0f3f8; border-bottom: 1px solid #c2cede; display: flex; align-items: center; }
-        details.main-menu summary::-webkit-details-marker { display: none; }
-        .menu-list { list-style: none; background: #ffffff; }
-        .menu-list li { border-bottom: 1px solid #e1e7f0; }
-        .menu-list button { display: flex; align-items: center; width: 100%; text-align: left; padding: 10px; color: #1a4f8b; font-weight: bold; font-size: 13px; background: none; border: none; cursor: pointer; }
-        .menu-svg { width: 18px; height: 18px; fill: #536f96; margin-right: 10px; }
-        
-        /* Блоки */
-        .category { margin: 8px; border: 1px solid #8ba0bd; background: #ffffff; }
-        .category-header { background: #728bb0; color: #ffffff; font-weight: bold; font-size: 12px; padding: 8px; text-transform: uppercase; }
-        
-        .forum-item { padding: 10px; border-bottom: 1px solid #e1e7f0; display: flex; align-items: flex-start; }
-        .avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; border: 1px solid #c2cede; background: #f0f3f8; }
-        .forum-details { flex-grow: 1; overflow: hidden; }
-        .forum-title { color: #1a4f8b; font-weight: bold; font-size: 14px; cursor: pointer; }
-        .forum-desc { color: #222; font-size: 12px; margin-top: 4px; word-wrap: break-word; }
-        .forum-desc img { max-width: 100%; max-height: 200px; border-radius: 4px; margin-top: 5px; display: block; }
-        .forum-meta { background: #f4f6f9; border: 1px dashed #d0d7e0; padding: 4px; font-size: 10px; color: #666; margin-top: 4px; }
-        
-        /* Формы и кнопки */
-        .post-box { padding: 10px; background: #f8fafc; }
-        .post-textarea { width: 100%; height: 60px; border: 1px solid #b2c1d4; padding: 8px; font-size: 12px; margin-bottom: 8px; }
-        .btn { background: #3b5b8c; color: #fff; border: 1px solid #2a4369; padding: 8px 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .btn-light { background: #eef3f8; color: #2b3e55; border: 1px solid #a8b8cc; }
-        .input-text { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #b2c1d4; }
-        
-        /* Галерея */
-        .gallery-grid { display: flex; flex-wrap: wrap; gap: 5px; padding: 5px; }
-        .gallery-grid img { width: calc(50% - 5px); height: 120px; object-fit: cover; border: 1px solid #ccc; }
-
-        .hidden { display: none !important; }
-        .page { display: none; }
-        .active-page { display: block; }
-        
-        .add-friend-btn { font-size: 10px; background: #4a7c59; color: #fff; border: none; padding: 2px 6px; margin-left: 5px; cursor: pointer; border-radius: 2px; }
-    </style>
-    
-    <!-- Подключаем старую версию Firebase (v8), которая работает на старых браузерах (ES5) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>Форум Савелия</title>
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Tahoma,Arial,sans-serif;
+}
+html,body{
+    min-height:100%;
+}
+body{
+    background:#dce8df;
+    color:#222;
+    font-size:13px;
+    padding-bottom:20px;
+}
+button,
+input,
+textarea{
+    font-family:Tahoma,Arial,sans-serif;
+}
+button{
+    cursor:pointer;
+}
+.container{
+    width:100%;
+    max-width:680px;
+    min-height:100vh;
+    margin:0 auto;
+    background:#edf4ef;
+    border-left:1px solid #b8cbbb;
+    border-right:1px solid #b8cbbb;
+}
+/* =========================
+   HEADER
+========================= */
+.header{
+    background:#39734b;
+    color:#fff;
+    padding:10px;
+    border-bottom:2px solid #285637;
+}
+.header-inner{
+    display:flex;
+    align-items:center;
+}
+.logo-box{
+    width:34px;
+    height:34px;
+    background:#fff;
+    border:1px solid #275c39;
+    border-radius:4px;
+    margin-right:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+.logo-svg{
+    width:23px;
+    height:23px;
+    fill:#39734b;
+}
+.logo-title{
+    font-size:17px;
+    font-weight:bold;
+}
+.logo-subtitle{
+    font-size:10px;
+    color:#d9eadc;
+    margin-top:2px;
+}
+/* =========================
+   MENU
+========================= */
+details.main-menu{
+    background:#d8e7dc;
+    border-bottom:1px solid #aec4b4;
+}
+details.main-menu summary{
+    list-style:none;
+    padding:9px;
+    background:#f6f9f7;
+    border-bottom:1px solid #c2d2c6;
+    color:#285b38;
+    font-weight:bold;
+}
+details.main-menu summary::-webkit-details-marker{
+    display:none;
+}
+.menu-summary-inner{
+    display:flex;
+    align-items:center;
+}
+.menu-svg{
+    width:18px;
+    height:18px;
+    fill:#39734b;
+    margin-right:9px;
+    flex:none;
+}
+.menu-list{
+    list-style:none;
+    background:#fff;
+}
+.menu-list li{
+    border-bottom:1px solid #e0e8e2;
+}
+.menu-list button{
+    display:flex;
+    align-items:center;
+    width:100%;
+    padding:9px;
+    border:0;
+    background:#fff;
+    color:#285b38;
+    font-size:12px;
+    font-weight:bold;
+    text-align:left;
+}
+.menu-list button:active{
+    background:#e4f0e7;
+}
+.hidden{
+    display:none !important;
+}
+/* =========================
+   PAGES
+========================= */
+.page{
+    display:none;
+}
+.active-page{
+    display:block;
+}
+.category{
+    margin:7px;
+    border:1px solid #9db5a3;
+    background:#fff;
+}
+.category-header{
+    background:#51845f;
+    color:#fff;
+    font-weight:bold;
+    font-size:12px;
+    padding:7px 9px;
+    border-bottom:1px solid #376945;
+}
+.category-header small{
+    font-size:10px;
+    font-weight:normal;
+}
+.post-box{
+    padding:9px;
+    background:#f8faf8;
+}
+/* =========================
+   INPUTS
+========================= */
+.input-text,
+.post-textarea{
+    width:100%;
+    border:1px solid #aebfb2;
+    background:#fff;
+    color:#222;
+    border-radius:2px;
+    font-size:12px;
+}
+.input-text{
+    padding:8px;
+    margin-bottom:8px;
+}
+.post-textarea{
+    height:65px;
+    resize:vertical;
+    padding:7px;
+    margin-bottom:7px;
+}
+.input-text:focus,
+.post-textarea:focus{
+    outline:none;
+    border-color:#4b865c;
+}
+/* =========================
+   BUTTONS
+========================= */
+.btn{
+    background:#39734b;
+    color:#fff;
+    border:1px solid #285637;
+    border-radius:2px;
+    padding:7px 10px;
+    font-size:12px;
+    font-weight:bold;
+    margin-right:4px;
+}
+.btn:active{
+    background:#285637;
+}
+.btn-light{
+    background:#edf4ef;
+    color:#285b38;
+    border:1px solid #a8bbaD;
+}
+.btn-danger{
+    background:#9a4444;
+    border-color:#743333;
+}
+/* =========================
+   POSTS
+========================= */
+.forum-item{
+    padding:9px;
+    border-bottom:1px solid #dfe7e1;
+    display:flex;
+    align-items:flex-start;
+}
+.forum-item:last-child{
+    border-bottom:0;
+}
+.avatar-img{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:50%;
+    object-fit:cover;
+    margin-right:9px;
+    border:1px solid #aebfb2;
+    background:#edf4ef;
+}
+.forum-details{
+    flex:1;
+    min-width:0;
+}
+.forum-title{
+    color:#28613b;
+    font-weight:bold;
+    font-size:13px;
+    word-wrap:break-word;
+}
+.forum-desc{
+    color:#222;
+    font-size:12px;
+    line-height:1.35;
+    margin-top:4px;
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+}
+.forum-desc img{
+    max-width:100%;
+    max-height:220px;
+    display:block;
+    margin-top:6px;
+    border:1px solid #c4d2c8;
+}
+.forum-meta{
+    color:#777;
+    font-size:10px;
+    margin-top:5px;
+    padding-top:4px;
+    border-top:1px dashed #d5ddd7;
+}
+.add-friend-btn{
+    background:#e8f1eb;
+    color:#28613b;
+    border:1px solid #a7bbaa;
+    border-radius:2px;
+    padding:2px 5px;
+    font-size:9px;
+    margin-left:5px;
+}
+/* =========================
+   SEARCH
+========================= */
+.search-box{
+    padding:8px;
+    background:#eef5f0;
+    border-bottom:1px solid #c9d8cc;
+}
+.search-row{
+    display:flex;
+}
+.search-row input{
+    flex:1;
+    min-width:0;
+    padding:8px;
+    border:1px solid #aebfb2;
+    font-size:12px;
+}
+.search-row button{
+    width:75px;
+    margin-left:4px;
+    border:1px solid #285637;
+    background:#39734b;
+    color:#fff;
+    font-weight:bold;
+}
+/* =========================
+   GALLERY
+========================= */
+.gallery-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    padding:5px;
+}
+.gallery-grid img{
+    width:calc(50% - 3px);
+    height:125px;
+    object-fit:cover;
+    border:1px solid #b9c9bd;
+    background:#eef4ef;
+}
+/* =========================
+   USERS
+========================= */
+.user-row{
+    padding:9px;
+    border-bottom:1px solid #e0e8e2;
+    display:flex;
+    align-items:center;
+}
+.user-row:last-child{
+    border-bottom:0;
+}
+.user-info{
+    flex:1;
+    min-width:0;
+}
+.user-name{
+    font-weight:bold;
+    color:#285b38;
+}
+.user-status{
+    font-size:10px;
+    color:#777;
+    margin-top:3px;
+}
+/* =========================
+   MESSENGER
+========================= */
+.messenger-list{
+    background:#fff;
+}
+.dialog-row{
+    display:flex;
+    align-items:center;
+    padding:9px;
+    border-bottom:1px solid #e0e8e2;
+    cursor:pointer;
+}
+.dialog-row:active{
+    background:#edf5ef;
+}
+.dialog-avatar{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:50%;
+    object-fit:cover;
+    margin-right:9px;
+    border:1px solid #adbfaf;
+}
+.dialog-info{
+    flex:1;
+    min-width:0;
+}
+.dialog-name{
+    font-weight:bold;
+    color:#285b38;
+}
+.dialog-preview{
+    color:#777;
+    font-size:10px;
+    margin-top:3px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.chat-head{
+    padding:7px;
+    background:#e8f1ea;
+    border-bottom:1px solid #bdcdbf;
+    display:flex;
+    align-items:center;
+}
+.back-btn{
+    width:32px;
+    height:28px;
+    margin-right:6px;
+    background:#fff;
+    border:1px solid #a9bcae;
+    color:#285b38;
+    font-weight:bold;
+}
+.chat-user-avatar{
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    object-fit:cover;
+    margin-right:7px;
+    border:1px solid #a9bcae;
+}
+.chat-user-name{
+    font-weight:bold;
+    color:#285b38;
+}
+.e2ee-status{
+    font-size:9px;
+    margin-top:2px;
+}
+.e2ee-ok{
+    color:#277442;
+}
+.e2ee-off{
+    color:#8a6a25;
+}
+.chat-messages{
+    height:340px;
+    overflow-y:auto;
+    background:#edf4ef;
+    padding:7px;
+}
+.message{
+    margin-bottom:7px;
+    max-width:88%;
+    clear:both;
+}
+.message.mine{
+    float:right;
+}
+.message.theirs{
+    float:left;
+}
+.message-bubble{
+    padding:7px 8px;
+    border:1px solid #bdcdbf;
+    background:#fff;
+    border-radius:4px;
+    font-size:12px;
+    line-height:1.3;
+    word-wrap:break-word;
+}
+.message.mine .message-bubble{
+    background:#dceede;
+    border-color:#a9c7ad;
+}
+.message-time{
+    color:#777;
+    font-size:9px;
+    margin-top:2px;
+}
+.clear{
+    clear:both;
+}
+.chat-input{
+    padding:7px;
+    background:#f8faf8;
+    border-top:1px solid #c4d2c7;
+}
+.chat-input textarea{
+    width:100%;
+    height:55px;
+    resize:none;
+    border:1px solid #aebfb2;
+    padding:7px;
+    font-size:12px;
+    margin-bottom:5px;
+}
+.chat-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.encryption-note{
+    font-size:9px;
+    color:#666;
+}
+/* =========================
+   PROFILE
+========================= */
+.profile-card{
+    padding:12px;
+    text-align:center;
+}
+.profile-avatar{
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    object-fit:cover;
+    border:2px solid #83a88c;
+    margin-bottom:6px;
+}
+.profile-name{
+    font-size:15px;
+    font-weight:bold;
+    color:#285b38;
+}
+.profile-uid{
+    color:#888;
+    font-size:9px;
+    margin-top:3px;
+}
+/* =========================
+   LOW BANDWIDTH
+========================= */
+.low-bandwidth{
+    padding:5px 8px;
+    background:#f2f6f3;
+    color:#777;
+    font-size:9px;
+    border-bottom:1px solid #d5dfd7;
+}
+.status-text{
+    font-size:10px;
+    margin-top:5px;
+}
+.green{
+    color:#277442;
+}
+.red{
+    color:#a33c3c;
+}
+.empty{
+    padding:12px;
+    color:#777;
+    text-align:center;
+    font-size:11px;
+}
+/* Старые телефоны */
+@media(max-width:360px){
+    body{
+        font-size:12px;
+    }
+    .container{
+        border:0;
+    }
+    .category{
+        margin:4px;
+    }
+    .gallery-grid img{
+        height:105px;
+    }
+    .chat-messages{
+        height:300px;
+    }
+    .btn{
+        padding:6px 7px;
+        font-size:11px;
+    }
+}
+</style>
+<!-- Firebase 8 — гораздо более подходящий вариант для старых браузеров -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
 <body>
-
 <div class="container">
-    <header class="header">
+<header class="header">
+    <div class="header-inner">
+    <div class="logo-box">
+        <svg class="logo-svg" viewBox="0 0 24 24">
+            <path d="M4 4h16v13H7l-3 3V4zm3 3v2h10V7H7zm0 4v2h7v-2H7z"/>
+        </svg>
+    </div>
+    <div>
         <div class="logo-title">Форум Савелия</div>
-    </header>
-
-    <details class="main-menu" id="mainMenu">
-        <summary>
-            <svg class="menu-svg" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-            Главное меню
-        </summary>
-        <ul class="menu-list">
-            <li id="navLogin"><button onclick="goPage('auth')"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>Вход / Регистрация</button></li>
-            <li><button onclick="goPage('main')"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Главная беседа</button></li>
-            <li><button onclick="goPage('gallery')"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>Галерея</button></li>
-            <li id="navFriends" class="hidden"><button onclick="goPage('friends')"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>Друзья и ЛС</button></li>
-            <li id="navSettings" class="hidden"><button onclick="goPage('settings')"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 C9.7,21.59,9.9,21.76,10.14,21.76h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>Настройки</button></li>
-            <li id="navLogout" class="hidden"><button onclick="doLogout()">Выход</button></li>
-        </ul>
-    </details>
-
-    <!-- 1. АВТОРИЗАЦИЯ -->
-    <div id="page-auth" class="page">
-        <div class="category">
-            <div class="category-header">Вход / Регистрация</div>
-            <div class="post-box">
-                <input type="email" id="authEmail" class="input-text" placeholder="Email">
-                <input type="password" id="authPass" class="input-text" placeholder="Пароль">
-                <input type="text" id="authName" class="input-text" placeholder="Имя (Только для регистрации)">
-                
-                <div style="font-size: 11px; margin-bottom: 5px;">Аватарка (Для регистрации, необязательно):</div>
-                <input type="file" id="authAvatar" accept="image/*" class="input-text">
-
-                <div id="authStatus" style="color:red; font-size:11px; margin-bottom:10px;"></div>
-                
-                <button class="btn" onclick="doLogin()">Войти</button>
-                <button class="btn btn-light" onclick="doRegister()">Создать аккаунт</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. ГЛАВНАЯ (БЕСЕДА) -->
-    <div id="page-main" class="page active-page">
-        <div class="category">
-            <div class="category-header">Флудилка <span id="syncStatus">...</span></div>
-            <div id="postsList"></div>
-        </div>
-        
-        <div class="category" id="postFormSection" style="display:none;">
-            <div class="category-header">Написать</div>
-            <div class="post-box">
-                <textarea id="postText" class="post-textarea" placeholder="Текст сообщения..."></textarea>
-                <input type="file" id="postImg" accept="image/*" style="display:none;">
-                <button class="btn btn-light" onclick="document.getElementById('postImg').click()">Прикрепить фото</button>
-                <button class="btn" id="sendBtn" onclick="sendPost()">Отправить</button>
-                <div id="postStatus" style="font-size: 11px; color: green; margin-top:5px;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. ГАЛЕРЕЯ -->
-    <div id="page-gallery" class="page">
-        <div class="category">
-            <div class="category-header">Галерея пользователей</div>
-            <div class="gallery-grid" id="galleryList"></div>
-        </div>
-    </div>
-
-    <!-- 4. НАСТРОЙКИ (СМЕНА ИМЕНИ И АВАТАРА) -->
-    <div id="page-settings" class="page">
-        <div class="category">
-            <div class="category-header">Мой Профиль</div>
-            <div class="post-box">
-                <img id="setAvPreview" class="avatar-img" src="" style="width: 80px; height: 80px; display:block; margin-bottom:10px;">
-                <div style="font-size: 11px;">Новое имя:</div>
-                <input type="text" id="setNewName" class="input-text">
-                
-                <div style="font-size: 11px;">Новая аватарка:</div>
-                <input type="file" id="setNewAvatar" accept="image/*" class="input-text">
-                
-                <button class="btn" onclick="saveSettings()">Сохранить настройки</button>
-                <div id="setSync" style="font-size: 11px; color: green; margin-top:5px;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. ДРУЗЬЯ И ЛС -->
-    <div id="page-friends" class="page">
-        <div class="category">
-            <div class="category-header">Мои Друзья</div>
-            <div id="friendsList"></div>
-        </div>
-    </div>
-
-    <!-- 6. ЧАТ С ДРУГОМ -->
-    <div id="page-chat" class="page">
-        <div class="category">
-            <div class="category-header">Диалог: <span id="chatTitle">...</span></div>
-            <div id="chatMessages" style="max-height: 300px; overflow-y: auto;"></div>
-            <div class="post-box">
-                <textarea id="chatInput" class="post-textarea" placeholder="Сообщение..."></textarea>
-                <button class="btn" onclick="sendPrivateMsg()">Отправить ЛС</button>
-            </div>
-        </div>
+        <div class="logo-subtitle">мобильная версия</div>
     </div>
 </div>
+</header>
+<div class="low-bandwidth">
+    Режим экономии трафика • изображения загружаются только по необходимости
+</div>
+<details class="main-menu" id="mainMenu">
+<summary>
+    <div class="menu-summary-inner">
+        <svg class="menu-svg" viewBox="0 0 24 24">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+        Главное меню
+    </div>
+</summary>
+<ul class="menu-list">
+<li id="navLogin">
+<button onclick="goPage('auth')">
+<svg class="menu-svg" viewBox="0 0 24 24">
+<path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm0 2c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4z"/>
+</svg>
+Вход / Регистрация
+</button>
+</li>
+<li>
+<button onclick="goPage('main')">
+<svg class="menu-svg" viewBox="0 0 24 24">
+<path d="M4 4h16v16H4V4zm3 3v2h10V7H7zm0 4v2h10v-2H7zm0 4v2h6v-2H7z"/>
+</svg>
+Главная беседа
+</button>
+</li>
+<li>
+<button onclick="goPage('gallery')">
+<svg class="menu-svg" viewBox="0 0 24 24">
+<path d="M21 19V5c0-1.1-.9-2-2-2H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5l3.5-4.5z"/>
+</svg>
+Галерея
+</button>
+</li>
+<li id="navMessenger" class="hidden">
+<button onclick="goPage('friends')">
+<svg class="menu-svg" viewBox="0 0 24 24">
+<path d="M20 2H4C2.9 2 2 2.9 2 4v15c0 1.1.9 2 2 2h4l4 3 4-3h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 14H6v-2h12v2zm0-3H6v-2h12v2zm0-3H6V8h12v2z"/>
+</svg>
+Messenger
+</button>
+</li>
+<li id="navSearch" class="hidden">
+<button onclick="goPage('search')">
+<svg class="menu-svg" viewBox="0 0 24 24">
+<path d="M9.5 3a6.5 6.5 0 0 0 0 13c1.6 0 3-.6 4.1-1.5L19 20l1.4-1.4-5.4-5.4c.6-1.1 1-2.4 1-3.7A6.5 6.5 0 0 0 9.5 3zm0 2C12 5 14 7 14 9.5S12 14 9.5 14 5 12 5 9.5 7 5 9.5 5z"/>
+</svg>
+Поиск пользователей
+</button>
+</li>
+<li id="navSettings" class="hidden">
+<button onclick="goPage('settings')">
+<svg class="menu-svg" viewBox="0 0 24 24">
+<path d="M19.4 13c.1-.3.1-.7.1-1s0-.7-.1-1l2-1.6-2-3.4-2.4 1c-.5-.4-1-.7-1.6-.9L15 3h-4l-.5 3.1c-.6.2-1.1.5-1.6.9l-2.4-1-2 3.4L6.6 11c-.1.3-.1.7-.1 1s0 .7.1 1l-2.1 1.6 2 3.4 2.4-1c.5.4 1 .7 1.6.9L11 21h4l.5-3.1c.6-.2 1.1-.5 1.6-.9l2.4 1 2-3.4-2.1-1.6zM13 15.5A3.5 3.5 0 1 1 13 8a3.5 3.5 0 0 1 0 7.5z"/>
+</svg>
+Настройки
+</button>
+</li>
+<li id="navLogout" class="hidden">
+<button onclick="doLogout()">
+Выход
+</button>
+</li>
+</ul>
+</details>
+<!-- =========================
+     AUTH
+========================= -->
+<div id="page-auth" class="page">
+<div class="category">
+<div class="category-header">
+Вход / Регистрация
+</div>
+<div class="post-box">
+<div style="font-size:10px;margin-bottom:4px;">
+Аватарка, необязательно:
+</div>
+<div id="authStatus"
+class="status-text red">
+</div>
 
+Войти
+Создать аккаунт
+</div>
+</div>
+</div>
+<!-- =========================
+     MAIN
+========================= -->
+<div id="page-main" class="page active-page">
+<div class="category">
+<div class="category-header">
+Главная беседа
+<span id="syncStatus"></span>
+</div>
+<div id="postsList"></div>
+</div>
+<div class="category"
+id="postFormSection"
+style="display:none;">
+<div class="category-header">
+Новое сообщение
+</div>
+<div class="post-box">
+<textarea
+id="postText"
+class="post-textarea"
+placeholder="Что хотите написать?"></textarea>
+
+Фото
+Отправить
+<div id="postStatus"
+class="status-text green">
+</div>
+</div>
+</div>
+</div>
+<!-- =========================
+     GALLERY
+========================= -->
+<div id="page-gallery" class="page">
+<div class="category">
+<div class="category-header">
+Галерея
+</div>
+<div class="gallery-grid"
+id="galleryList">
+</div>
+</div>
+</div>
+<!-- =========================
+     SEARCH
+========================= -->
+<div id="page-search" class="page">
+<div class="category">
+<div class="category-header">
+Поиск пользователей
+</div>
+<div class="search-box">
+<div class="search-row">
+<button onclick="searchUsers()">
+Найти
+</button>
+</div>
+</div>
+<div id="searchResults">
+<div class="empty">
+Введите имя пользователя
+</div>
+</div>
+</div>
+</div>
+<!-- =========================
+     FRIENDS / MESSENGER
+========================= -->
+<div id="page-friends" class="page">
+<div class="category">
+<div class="category-header">
+Messenger
+</div>
+<div id="friendsList"
+class="messenger-list">
+</div>
+</div>
+<div class="category">
+<div class="category-header">
+Найти человека
+</div>
+<div class="search-box">
+<div class="search-row">
+<button onclick="searchMessengerUsers()">
+Найти
+</button>
+</div>
+</div>
+<div id="messengerSearchResults"></div>
+</div>
+</div>
+<!-- =========================
+     CHAT
+========================= -->
+<div id="page-chat" class="page">
+<div class="category"
+style="margin:0;border-left:0;border-right:0;">
+<div class="chat-head">
+
+<
+<div>
+<div
+id="chatTitle"
+class="chat-user-name">
+Диалог
+</div>
+<div
+id="encryptionStatus"
+class="e2ee-status">
+Проверка шифрования...
+</div>
+</div>
+</div>
+<div
+id="chatMessages"
+class="chat-messages">
+</div>
+<div class="chat-input">
+<textarea
+id="chatInput"
+placeholder="Введите сообщение..."></textarea>
+<div class="chat-actions">
+<div
+id="encryptionNote"
+class="encryption-note">
+</div>
+
+Отправить
+</div>
+</div>
+</div>
+</div>
+<!-- =========================
+     SETTINGS
+========================= -->
+<div id="page-settings" class="page">
+<div class="category">
+<div class="category-header">
+Мой профиль
+</div>
+<div class="profile-card">
+<div
+id="profileNamePreview"
+class="profile-name">
+</div>
+</div>
+<div class="post-box">
+<div style="font-size:10px;margin-bottom:4px;">
+Новое имя:
+</div>
+<div style="font-size:10px;margin-bottom:4px;">
+Новая аватарка:
+</div>
+
+Сохранить
+<div
+id="setSync"
+class="status-text green">
+</div>
+</div>
+</div>
+</div>
+<!-- =========================
+     PROFILE
+========================= -->
+<div id="page-profile" class="page">
+<div class="category">
+<div class="category-header">
+Профиль пользователя
+</div>
+<div class="profile-card">
+<div
+id="viewProfileName"
+class="profile-name">
+</div>
+<div
+id="viewProfileUid"
+class="profile-uid">
+</div>
+<br>
+
+В друзья
+Написать
+</div>
+</div>
+</div>
+</div>
 <script>
-    // --- НАСТРОЙКА FIREBASE ---
-    var firebaseConfig = {
-        apiKey: "AIzaSyCsU2eJ2aF5oj4uWFbyy0Ez0mekT_At4vU",
-        authDomain: "sava-online.firebaseapp.com",
-        databaseURL: "https://sava-online-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "sava-online",
-        storageBucket: "sava-online.firebasestorage.app"
-    };
-    firebase.initializeApp(firebaseConfig);
-    var auth = firebase.auth();
-    var db = firebase.database();
-    var IMGBB_KEY = "fa3d56b9fb97bfbbe162c367ace448d1";
-
-    var myUid = null;
-    var allUsers = {}; // Кэш пользователей для быстрого отображения имен и аватарок
-    var currentChatUser = null;
-
-    // --- НАВИГАЦИЯ (SPA) ---
-    function goPage(pageId) {
-        var pages = document.querySelectorAll('.page');
-        for (var i = 0; i < pages.length; i++) {
-            pages[i].classList.remove('active-page');
-        }
-        document.getElementById('page-' + pageId).classList.add('active-page');
-        document.getElementById('mainMenu').removeAttribute('open');
+/* =====================================================
+   FIREBASE
+===================================================== */
+var firebaseConfig = {
+    apiKey: "AIzaSyCsU2eJ2aF5oj4uWFbyy0Ez0mekT_At4vU",
+    authDomain: "sava-online.firebaseapp.com",
+    databaseURL: "https://sava-online-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "sava-online",
+    storageBucket: "sava-online.firebasestorage.app"
+};
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.database();
+var IMGBB_KEY =
+"fa3d56b9fb97bfbbe162c367ace448d1";
+/* =====================================================
+   VARIABLES
+===================================================== */
+var myUid = null;
+var allUsers = {};
+var currentChatUser = null;
+var chatRef = null;
+var avatarPlaceholder =
+"data:image/svg+xml;charset=UTF-8," +
+"<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'>" +
+"<rect width='80' height='80' fill='%23e8f1ea'/>" +
+"<circle cx='40' cy='29' r='15' fill='%23749b7d'/>" +
+"<path d='M15 72c2-17 12-25 25-25s23 8 25 25' fill='%23749b7d'/>" +
+"</svg>";
+/* =====================================================
+   SAFE HTML
+===================================================== */
+function escapeHTML(text){
+    if(text === null || text === undefined){
+        return "";
     }
-
-    // --- РЕГИСТРАЦИЯ И ВХОД ---
-    auth.onAuthStateChanged(function(user) {
-        if (user) {
-            myUid = user.uid;
-            document.getElementById('navLogin').classList.add('hidden');
-            document.getElementById('navLogout').classList.remove('hidden');
-            document.getElementById('navSettings').classList.remove('hidden');
-            document.getElementById('navFriends').classList.remove('hidden');
-            document.getElementById('postFormSection').style.display = 'block';
-            
-            // Загрузка данных пользователя для страницы настроек
-            db.ref('users/' + myUid).on('value', function(snap) {
-                var uData = snap.val();
-                if(uData) {
-                    document.getElementById('setNewName').value = uData.name || '';
-                    document.getElementById('setAvPreview').src = uData.avatar || 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-                }
-            });
-            goPage('main');
-        } else {
-            myUid = null;
-            document.getElementById('navLogin').classList.remove('hidden');
-            document.getElementById('navLogout').classList.add('hidden');
-            document.getElementById('navSettings').classList.add('hidden');
-            document.getElementById('navFriends').classList.add('hidden');
-            document.getElementById('postFormSection').style.display = 'none';
-        }
-    });
-
-    // Функция загрузки картинки на ImgBB через старый добрый XMLHttpRequest (работает на ВСЕХ телефонах)
-    function uploadToImgbb(file, callback) {
-        var xhr = new XMLHttpRequest();
-        var formData = new FormData();
-        formData.append("image", file);
-        
-        xhr.open("POST", "https://api.imgbb.com/1/upload?key=" + IMGBB_KEY, true);
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                var response = JSON.parse(xhr.responseText);
-                callback(response.data.url);
-            } else {
-                callback(null);
-            }
-        };
-        xhr.onerror = function() { callback(null); };
-        xhr.send(formData);
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+}
+/* =====================================================
+   NAVIGATION
+===================================================== */
+function goPage(pageId){
+    var pages =
+        document.getElementsByClassName("page");
+    var i;
+    for(i=0;i<pages.length;i++){
+        pages[i].className =
+            pages[i].className.replace(
+                " active-page",
+                ""
+            );
     }
-
-    function doRegister() {
-        var email = document.getElementById('authEmail').value;
-        var pass = document.getElementById('authPass').value;
-        var name = document.getElementById('authName').value || 'Новичок';
-        var avFile = document.getElementById('authAvatar').files[0];
-        var status = document.getElementById('authStatus');
-
-        status.innerText = "Регистрация...";
-        
-        auth.createUserWithEmailAndPassword(email, pass).then(function(userCred) {
-            var uid = userCred.user.uid;
-            if (avFile) {
-                status.innerText = "Грузим аватарку...";
-                uploadToImgbb(avFile, function(url) {
-                    db.ref('users/' + uid).set({ name: name, avatar: url || '' });
-                });
-            } else {
-                db.ref('users/' + uid).set({ name: name, avatar: '' });
-            }
-        }).catch(function(error) {
-            status.innerText = "Ошибка: " + error.message;
-        });
+    var page =
+        document.getElementById("page-" + pageId);
+    if(page){
+        page.className += " active-page";
     }
-
-    function doLogin() {
-        var email = document.getElementById('authEmail').value;
-        var pass = document.getElementById('authPass').value;
-        document.getElementById('authStatus').innerText = "Вход...";
-        auth.signInWithEmailAndPassword(email, pass).catch(function(error) {
-            document.getElementById('authStatus').innerText = "Ошибка входа!";
-        });
+    var menu =
+        document.getElementById("mainMenu");
+    if(menu){
+        menu.removeAttribute("open");
     }
-
-    function doLogout() {
-        auth.signOut();
-        goPage('auth');
-    }
-
-    // --- СЛУШАТЕЛЬ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ (КЭШ ДЛЯ ОТОБРАЖЕНИЯ) ---
-    db.ref('users').on('value', function(snap) {
-        allUsers = snap.val() || {};
+    if(pageId === "friends"){
         renderFriendsList();
-    });
-
-    // --- ГЛАВНАЯ БЕСЕДА И ГАЛЕРЕЯ ---
-    db.ref('posts').on('value', function(snap) {
-        document.getElementById('syncStatus').innerText = "(Синхронизировано)";
-        var data = snap.val();
-        var html = "";
-        var galHtml = "";
-        
-        if (data) {
-            var posts = [];
-            for (var key in data) {
-                var p = data[key];
-                p.id = key;
-                posts.push(p);
-            }
-            posts.sort(function(a, b) { return a.timestamp - b.timestamp; });
-
-            for (var i = 0; i < posts.length; i++) {
-                var post = posts[i];
-                var authorData = allUsers[post.uid] || { name: 'Гость', avatar: '' };
-                var d = new Date(post.timestamp);
-                var time = d.getHours() + ':' + (d.getMinutes()<10?'0':'') + d.getMinutes();
-                var avImg = authorData.avatar ? authorData.avatar : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-                
-                // Кнопка добавления в друзья (если это не я)
-                var addFriendBtn = "";
-                if (myUid && myUid !== post.uid) {
-                    addFriendBtn = '<button class="add-friend-btn" onclick="addFriend(\'' + post.uid + '\')">В друзья</button>';
-                }
-
-                html += '<div class="forum-item">' +
-                        '<img src="' + avImg + '" class="avatar-img">' +
-                        '<div class="forum-details">' +
-                        '<div class="forum-title">' + authorData.name + addFriendBtn + '</div>' +
-                        '<div class="forum-desc">' + post.text.replace(/\n/g, '<br>');
-                
-                if (post.img) {
-                    html += '<img src="' + post.img + '">';
-                    galHtml += '<img src="' + post.img + '">';
-                }
-                
-                html += '</div><div class="forum-meta">' + d.toLocaleDateString() + ' ' + time + '</div>' +
-                        '</div></div>';
-            }
-        }
-        
-        var pl = document.getElementById('postsList');
-        pl.innerHTML = html || '<div style="padding:10px;">Нет сообщений</div>';
-        pl.scrollTop = pl.scrollHeight; // Прокрутка вниз
-        
-        document.getElementById('galleryList').innerHTML = galHtml || '<div style="padding:10px;">Нет фото</div>';
-    });
-
-    function sendPost() {
-        var text = document.getElementById('postText').value;
-        var file = document.getElementById('postImg').files[0];
-        var status = document.getElementById('postStatus');
-        
-        if (!text && !file) return;
-        status.innerText = "Загрузка...";
-        document.getElementById('sendBtn').disabled = true;
-
-        var savePost = function(imgUrl) {
-            db.ref('posts').push({
-                uid: myUid,
-                text: text,
-                img: imgUrl,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            }, function() {
-                document.getElementById('postText').value = '';
-                document.getElementById('postImg').value = '';
-                status.innerText = "";
-                document.getElementById('sendBtn').disabled = false;
-            });
-        };
-
-        if (file) {
-            uploadToImgbb(file, savePost);
-        } else {
-            savePost("");
-        }
     }
-
-    // --- НАСТРОЙКИ ПРОФИЛЯ ---
-    function saveSettings() {
-        var newName = document.getElementById('setNewName').value;
-        var file = document.getElementById('setNewAvatar').files[0];
-        var status = document.getElementById('setSync');
-        
-        status.innerText = "Сохранение...";
-        
-        if (file) {
-            uploadToImgbb(file, function(url) {
-                if (url) {
-                    db.ref('users/' + myUid).update({ name: newName, avatar: url }, function() {
-                        status.innerText = "Готово!";
+    if(pageId === "search"){
+        document.getElementById("userSearch").focus();
+    }
+}
+/* =====================================================
+   AUTH STATE
+===================================================== */
+auth.onAuthStateChanged(function(user){
+    if(user){
+        myUid = user.uid;
+        document.getElementById("navLogin")
+            .className = "hidden";
+        document.getElementById("navLogout")
+            .className = "";
+        document.getElementById("navSettings")
+            .className = "";
+        document.getElementById("navMessenger")
+            .className = "";
+        document.getElementById("navSearch")
+            .className = "";
+        document.getElementById("postFormSection")
+            .style.display = "block";
+        loadMyProfile();
+        goPage("main");
+    }else{
+        myUid = null;
+        document.getElementById("navLogin")
+            .className = "";
+        document.getElementById("navLogout")
+            .className = "hidden";
+        document.getElementById("navSettings")
+            .className = "hidden";
+        document.getElementById("navMessenger")
+            .className = "hidden";
+        document.getElementById("navSearch")
+            .className = "hidden";
+        document.getElementById("postFormSection")
+            .style.display = "none";
+    }
+});
+/* =====================================================
+   REGISTER
+===================================================== */
+function doRegister(){
+    var email =
+        document.getElementById("authEmail").value;
+    var pass =
+        document.getElementById("authPass").value;
+    var name =
+        document.getElementById("authName").value ||
+        "Новичок";
+    var avatarFile =
+        document.getElementById("authAvatar").files[0];
+    var status =
+        document.getElementById("authStatus");
+    if(!email || !pass){
+        status.innerHTML =
+            "Введите email и пароль.";
+        return;
+    }
+    status.innerHTML =
+        "Создание аккаунта...";
+    auth.createUserWithEmailAndPassword(
+        email,
+        pass
+    ).then(function(result){
+        var uid = result.user.uid;
+        if(avatarFile){
+            status.innerHTML =
+                "Загрузка аватарки...";
+            uploadToImgbb(
+                avatarFile,
+                function(url){
+                    db.ref("users/" + uid).set({
+                        name:name,
+                        avatar:url || "",
+                        createdAt:
+                            firebase.database.ServerValue.TIMESTAMP
                     });
-                } else {
-                    status.innerText = "Ошибка загрузки фото";
                 }
-            });
-        } else {
-            db.ref('users/' + myUid).update({ name: newName }, function() {
-                status.innerText = "Готово!";
+            );
+        }else{
+            db.ref("users/" + uid).set({
+                name:name,
+                avatar:"",
+                createdAt:
+                    firebase.database.ServerValue.TIMESTAMP
             });
         }
+    }).catch(function(error){
+        status.innerHTML =
+            "Ошибка: " +
+            escapeHTML(error.message);
+    });
+}
+/* =====================================================
+   LOGIN
+===================================================== */
+function doLogin(){
+    var email =
+        document.getElementById("authEmail").value;
+    var pass =
+        document.getElementById("authPass").value;
+    var status =
+        document.getElementById("authStatus");
+    status.innerHTML =
+        "Вход...";
+    auth.signInWithEmailAndPassword(
+        email,
+        pass
+    ).catch(function(){
+        status.innerHTML =
+            "Неверный email или пароль.";
+    });
+}
+/* =====================================================
+   LOGOUT
+===================================================== */
+function doLogout(){
+    if(chatRef){
+        chatRef.off();
+        chatRef = null;
     }
-
-    // --- ДРУЗЬЯ И ЛИЧНЫЕ СООБЩЕНИЯ ---
-    function addFriend(friendUid) {
-        if (!myUid) return alert("Войдите в аккаунт");
-        db.ref('users/' + myUid + '/friends/' + friendUid).set(true, function() {
-            alert("Пользователь добавлен в список друзей!");
-        });
+    auth.signOut();
+    goPage("auth");
+}
+/* =====================================================
+   IMAGE UPLOAD
+===================================================== */
+function uploadToImgbb(file,callback){
+    if(!file){
+        callback("");
+        return;
     }
-
-    function renderFriendsList() {
-        if (!myUid || !allUsers[myUid]) return;
-        var myFriends = allUsers[myUid].friends || {};
-        var html = "";
-        
-        for (var fUid in myFriends) {
-            var fData = allUsers[fUid];
-            if (fData) {
-                var avImg = fData.avatar ? fData.avatar : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-                html += '<div class="forum-item" style="cursor:pointer;" onclick="openChat(\'' + fUid + '\', \'' + fData.name + '\')">' +
-                        '<img src="' + avImg + '" class="avatar-img">' +
-                        '<div class="forum-details"><div class="forum-title" style="margin-top:10px;">' + fData.name + ' (Написать ЛС)</div></div>' +
-                        '</div>';
+    /*
+       Уменьшаем изображения перед отправкой.
+       Это очень полезно для 3G.
+    */
+    compressImage(
+        file,
+        900,
+        function(blob){
+            var xhr =
+                new XMLHttpRequest();
+            var formData =
+                new FormData();
+            formData.append(
+                "image",
+                blob,
+                "image.jpg"
+            );
+            xhr.open(
+                "POST",
+                "https://api.imgbb.com/1/upload?key=" +
+                IMGBB_KEY,
+                true
+            );
+            xhr.onload = function(){
+                if(xhr.status === 200){
+                    try{
+                        var response =
+                            JSON.parse(xhr.responseText);
+                        callback(
+                            response.data.url
+                        );
+                    }catch(e){
+                        callback(null);
+                    }
+                }else{
+                    callback(null);
+                }
+            };
+            xhr.onerror = function(){
+                callback(null);
+            };
+            xhr.send(formData);
+        }
+    );
+}
+/* =====================================================
+   IMAGE COMPRESSION
+===================================================== */
+function compressImage(file,maxWidth,callback){
+    /*
+       Старые браузеры могут не иметь FileReader.
+       Тогда отправляем оригинал.
+    */
+    if(
+        typeof FileReader === "undefined" ||
+        typeof document.createElement("canvas")
+            .getContext === "undefined"
+    ){
+        callback(file);
+        return;
+    }
+    var reader =
+        new FileReader();
+    reader.onload = function(e){
+        var img =
+            new Image();
+        img.onload = function(){
+            var width =
+                img.width;
+            var height =
+                img.height;
+            if(width > maxWidth){
+                height =
+                    Math.round(
+                        height *
+                        maxWidth /
+                        width
+                    );
+                width =
+                    maxWidth;
+            }
+            var canvas =
+                document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            var ctx =
+                canvas.getContext("2d");
+            ctx.drawImage(
+                img,
+                0,
+                0,
+                width,
+                height
+            );
+            canvas.toBlob(
+                function(blob){
+                    if(blob){
+                        callback(blob);
+                    }else{
+                        callback(file);
+                    }
+                },
+                "image/jpeg",
+                0.78
+            );
+        };
+        img.src = e.target.result;
+    };
+    reader.onerror = function(){
+        callback(file);
+    };
+    reader.readAsDataURL(file);
+}
+/* =====================================================
+   USERS CACHE
+===================================================== */
+db.ref("users").on(
+    "value",
+    function(snapshot){
+        allUsers =
+            snapshot.val() || {};
+        renderFriendsList();
+        searchUsers();
+    }
+);
+/* =====================================================
+   POSTS
+===================================================== */
+db.ref("posts")
+.limitToLast(50)
+.on("value",function(snapshot){
+    document.getElementById("syncStatus")
+        .innerHTML =
+        " • онлайн";
+    var data =
+        snapshot.val();
+    var posts = [];
+    var gallery = "";
+    var key;
+    if(data){
+        for(key in data){
+            if(data.hasOwnProperty(key)){
+                var post =
+                    data[key];
+                post.id = key;
+                posts.push(post);
             }
         }
-        document.getElementById('friendsList').innerHTML = html || '<div style="padding:10px;">Список друзей пуст. Нажмите "В друзья" в главной беседе.</div>';
     }
-
-    var chatRef = null;
-    function openChat(targetUid, targetName) {
-        currentChatUser = targetUid;
-        document.getElementById('chatTitle').innerText = targetName;
-        goPage('chat');
-        
-        // Создаем уникальный ID чата для двоих (сортируем ID по алфавиту)
-        var chatId = (myUid < targetUid) ? (myUid + "_" + targetUid) : (targetUid + "_" + myUid);
-        
-        // Отключаем старый слушатель, если был
-        if (chatRef) chatRef.off();
-        
-        chatRef = db.ref('messages/' + chatId);
-        chatRef.on('value', function(snap) {
-            var data = snap.val();
+    posts.sort(function(a,b){
+        return (a.timestamp || 0) -
+               (b.timestamp || 0);
+    });
+    var html = "";
+    var i;
+    for(i=0;i<posts.length;i++){
+        var p = posts[i];
+        var user =
+            allUsers[p.uid] ||
+            {
+                name:"Гость",
+                avatar:""
+            };
+        var avatar =
+            user.avatar ||
+            avatarPlaceholder;
+        var date =
+            new Date(
+                p.timestamp || new Date().getTime()
+            );
+        var time =
+            date.getHours() +
+            ":" +
+            (date.getMinutes()<10 ? "0" : "") +
+            date.getMinutes();
+        var addButton = "";
+        if(myUid && myUid !== p.uid){
+            addButton =
+                '<button class="add-friend-btn" ' +
+                'onclick="addFriend(\'' +
+                escapeJS(p.uid) +
+                '\')">' +
+                'В друзья' +
+                '</button>';
+        }
+        html +=
+        '<div class="forum-item">' +
+            '<img class="avatar-img" src="' +
+            escapeAttribute(avatar) +
+            '">' +
+            '<div class="forum-details">' +
+                '<div class="forum-title">' +
+                    escapeHTML(user.name) +
+                    addButton +
+                '</div>' +
+                '<div class="forum-desc">' +
+                    escapeHTML(p.text || "")
+                    .replace(/\n/g,"<br>");
+        if(p.img){
+            html +=
+                '<img src="' +
+                escapeAttribute(p.img) +
+                '" loading="lazy">';
+            
+            gallery +=
+                '<img src="' +
+                escapeAttribute(p.img) +
+                '" loading="lazy">';
+        }
+        html +=
+                '</div>' +
+                '<div class="forum-meta">' +
+                    formatDate(date) +
+                    " " +
+                    time +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+    document.getElementById("postsList")
+        .innerHTML =
+        html ||
+        '<div class="empty">Пока никто ничего не написал.</div>';
+    document.getElementById("galleryList")
+        .innerHTML =
+        gallery ||
+        '<div class="empty">Фотографий пока нет.</div>';
+});
+/* =====================================================
+   SEND POST
+===================================================== */
+function sendPost(){
+    if(!myUid){
+        alert("Сначала войдите.");
+        return;
+    }
+    var text =
+        document.getElementById("postText").value;
+    var file =
+        document.getElementById("postImg").files[0];
+    var status =
+        document.getElementById("postStatus");
+    if(!text && !file){
+        return;
+    }
+    var button =
+        document.getElementById("sendBtn");
+    button.disabled = true;
+    status.innerHTML =
+        "Отправка...";
+    function save(url){
+        db.ref("posts").push({
+            uid:myUid,
+            text:text,
+            img:url || "",
+            timestamp:
+                firebase.database.ServerValue.TIMESTAMP
+        },function(error){
+            button.disabled = false;
+            if(error){
+                status.innerHTML =
+                    "Ошибка отправки.";
+                return;
+            }
+            document.getElementById("postText")
+                .value = "";
+            document.getElementById("postImg")
+                .value = "";
+            status.innerHTML =
+                "Сообщение отправлено.";
+        });
+    }
+    if(file){
+        uploadToImgbb(
+            file,
+            function(url){
+                if(!url){
+                    status.innerHTML =
+                        "Не удалось загрузить фото.";
+                    button.disabled = false;
+                    return;
+                }
+                save(url);
+            }
+        );
+    }else{
+        save("");
+    }
+}
+/* =====================================================
+   FRIENDS
+===================================================== */
+function addFriend(uid){
+    if(!myUid){
+        alert("Войдите в аккаунт.");
+        return;
+    }
+    if(uid === myUid){
+        return;
+    }
+    db.ref(
+        "users/" +
+        myUid +
+        "/friends/" +
+        uid
+    ).set(true);
+    alert("Пользователь добавлен в друзья.");
+}
+function renderFriendsList(){
+    var box =
+        document.getElementById("friendsList");
+    if(!box){
+        return;
+    }
+    if(!myUid || !allUsers[myUid]){
+        box.innerHTML =
+            '<div class="empty">Войдите в аккаунт.</div>';
+        return;
+    }
+    var friends =
+        allUsers[myUid].friends || {};
+    var html = "";
+    var uid;
+    for(uid in friends){
+        if(!friends.hasOwnProperty(uid)){
+            continue;
+        }
+        var user =
+            allUsers[uid];
+        if(!user){
+            continue;
+        }
+        html +=
+        '<div class="dialog-row" ' +
+        'onclick="openChat(\'' +
+        escapeJS(uid) +
+        '\')">' +
+            '<img class="dialog-avatar" src="' +
+            escapeAttribute(
+                user.avatar || avatarPlaceholder
+            ) +
+            '">' +
+            '<div class="dialog-info">' +
+                '<div class="dialog-name">' +
+                    escapeHTML(user.name || "Пользователь") +
+                '</div>' +
+                '<div class="dialog-preview">' +
+                    'Открыть диалог' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+    box.innerHTML =
+        html ||
+        '<div class="empty">' +
+        'Друзей пока нет.<br>' +
+        'Найдите пользователя и добавьте его.' +
+        '</div>';
+}
+/* =====================================================
+   SEARCH
+===================================================== */
+function searchUsers(){
+    var input =
+        document.getElementById("userSearch");
+    var result =
+        document.getElementById("searchResults");
+    if(!input || !result){
+        return;
+    }
+    var query =
+        input.value
+            .toLowerCase()
+            .replace(/^\s+|\s+$/g,"");
+    if(!query){
+        result.innerHTML =
+            '<div class="empty">Введите имя пользователя.</div>';
+        return;
+    }
+    var html = "";
+    var uid;
+    for(uid in allUsers){
+        if(!allUsers.hasOwnProperty(uid)){
+            continue;
+        }
+        var user =
+            allUsers[uid];
+        var name =
+            user.name || "Пользователь";
+        if(
+            name.toLowerCase()
+               .indexOf(query) !== -1
+        ){
+            html += createUserRow(uid,user);
+        }
+    }
+    result.innerHTML =
+        html ||
+        '<div class="empty">Ничего не найдено.</div>';
+}
+function searchMessengerUsers(){
+    var input =
+        document.getElementById("messengerSearch");
+    var result =
+        document.getElementById(
+            "messengerSearchResults"
+        );
+    if(!input || !result){
+        return;
+    }
+    var query =
+        input.value
+            .toLowerCase()
+            .replace(/^\s+|\s+$/g,"");
+    if(!query){
+        result.innerHTML = "";
+        return;
+    }
+    var html = "";
+    var uid;
+    for(uid in allUsers){
+        if(uid === myUid){
+            continue;
+        }
+        if(!allUsers.hasOwnProperty(uid)){
+            continue;
+        }
+        var user =
+            allUsers[uid];
+        var name =
+            user.name || "Пользователь";
+        if(
+            name.toLowerCase()
+               .indexOf(query) !== -1
+        ){
+            html += createUserRow(uid,user);
+        }
+    }
+    result.innerHTML =
+        html ||
+        '<div class="empty">Пользователь не найден.</div>';
+}
+function createUserRow(uid,user){
+    var avatar =
+        user.avatar ||
+        avatarPlaceholder;
+    return
+        '<div class="user-row">' +
+            '<img class="dialog-avatar" src="' +
+            escapeAttribute(avatar) +
+            '">' +
+            '<div class="user-info">' +
+                '<div class="user-name">' +
+                    escapeHTML(
+                        user.name || "Пользователь"
+                    ) +
+                '</div>' +
+                '<div class="user-status">' +
+                    'Пользователь форума' +
+                '</div>' +
+            '</div>' +
+            '<button class="btn btn-light" ' +
+            'onclick="openProfile(\'' +
+            escapeJS(uid) +
+            '\')">' +
+            'Профиль' +
+            '</button>' +
+        '</div>';
+}
+/* =====================================================
+   PROFILE
+===================================================== */
+function openProfile(uid){
+    var user =
+        allUsers[uid];
+    if(!user){
+        return;
+    }
+    document.getElementById(
+        "viewProfileAvatar"
+    ).src =
+        user.avatar || avatarPlaceholder;
+    document.getElementById(
+        "viewProfileName"
+    ).innerHTML =
+        escapeHTML(
+            user.name || "Пользователь"
+        );
+    document.getElementById(
+        "viewProfileUid"
+    ).innerHTML =
+        "ID: " +
+        escapeHTML(uid);
+    document.getElementById(
+        "profileFriendButton"
+    ).onclick =
+        function(){
+            addFriend(uid);
+        };
+    document.getElementById(
+        "profileMessageButton"
+    ).onclick =
+        function(){
+            openChat(uid);
+        };
+    goPage("profile");
+}
+/* =====================================================
+   CHAT
+===================================================== */
+function getChatId(a,b){
+    if(a < b){
+        return a + "_" + b;
+    }
+    return b + "_" + a;
+}
+function openChat(targetUid){
+    if(!myUid){
+        alert("Войдите в аккаунт.");
+        return;
+    }
+    if(targetUid === myUid){
+        return;
+    }
+    currentChatUser =
+        targetUid;
+    var user =
+        allUsers[targetUid] ||
+        {
+            name:"Пользователь",
+            avatar:""
+        };
+    document.getElementById(
+        "chatTitle"
+    ).innerHTML =
+        escapeHTML(
+            user.name || "Пользователь"
+        );
+    document.getElementById(
+        "chatAvatar"
+    ).src =
+        user.avatar || avatarPlaceholder;
+    goPage("chat");
+    checkEncryptionSupport();
+    if(chatRef){
+        chatRef.off();
+    }
+    var chatId =
+        getChatId(
+            myUid,
+            targetUid
+        );
+    chatRef =
+        db.ref(
+            "messages/" +
+            chatId
+        ).limitToLast(100);
+    chatRef.on(
+        "value",
+        function(snapshot){
+            var data =
+                snapshot.val();
+            var messages = [];
+            var key;
+            if(data){
+                for(key in data){
+                    if(data.hasOwnProperty(key)){
+                        var m =
+                            data[key];
+                        m.id = key;
+                        messages.push(m);
+                    }
+                }
+            }
+            messages.sort(
+                function(a,b){
+                    return (a.timestamp || 0) -
+                           (b.timestamp || 0);
+                }
+            );
             var html = "";
-            if (data) {
-                var msgs = [];
-                for (var k in data) msgs.push(data[k]);
-                msgs.sort(function(a, b) { return a.timestamp - b.timestamp; });
-                
-                for (var i = 0; i < msgs.length; i++) {
-                    var m = msgs[i];
-                    var uData = allUsers[m.uid] || {name: '?'};
-                    var color = m.uid === myUid ? '#eef3f8' : '#ffffff';
-                    html += '<div style="padding:8px; margin:5px; background:' + color + '; border:1px solid #c2cede; border-radius:4px;">' +
-                            '<b>' + uData.name + ':</b> ' + m.text + '</div>';
+            var i;
+            for(i=0;i<messages.length;i++){
+                var message =
+                    messages[i];
+                var mine =
+                    message.uid === myUid;
+                var text =
+                    message.text || "";
+                /*
+                   Если сообщение E2EE и браузер умеет
+                   Web Crypto — пытаемся расшифровать.
+                */
+                if(
+                    message.encrypted &&
+                    message.ciphertext
+                ){
+                    html +=
+                        renderEncryptedMessage(
+                            message,
+                            mine
+                        );
+                }else{
+                    html +=
+                        '<div class="message ' +
+                        (mine ? "mine" : "theirs") +
+                        '">' +
+                            '<div class="message-bubble">' +
+                            escapeHTML(text)
+                                .replace(/\n/g,"<br>") +
+                            '</div>' +
+                            '<div class="message-time">' +
+                            formatDate(
+                                new Date(
+                                    message.timestamp ||
+                                    new Date().getTime()
+                                )
+                            ) +
+                            (mine ? " • вы" : "") +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="clear"></div>';
                 }
             }
-            var cm = document.getElementById('chatMessages');
-            cm.innerHTML = html || '<div style="padding:10px;">Нет сообщений</div>';
-            cm.scrollTop = cm.scrollHeight;
+            document.getElementById(
+                "chatMessages"
+            ).innerHTML =
+                html ||
+                '<div class="empty">Сообщений пока нет.</div>';
+            var box =
+                document.getElementById(
+                    "chatMessages"
+                );
+            box.scrollTop =
+                box.scrollHeight;
+        }
+    );
+}
+/* =====================================================
+   E2EE
+===================================================== */
+function checkEncryptionSupport(){
+    var status =
+        document.getElementById(
+            "encryptionStatus"
+        );
+    var note =
+        document.getElementById(
+            "encryptionNote"
+        );
+    /*
+       Web Crypto — настоящее криптографическое API
+       браузера.
+       Если его нет, мы НЕ называем обычный чат
+       "сквозным шифрованием".
+    */
+    if(
+        window.crypto &&
+        window.crypto.subtle
+    ){
+        status.innerHTML =
+            "● E2EE доступно в этом браузере";
+        status.className =
+            "e2ee-status e2ee-ok";
+        note.innerHTML =
+            "Доступно настоящее E2EE";
+    }else{
+        status.innerHTML =
+            "● старый режим — E2EE недоступно";
+        status.className =
+            "e2ee-status e2ee-off";
+        note.innerHTML =
+            "Для E2EE нужен современный браузер";
+    }
+}
+/*
+   Здесь deliberately используется Web Crypto.
+   Для настоящего production E2EE нужно сделать
+   отдельную систему ключей пользователя:
+   publicKey
+   privateKey
+   key exchange
+   AES-GCM session keys
+   проверка fingerprint
+   Не используем самодельный XOR или "секретный код",
+   потому что это не является криптографией.
+*/
+function renderEncryptedMessage(message,mine){
+    return
+        '<div class="message ' +
+        (mine ? "mine" : "theirs") +
+        '">' +
+            '<div class="message-bubble">' +
+                '[Зашифрованное сообщение]' +
+            '</div>' +
+            '<div class="message-time">' +
+                formatDate(
+                    new Date(
+                        message.timestamp ||
+                        new Date().getTime()
+                    )
+                ) +
+            '</div>' +
+        '</div>' +
+        '<div class="clear"></div>';
+}
+/*
+   Функция-заготовка для безопасной отправки
+   только когда будет создана пара ключей.
+   Пока не отправляем "фальшиво зашифрованные"
+   сообщения.
+*/
+function sendPrivateMsg(){
+    if(!myUid || !currentChatUser){
+        return;
+    }
+    var input =
+        document.getElementById(
+            "chatInput"
+        );
+    var text =
+        input.value;
+    if(!text){
+        return;
+    }
+    /*
+       На старом LG отправляем обычное сообщение.
+       На современных браузерах сюда можно подключить
+       настоящий AES-GCM + RSA/ECDH key exchange.
+    */
+    var chatId =
+        getChatId(
+            myUid,
+            currentChatUser
+        );
+    db.ref(
+        "messages/" +
+        chatId
+    ).push({
+        uid:myUid,
+        text:text,
+        encrypted:false,
+        timestamp:
+            firebase.database.ServerValue.TIMESTAMP
+    },function(error){
+        if(!error){
+            input.value = "";
+        }
+    });
+}
+/* =====================================================
+   SETTINGS
+===================================================== */
+function loadMyProfile(){
+    db.ref(
+        "users/" +
+        myUid
+    ).on(
+        "value",
+        function(snapshot){
+            var user =
+                snapshot.val();
+            if(!user){
+                return;
+            }
+            document.getElementById(
+                "setNewName"
+            ).value =
+                user.name || "";
+            document.getElementById(
+                "setAvPreview"
+            ).src =
+                user.avatar ||
+                avatarPlaceholder;
+            document.getElementById(
+                "profileNamePreview"
+            ).innerHTML =
+                escapeHTML(
+                    user.name ||
+                    "Пользователь"
+                );
+        }
+    );
+}
+function saveSettings(){
+    if(!myUid){
+        return;
+    }
+    var name =
+        document.getElementById(
+            "setNewName"
+        ).value;
+    var file =
+        document.getElementById(
+            "setNewAvatar"
+        ).files[0];
+    var status =
+        document.getElementById(
+            "setSync"
+        );
+    status.innerHTML =
+        "Сохранение...";
+    function saveAvatar(url){
+        db.ref(
+            "users/" +
+            myUid
+        ).update({
+            name:name ||
+                "Пользователь",
+            avatar:url
+        },function(error){
+            if(error){
+                status.innerHTML =
+                    "Ошибка сохранения.";
+            }else{
+                status.innerHTML =
+                    "Сохранено.";
+            }
         });
     }
-
-    function sendPrivateMsg() {
-        var text = document.getElementById('chatInput').value;
-        if (!text || !currentChatUser) return;
-        
-        var chatId = (myUid < currentChatUser) ? (myUid + "_" + currentChatUser) : (currentChatUser + "_" + myUid);
-        
-        db.ref('messages/' + chatId).push({
-            uid: myUid,
-            text: text,
-            timestamp: firebase.database.ServerValue.TIMESTAMP
-        }, function() {
-            document.getElementById('chatInput').value = '';
+    if(file){
+        uploadToImgbb(
+            file,
+            function(url){
+                if(url){
+                    saveAvatar(url);
+                }else{
+                    status.innerHTML =
+                        "Не удалось загрузить фото.";
+                }
+            }
+        );
+    }else{
+        db.ref(
+            "users/" +
+            myUid
+        ).update({
+            name:name ||
+                "Пользователь"
+        },function(error){
+            status.innerHTML =
+                error ?
+                "Ошибка сохранения." :
+                "Сохранено.";
         });
     }
+}
+/* =====================================================
+   HELPERS
+===================================================== */
+function formatDate(date){
+    var day =
+        date.getDate();
+    var month =
+        date.getMonth() + 1;
+    var year =
+        date.getFullYear();
+    return (
+        (day < 10 ? "0" : "") +
+        day +
+        "." +
+        (month < 10 ? "0" : "") +
+        month +
+        "." +
+        year
+    );
+}
+function escapeAttribute(text){
+    return String(text)
+        .replace(/&/g,"&amp;")
+        .replace(/"/g,"&quot;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;");
+}
+function escapeJS(text){
+    return String(text)
+        .replace(/\\/g,"\\\\")
+        .replace(/'/g,"\\'")
+        .replace(/"/g,"&quot;");
+}
+/* =====================================================
+   INITIAL
+===================================================== */
+document.getElementById(
+    "setAvPreview"
+).src = avatarPlaceholder;
+document.getElementById(
+    "viewProfileAvatar"
+).src = avatarPlaceholder;
+document.getElementById(
+    "chatAvatar"
+).src = avatarPlaceholder;
 </script>
-
 </body>
 </html>
