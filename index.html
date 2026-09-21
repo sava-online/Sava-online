@@ -1,0 +1,2102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SavcomPay</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:#eefaf3;
+  color:#13251b;
+  min-height:100vh;
+}
+
+button,input{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.hidden{
+  display:none!important;
+}
+
+.app{
+  width:100%;
+  max-width:1100px;
+  margin:auto;
+  padding:25px;
+}
+
+/* AUTH */
+
+.auth-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.auth-card{
+  width:100%;
+  max-width:430px;
+  background:white;
+  border-radius:28px;
+  padding:32px;
+  box-shadow:0 20px 60px rgba(20,100,55,.12);
+}
+
+.logo{
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  background:#19a85b;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  font-weight:800;
+  margin-bottom:18px;
+}
+
+h1{
+  font-size:30px;
+}
+
+.subtitle{
+  color:#718079;
+  margin-top:7px;
+  margin-bottom:28px;
+}
+
+.tabs{
+  display:flex;
+  background:#f0f6f2;
+  padding:5px;
+  border-radius:14px;
+  margin-bottom:20px;
+}
+
+.tab{
+  flex:1;
+  border:0;
+  background:transparent;
+  padding:12px;
+  border-radius:10px;
+  color:#68756e;
+}
+
+.tab.active{
+  background:white;
+  color:#159653;
+  font-weight:700;
+  box-shadow:0 3px 10px rgba(0,0,0,.05);
+}
+
+.field{
+  margin-bottom:14px;
+}
+
+.field label{
+  display:block;
+  font-size:13px;
+  color:#66736c;
+  margin-bottom:7px;
+}
+
+.field input{
+  width:100%;
+  padding:14px;
+  border:1px solid #dce7e1;
+  border-radius:13px;
+  outline:none;
+}
+
+.field input:focus{
+  border-color:#19a85b;
+}
+
+.primary{
+  width:100%;
+  border:0;
+  background:#19a85b;
+  color:white;
+  padding:15px;
+  border-radius:14px;
+  font-weight:700;
+  margin-top:5px;
+}
+
+.primary:hover{
+  background:#128d4b;
+}
+
+.secondary{
+  width:100%;
+  border:1px solid #dce7e1;
+  background:white;
+  padding:13px;
+  border-radius:13px;
+  color:#1b8f51;
+  font-weight:600;
+}
+
+.message{
+  padding:12px;
+  border-radius:12px;
+  background:#eef8f2;
+  color:#247246;
+  font-size:14px;
+  margin-bottom:14px;
+}
+
+.error{
+  background:#fff0f0;
+  color:#b13c3c;
+}
+
+.small{
+  font-size:12px;
+  color:#829088;
+  margin-top:15px;
+  line-height:1.5;
+}
+
+/* DASHBOARD */
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:25px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:22px;
+  font-weight:800;
+}
+
+.brand .mini-logo{
+  width:40px;
+  height:40px;
+  border-radius:13px;
+  background:#19a85b;
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.logout{
+  border:0;
+  background:white;
+  padding:10px 14px;
+  border-radius:12px;
+  color:#66736c;
+}
+
+.wallet-card{
+  background:linear-gradient(135deg,#18a95a,#087b3d);
+  color:white;
+  border-radius:28px;
+  padding:28px;
+  box-shadow:0 20px 40px rgba(17,132,72,.2);
+  margin-bottom:22px;
+}
+
+.wallet-label{
+  opacity:.8;
+  font-size:14px;
+}
+
+.balance{
+  font-size:42px;
+  font-weight:800;
+  margin:8px 0 18px;
+}
+
+.address{
+  background:rgba(255,255,255,.13);
+  padding:12px;
+  border-radius:13px;
+  font-size:12px;
+  word-break:break-all;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:25px;
+}
+
+.action{
+  background:white;
+  border:0;
+  border-radius:20px;
+  padding:20px 12px;
+  text-align:center;
+  box-shadow:0 8px 25px rgba(20,100,55,.06);
+}
+
+.action-icon{
+  width:46px;
+  height:46px;
+  margin:auto auto 9px;
+  border-radius:14px;
+  background:#e9f8ef;
+  color:#159653;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+}
+
+.action strong{
+  display:block;
+  font-size:14px;
+}
+
+.action span{
+  display:block;
+  color:#87938d;
+  font-size:11px;
+  margin-top:4px;
+}
+
+.section{
+  background:white;
+  border-radius:22px;
+  padding:22px;
+  margin-bottom:18px;
+}
+
+.section-title{
+  font-weight:800;
+  margin-bottom:16px;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:13px 0;
+  border-bottom:1px solid #edf2ef;
+}
+
+.row:last-child{
+  border-bottom:0;
+}
+
+.muted{
+  color:#819088;
+  font-size:13px;
+}
+
+/* MODAL */
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(8,25,16,.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100;
+}
+
+.modal-card{
+  width:100%;
+  max-width:430px;
+  background:white;
+  border-radius:25px;
+  padding:25px;
+  max-height:90vh;
+  overflow:auto;
+}
+
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.close{
+  border:0;
+  background:#eef5f1;
+  width:36px;
+  height:36px;
+  border-radius:12px;
+}
+
+.qr{
+  width:220px;
+  height:220px;
+  margin:15px auto;
+  display:block;
+}
+
+.address-box{
+  background:#f2f7f4;
+  padding:13px;
+  border-radius:12px;
+  word-break:break-all;
+  font-size:12px;
+  text-align:center;
+}
+
+.pin-dots{
+  font-size:26px;
+  letter-spacing:10px;
+  text-align:center;
+  margin:20px 0;
+  min-height:36px;
+}
+
+.pin-pad{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:9px;
+}
+
+.pin-key{
+  border:0;
+  background:#f0f6f2;
+  padding:16px;
+  border-radius:13px;
+  font-size:19px;
+}
+
+.pin-key:hover{
+  background:#e3f3e9;
+}
+
+.verify-icon{
+  font-size:50px;
+  text-align:center;
+  margin-bottom:15px;
+}
+
+@media(max-width:700px){
+  .grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .balance{
+    font-size:34px;
+  }
+
+  .app{
+    padding:15px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- AUTH -->
+
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+
+    <div class="logo">S</div>
+
+    <h1>SavcomPay</h1>
+    <div class="subtitle">простой TON-кошелёк</div>
+
+    <div class="tabs">
+      <button id="loginTab" class="tab active">Войти</button>
+      <button id="registerTab" class="tab">Регистрация</button>
+    </div>
+
+    <div id="authMessage" class="message hidden"></div>
+
+    <div id="loginForm">
+
+      <div class="field">
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com">
+      </div>
+
+      <div class="field">
+        <label>Пароль</label>
+        <input id="loginPassword" type="password" placeholder="••••••••">
+      </div>
+
+      <button id="loginBtn" class="primary">
+        Войти
+      </button>
+
+      <button id="resetBtn" class="secondary" style="margin-top:10px">
+        Забыли пароль?
+      </button>
+
+    </div>
+
+    <div id="registerForm" class="hidden">
+
+      <div class="field">
+        <label>Email</label>
+        <input id="registerEmail" type="email" placeholder="you@example.com">
+      </div>
+
+      <div class="field">
+        <label>Пароль</label>
+        <input id="registerPassword" type="password" placeholder="Минимум 6 символов">
+      </div>
+
+      <div class="field">
+        <label>Повторите пароль</label>
+        <input id="registerPassword2" type="password" placeholder="Повторите пароль">
+      </div>
+
+      <button id="registerBtn" class="primary">
+        Создать аккаунт
+      </button>
+
+    </div>
+
+    <div class="small">
+      После регистрации на email придёт письмо подтверждения.
+      Кошелёк будет доступен после подтверждения адреса.
+    </div>
+
+  </div>
+</div>
+
+
+<!-- EMAIL VERIFICATION -->
+
+<div id="verifyScreen" class="auth-screen hidden">
+
+  <div class="auth-card">
+
+    <div class="verify-icon">📧</div>
+
+    <h1>Проверьте почту</h1>
+
+    <div class="subtitle">
+      Мы отправили ссылку подтверждения на:
+    </div>
+
+    <div id="verifyEmail"
+         style="font-weight:700;margin-bottom:20px;word-break:break-all">
+    </div>
+
+    <div id="verifyMessage" class="message">
+      Откройте письмо от Firebase и нажмите кнопку подтверждения.
+    </div>
+
+    <button id="checkVerifyBtn" class="primary">
+      Я подтвердил email
+    </button>
+
+    <button id="resendVerifyBtn"
+            class="secondary"
+            style="margin-top:10px">
+      Отправить письмо ещё раз
+    </button>
+
+    <button id="verifyLogoutBtn"
+            class="secondary"
+            style="margin-top:10px">
+      Выйти
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- PIN SCREEN -->
+
+<div id="pinScreen" class="auth-screen hidden">
+
+  <div class="auth-card">
+
+    <div class="logo">🔐</div>
+
+    <h1 id="pinTitle">Создайте PIN</h1>
+
+    <div class="subtitle" id="pinSubtitle">
+      PIN нужен для разблокировки SavcomPay на этом устройстве.
+    </div>
+
+    <div id="pinMessage" class="message hidden"></div>
+
+    <div id="pinDots" class="pin-dots">
+      • • • • • •
+    </div>
+
+    <div class="pin-pad">
+
+      <button class="pin-key" data-pin="1">1</button>
+      <button class="pin-key" data-pin="2">2</button>
+      <button class="pin-key" data-pin="3">3</button>
+
+      <button class="pin-key" data-pin="4">4</button>
+      <button class="pin-key" data-pin="5">5</button>
+      <button class="pin-key" data-pin="6">6</button>
+
+      <button class="pin-key" data-pin="7">7</button>
+      <button class="pin-key" data-pin="8">8</button>
+      <button class="pin-key" data-pin="9">9</button>
+
+      <button class="pin-key" data-pin="clear">⌫</button>
+      <button class="pin-key" data-pin="0">0</button>
+      <button class="pin-key" data-pin="cancel">×</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- APP -->
+
+<div id="appScreen" class="app hidden">
+
+  <div class="topbar">
+
+    <div class="brand">
+      <div class="mini-logo">S</div>
+      SavcomPay
+    </div>
+
+    <button id="logoutBtn" class="logout">
+      Выйти
+    </button>
+
+  </div>
+
+
+  <div class="wallet-card">
+
+    <div class="wallet-label">
+      TON Testnet
+    </div>
+
+    <div id="balance" class="balance">
+      0 TON
+    </div>
+
+    <div id="walletAddress" class="address">
+      Создание кошелька...
+    </div>
+
+  </div>
+
+
+  <div class="grid">
+
+    <button id="receiveBtn" class="action">
+      <div class="action-icon">↓</div>
+      <strong>Пополнить</strong>
+      <span>Получить TON</span>
+    </button>
+
+    <button id="sendBtn" class="action">
+      <div class="action-icon">↑</div>
+      <strong>Отправить</strong>
+      <span>Перевод TON</span>
+    </button>
+
+    <button id="refreshBtn" class="action">
+      <div class="action-icon">↻</div>
+      <strong>Обновить</strong>
+      <span>Баланс</span>
+    </button>
+
+    <button id="profileBtn" class="action">
+      <div class="action-icon">S</div>
+      <strong>Профиль</strong>
+      <span>Savcom ID</span>
+    </button>
+
+  </div>
+
+
+  <div class="section">
+
+    <div class="section-title">
+      TON Wallet
+    </div>
+
+    <div class="row">
+      <span>Сеть</span>
+      <strong>Testnet</strong>
+    </div>
+
+    <div class="row">
+      <span>Стандарт</span>
+      <strong>Wallet V5R1</strong>
+    </div>
+
+    <div class="row">
+      <span>Статус</span>
+      <strong style="color:#159653">
+        ● Активен
+      </strong>
+    </div>
+
+  </div>
+
+
+  <div class="section">
+
+    <div class="section-title">
+      Безопасность
+    </div>
+
+    <div class="row">
+      <span>PIN</span>
+      <strong>●●●●●●</strong>
+    </div>
+
+    <div class="row">
+      <span>Email</span>
+      <strong id="profileEmail">—</strong>
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- RECEIVE MODAL -->
+
+<div id="receiveModal" class="modal hidden">
+
+  <div class="modal-card">
+
+    <div class="modal-head">
+      <h2>Пополнить TON</h2>
+      <button class="close" data-close="receiveModal">×</button>
+    </div>
+
+    <p class="muted">
+      Отправьте тестовые TON на этот адрес.
+    </p>
+
+    <img id="qrImage" class="qr" alt="TON QR">
+
+    <div id="receiveAddress" class="address-box">
+      —
+    </div>
+
+    <button id="copyAddressBtn"
+            class="primary"
+            style="margin-top:12px">
+      Скопировать адрес
+    </button>
+
+    <p class="small">
+      Это TON Testnet. Не отправляйте сюда реальные TON.
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- SEND MODAL -->
+
+<div id="sendModal" class="modal hidden">
+
+  <div class="modal-card">
+
+    <div class="modal-head">
+      <h2>Отправить TON</h2>
+      <button class="close" data-close="sendModal">×</button>
+    </div>
+
+    <div id="sendMessage" class="message hidden"></div>
+
+    <div class="field">
+      <label>TON-адрес получателя</label>
+      <input id="sendAddress"
+             placeholder="EQ... или UQ...">
+    </div>
+
+    <div class="field">
+      <label>Количество TON</label>
+      <input id="sendAmount"
+             type="number"
+             min="0"
+             step="0.000000001"
+             placeholder="0.1">
+    </div>
+
+    <button id="sendTonBtn" class="primary">
+      Отправить
+    </button>
+
+    <p class="small">
+      Перед отправкой обязательно проверяйте адрес получателя.
+    </p>
+
+  </div>
+
+</div>
+
+
+<!-- PROFILE MODAL -->
+
+<div id="profileModal" class="modal hidden">
+
+  <div class="modal-card">
+
+    <div class="modal-head">
+      <h2>Профиль</h2>
+      <button class="close" data-close="profileModal">×</button>
+    </div>
+
+    <div class="row">
+      <span>Email</span>
+      <strong id="modalEmail">—</strong>
+    </div>
+
+    <div class="row">
+      <span>Savcom ID</span>
+      <strong id="modalSavId">—</strong>
+    </div>
+
+    <div class="row">
+      <span>TON</span>
+      <strong id="modalTonAddress"
+              style="max-width:210px;word-break:break-all;text-align:right">
+        —
+      </strong>
+    </div>
+
+  </div>
+
+</div>
+
+
+<script type="module">
+
+/* =========================================================
+   FIREBASE
+========================================================= */
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  reload
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+import {
+  getDatabase,
+  ref,
+  get,
+  set
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+
+
+/* =========================================================
+   TON WALLETKIT
+   =========================================================
+   WalletKit is loaded as an ESM package in the browser.
+========================================================= */
+
+import {
+  TonWalletKit,
+  Signer,
+  WalletV5R1Adapter,
+  Network,
+  CreateTonMnemonic
+} from "https://esm.sh/@ton/walletkit";
+
+
+/* =========================================================
+   FIREBASE CONFIG
+========================================================= */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCsU2eJ2aF5oj4uWFbyy0Ez0mekT_At4vU",
+  authDomain: "sava-online.firebaseapp.com",
+  databaseURL: "https://sava-online-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "sava-online",
+  storageBucket: "sava-online.firebasestorage.app",
+  messagingSenderId: "997547069745",
+  appId: "1:997547069745:web:821a8fa505cf14670ee010",
+  measurementId: "G-S3X80BM74X"
+};
+
+const appFirebase = initializeApp(firebaseConfig);
+
+const auth = getAuth(appFirebase);
+
+const db = getDatabase(appFirebase);
+
+
+/* =========================================================
+   DOM
+========================================================= */
+
+const authScreen = document.getElementById("authScreen");
+const verifyScreen = document.getElementById("verifyScreen");
+const pinScreen = document.getElementById("pinScreen");
+const appScreen = document.getElementById("appScreen");
+
+const loginTab = document.getElementById("loginTab");
+const registerTab = document.getElementById("registerTab");
+
+const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById("registerForm");
+
+const authMessage = document.getElementById("authMessage");
+
+const balanceEl = document.getElementById("balance");
+const walletAddressEl = document.getElementById("walletAddress");
+
+const verifyEmail = document.getElementById("verifyEmail");
+const verifyMessage = document.getElementById("verifyMessage");
+
+const pinTitle = document.getElementById("pinTitle");
+const pinSubtitle = document.getElementById("pinSubtitle");
+const pinMessage = document.getElementById("pinMessage");
+const pinDots = document.getElementById("pinDots");
+
+let currentUser = null;
+let currentWallet = null;
+let currentKit = null;
+
+let pinValue = "";
+let pinConfirmValue = "";
+let pinStage = "create";
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function showOnly(screen){
+
+  authScreen.classList.add("hidden");
+  verifyScreen.classList.add("hidden");
+  pinScreen.classList.add("hidden");
+  appScreen.classList.add("hidden");
+
+  screen.classList.remove("hidden");
+}
+
+
+function showMessage(el,text,error=false){
+
+  el.textContent = text;
+  el.classList.remove("hidden");
+
+  if(error){
+    el.classList.add("error");
+  }else{
+    el.classList.remove("error");
+  }
+}
+
+
+function hideMessage(el){
+  el.classList.add("hidden");
+}
+
+
+function friendlyError(error){
+
+  const code = error?.code || "";
+
+  const map = {
+    "auth/email-already-in-use":
+      "Этот email уже зарегистрирован.",
+
+    "auth/invalid-email":
+      "Неверный формат email.",
+
+    "auth/weak-password":
+      "Пароль слишком слабый. Используйте минимум 6 символов.",
+
+    "auth/invalid-credential":
+      "Неверный email или пароль.",
+
+    "auth/user-not-found":
+      "Пользователь не найден.",
+
+    "auth/wrong-password":
+      "Неверный пароль.",
+
+    "auth/too-many-requests":
+      "Слишком много попыток. Попробуйте позже.",
+
+    "auth/network-request-failed":
+      "Ошибка сети."
+  };
+
+  return map[code] || error?.message || "Произошла ошибка.";
+}
+
+
+/* =========================================================
+   TABS
+========================================================= */
+
+loginTab.onclick = () => {
+
+  loginTab.classList.add("active");
+  registerTab.classList.remove("active");
+
+  loginForm.classList.remove("hidden");
+  registerForm.classList.add("hidden");
+
+  hideMessage(authMessage);
+};
+
+
+registerTab.onclick = () => {
+
+  registerTab.classList.add("active");
+  loginTab.classList.remove("active");
+
+  registerForm.classList.remove("hidden");
+  loginForm.classList.add("hidden");
+
+  hideMessage(authMessage);
+};
+
+
+/* =========================================================
+   REGISTRATION
+========================================================= */
+
+document.getElementById("registerBtn").onclick = async () => {
+
+  hideMessage(authMessage);
+
+  const email =
+    document.getElementById("registerEmail").value.trim();
+
+  const password =
+    document.getElementById("registerPassword").value;
+
+  const password2 =
+    document.getElementById("registerPassword2").value;
+
+  if(!email || !password){
+
+    showMessage(
+      authMessage,
+      "Заполните email и пароль.",
+      true
+    );
+
+    return;
+  }
+
+  if(password.length < 6){
+
+    showMessage(
+      authMessage,
+      "Пароль должен содержать минимум 6 символов.",
+      true
+    );
+
+    return;
+  }
+
+  if(password !== password2){
+
+    showMessage(
+      authMessage,
+      "Пароли не совпадают.",
+      true
+    );
+
+    return;
+  }
+
+  try{
+
+    const credential =
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    const user = credential.user;
+
+    /*
+      Отправляем настоящее письмо Firebase.
+    */
+
+    await sendEmailVerification(user);
+
+    /*
+      Создаём профиль.
+    */
+
+    const savId =
+      "SP-" +
+      Math.random()
+        .toString(36)
+        .substring(2,10)
+        .toUpperCase();
+
+    await set(
+      ref(db,"users/" + user.uid),
+      {
+        uid:user.uid,
+        email:user.email,
+        savId,
+        createdAt:Date.now()
+      }
+    );
+
+    currentUser = user;
+
+    verifyEmail.textContent = user.email;
+
+    showOnly(verifyScreen);
+
+  }catch(error){
+
+    showMessage(
+      authMessage,
+      friendlyError(error),
+      true
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+document.getElementById("loginBtn").onclick = async () => {
+
+  hideMessage(authMessage);
+
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  if(!email || !password){
+
+    showMessage(
+      authMessage,
+      "Введите email и пароль.",
+      true
+    );
+
+    return;
+  }
+
+  try{
+
+    const credential =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    const user = credential.user;
+
+    await reload(user);
+
+    currentUser = auth.currentUser;
+
+    if(!currentUser.emailVerified){
+
+      verifyEmail.textContent = currentUser.email;
+
+      showOnly(verifyScreen);
+
+      return;
+    }
+
+    await continueAfterVerification();
+
+  }catch(error){
+
+    showMessage(
+      authMessage,
+      friendlyError(error),
+      true
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   EMAIL VERIFICATION
+========================================================= */
+
+document.getElementById("checkVerifyBtn").onclick =
+async () => {
+
+  if(!auth.currentUser){
+    return;
+  }
+
+  try{
+
+    await reload(auth.currentUser);
+
+    currentUser = auth.currentUser;
+
+    if(!currentUser.emailVerified){
+
+      showMessage(
+        verifyMessage,
+        "Email пока не подтверждён. Нажмите ссылку в письме.",
+        true
+      );
+
+      return;
+    }
+
+    showMessage(
+      verifyMessage,
+      "Email подтверждён! Открываем SavcomPay..."
+    );
+
+    await continueAfterVerification();
+
+  }catch(error){
+
+    showMessage(
+      verifyMessage,
+      friendlyError(error),
+      true
+    );
+
+  }
+
+};
+
+
+document.getElementById("resendVerifyBtn").onclick =
+async () => {
+
+  try{
+
+    if(!auth.currentUser){
+      return;
+    }
+
+    await sendEmailVerification(auth.currentUser);
+
+    showMessage(
+      verifyMessage,
+      "Новое письмо отправлено. Проверьте входящие и папку «Спам»."
+    );
+
+  }catch(error){
+
+    showMessage(
+      verifyMessage,
+      friendlyError(error),
+      true
+    );
+
+  }
+
+};
+
+
+document.getElementById("verifyLogoutBtn").onclick =
+async () => {
+
+  await signOut(auth);
+
+  currentUser = null;
+
+  showOnly(authScreen);
+
+};
+
+
+/* =========================================================
+   PASSWORD RESET
+========================================================= */
+
+document.getElementById("resetBtn").onclick =
+async () => {
+
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  if(!email){
+
+    showMessage(
+      authMessage,
+      "Сначала введите email.",
+      true
+    );
+
+    return;
+  }
+
+  try{
+
+    await sendPasswordResetEmail(
+      auth,
+      email
+    );
+
+    showMessage(
+      authMessage,
+      "Ссылка для восстановления отправлена на email."
+    );
+
+  }catch(error){
+
+    showMessage(
+      authMessage,
+      friendlyError(error),
+      true
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   PIN SECURITY
+========================================================= */
+
+async function hashPin(pin){
+
+  const data =
+    new TextEncoder().encode(
+      pin + "::SavcomPay::PIN"
+    );
+
+  const hash =
+    await crypto.subtle.digest(
+      "SHA-256",
+      data
+    );
+
+  return Array
+    .from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2,"0"))
+    .join("");
+}
+
+
+function getPinKey(){
+
+  return currentUser
+    ? "savcompay_pin_" + currentUser.uid
+    : null;
+}
+
+
+function hasPin(){
+
+  const key = getPinKey();
+
+  return key
+    ? !!localStorage.getItem(key)
+    : false;
+}
+
+
+async function savePin(pin){
+
+  const hash =
+    await hashPin(pin);
+
+  localStorage.setItem(
+    getPinKey(),
+    hash
+  );
+}
+
+
+async function verifyPin(pin){
+
+  const hash =
+    await hashPin(pin);
+
+  return hash ===
+    localStorage.getItem(getPinKey());
+}
+
+
+function startCreatePin(){
+
+  pinValue = "";
+  pinConfirmValue = "";
+  pinStage = "create";
+
+  pinTitle.textContent = "Создайте PIN";
+
+  pinSubtitle.textContent =
+    "Введите 6 цифр для защиты SavcomPay.";
+
+  hideMessage(pinMessage);
+
+  updatePinDots();
+
+  showOnly(pinScreen);
+}
+
+
+function startEnterPin(){
+
+  pinValue = "";
+  pinConfirmValue = "";
+  pinStage = "enter";
+
+  pinTitle.textContent = "Введите PIN";
+
+  pinSubtitle.textContent =
+    "Разблокируйте свой SavcomPay.";
+
+  hideMessage(pinMessage);
+
+  updatePinDots();
+
+  showOnly(pinScreen);
+}
+
+
+function updatePinDots(){
+
+  const length =
+    pinValue.length;
+
+  pinDots.textContent =
+    "● ".repeat(length) +
+    "○ ".repeat(6-length);
+}
+
+
+async function handlePinDigit(digit){
+
+  if(digit === "clear"){
+
+    pinValue =
+      pinValue.slice(0,-1);
+
+    updatePinDots();
+
+    return;
+  }
+
+  if(digit === "cancel"){
+
+    await signOut(auth);
+
+    currentUser = null;
+
+    showOnly(authScreen);
+
+    return;
+  }
+
+  if(pinValue.length >= 6){
+    return;
+  }
+
+  pinValue += digit;
+
+  updatePinDots();
+
+  if(pinValue.length !== 6){
+    return;
+  }
+
+  if(pinStage === "create"){
+
+    if(!pinConfirmValue){
+
+      pinConfirmValue = pinValue;
+
+      pinValue = "";
+
+      pinTitle.textContent =
+        "Повторите PIN";
+
+      updatePinDots();
+
+      return;
+    }
+
+    if(pinValue !== pinConfirmValue){
+
+      showMessage(
+        pinMessage,
+        "PIN-коды не совпадают.",
+        true
+      );
+
+      pinValue = "";
+      pinConfirmValue = "";
+
+      pinTitle.textContent =
+        "Создайте PIN";
+
+      updatePinDots();
+
+      return;
+    }
+
+    await savePin(pinValue);
+
+    await initializeWallet();
+
+    showOnly(appScreen);
+
+    return;
+  }
+
+  if(pinStage === "enter"){
+
+    const valid =
+      await verifyPin(pinValue);
+
+    if(!valid){
+
+      showMessage(
+        pinMessage,
+        "Неверный PIN.",
+        true
+      );
+
+      pinValue = "";
+
+      updatePinDots();
+
+      return;
+    }
+
+    await initializeWallet();
+
+    showOnly(appScreen);
+  }
+
+}
+
+
+document.querySelectorAll(".pin-key")
+.forEach(button => {
+
+  button.onclick = () => {
+
+    handlePinDigit(
+      button.dataset.pin
+    );
+
+  };
+
+});
+
+
+/* =========================================================
+   CONTINUE AFTER EMAIL VERIFICATION
+========================================================= */
+
+async function continueAfterVerification(){
+
+  if(hasPin()){
+
+    startEnterPin();
+
+  }else{
+
+    startCreatePin();
+
+  }
+
+}
+
+
+/* =========================================================
+   TON WALLET
+========================================================= */
+
+async function initializeWallet(){
+
+  try{
+
+    walletAddressEl.textContent =
+      "Создание TON Testnet кошелька...";
+
+    /*
+      ВНИМАНИЕ:
+
+      Seed хранится локально только для тестовой версии.
+      Не переносим его в Firebase.
+    */
+
+    const storageKey =
+      "savcompay_ton_mnemonic_" +
+      currentUser.uid;
+
+    let mnemonic =
+      localStorage.getItem(storageKey);
+
+    if(!mnemonic){
+
+      const words =
+        await CreateTonMnemonic();
+
+      mnemonic =
+        Array.isArray(words)
+          ? words.join(" ")
+          : String(words);
+
+      localStorage.setItem(
+        storageKey,
+        mnemonic
+      );
+
+      /*
+        ВАЖНО:
+        В реальном production-кошельке
+        нужно заменить это на защищённое
+        хранилище ключей.
+      */
+    }
+
+    /*
+      Создаём signer из mnemonic.
+    */
+
+    const signer =
+      await Signer.fromMnemonic(
+        mnemonic.split(" "),
+        {
+          type:"ton"
+        }
+      );
+
+    /*
+      Создаём TON Testnet wallet.
+    */
+
+    const network =
+      Network.testnet();
+
+    /*
+      API клиент Testnet.
+    */
+
+    const clientConfig = {
+      url:"https://testnet.toncenter.com"
+    };
+
+    /*
+      Инициализация WalletKit.
+      Некоторые версии SDK могут менять
+      конструктор — если CDN-версия выдаст
+      ошибку импорта, ниже я дам точную
+      npm/Vite-версию.
+    */
+
+    currentKit =
+      new TonWalletKit({
+        networks:{
+          [network.chainId]:{
+            apiClient:clientConfig
+          }
+        },
+
+        deviceInfo:{
+          appName:"SavcomPay",
+          platform:"browser",
+          appVersion:"1.0.0",
+          maxProtocolVersion:2,
+          features:[
+            {
+              name:"SendTransaction",
+              maxMessages:4
+            }
+          ]
+        }
+      });
+
+    const adapter =
+      await WalletV5R1Adapter.create(
+        signer,
+        {
+          network,
+          client:
+            currentKit.getApiClient(network)
+        }
+      );
+
+    currentWallet =
+      await currentKit.addWallet(
+        adapter
+      );
+
+    const address =
+      currentWallet.getAddress();
+
+    walletAddressEl.textContent =
+      address;
+
+    document.getElementById(
+      "receiveAddress"
+    ).textContent = address;
+
+    document.getElementById(
+      "modalTonAddress"
+    ).textContent = address;
+
+    /*
+      Сохраняем ТОЛЬКО публичный адрес.
+      Seed сюда не записываем.
+    */
+
+    await set(
+      ref(
+        db,
+        "users/" +
+        currentUser.uid +
+        "/ton"
+      ),
+      {
+        network:"testnet",
+        address:String(address)
+      }
+    );
+
+    await updateBalance();
+
+  }catch(error){
+
+    console.error(
+      "TON initialization error:",
+      error
+    );
+
+    walletAddressEl.textContent =
+      "Ошибка создания TON wallet";
+
+    alert(
+      "Не удалось запустить TON wallet.\n\n" +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   BALANCE
+========================================================= */
+
+async function updateBalance(){
+
+  if(!currentWallet){
+    return;
+  }
+
+  try{
+
+    /*
+      WalletKit API может отдавать данные
+      кошелька через getState().
+    */
+
+    const state =
+      await currentWallet.getState();
+
+    let nano =
+      state?.balance ??
+      state?.accountBalance ??
+      0;
+
+    if(typeof nano === "string"){
+      nano = BigInt(nano);
+    }else{
+      nano = BigInt(nano);
+    }
+
+    const whole =
+      Number(nano) / 1e9;
+
+    balanceEl.textContent =
+      whole.toFixed(4) + " TON";
+
+  }catch(error){
+
+    console.warn(
+      "Balance error:",
+      error
+    );
+
+    balanceEl.textContent =
+      "0 TON";
+
+  }
+
+}
+
+
+/* =========================================================
+   RECEIVE / QR
+========================================================= */
+
+document.getElementById("receiveBtn").onclick =
+async () => {
+
+  if(!currentWallet){
+
+    alert(
+      "TON wallet ещё создаётся."
+    );
+
+    return;
+  }
+
+  const address =
+    String(
+      currentWallet.getAddress()
+    );
+
+  document.getElementById(
+    "receiveAddress"
+  ).textContent = address;
+
+  /*
+    QR через внешний генератор.
+    В дальнейшем можем заменить
+    на локальную библиотеку QR.
+  */
+
+  document.getElementById(
+    "qrImage"
+  ).src =
+    "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" +
+    encodeURIComponent(address);
+
+  document.getElementById(
+    "receiveModal"
+  ).classList.remove("hidden");
+
+};
+
+
+document.getElementById("copyAddressBtn").onclick =
+async () => {
+
+  const address =
+    document.getElementById(
+      "receiveAddress"
+    ).textContent;
+
+  try{
+
+    await navigator.clipboard.writeText(
+      address
+    );
+
+    document.getElementById(
+      "copyAddressBtn"
+    ).textContent =
+      "Скопировано ✓";
+
+    setTimeout(() => {
+
+      document.getElementById(
+        "copyAddressBtn"
+      ).textContent =
+        "Скопировать адрес";
+
+    },1500);
+
+  }catch{
+
+    alert(
+      "Не удалось скопировать адрес."
+    );
+
+  }
+
+};
+
+
+/* =========================================================
+   SEND
+========================================================= */
+
+document.getElementById("sendBtn").onclick =
+() => {
+
+  document.getElementById(
+    "sendModal"
+  ).classList.remove("hidden");
+
+};
+
+
+document.getElementById("sendTonBtn").onclick =
+async () => {
+
+  const address =
+    document.getElementById(
+      "sendAddress"
+    ).value.trim();
+
+  const amount =
+    document.getElementById(
+      "sendAmount"
+    ).value.trim();
+
+  const message =
+    document.getElementById(
+      "sendMessage"
+    );
+
+  hideMessage(message);
+
+  if(!address){
+
+    showMessage(
+      message,
+      "Введите адрес получателя.",
+      true
+    );
+
+    return;
+  }
+
+  if(!amount || Number(amount) <= 0){
+
+    showMessage(
+      message,
+      "Введите количество TON.",
+      true
+    );
+
+    return;
+  }
+
+  /*
+    Реальную отправку подключим следующим этапом,
+    после проверки WalletKit transaction API.
+  */
+
+  showMessage(
+    message,
+    "Кошелёк готов. Отправка будет включена после проверки transaction API WalletKit."
+  );
+
+};
+
+
+/* =========================================================
+   REFRESH
+========================================================= */
+
+document.getElementById("refreshBtn").onclick =
+async () => {
+
+  await updateBalance();
+
+};
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+document.getElementById("profileBtn").onclick =
+async () => {
+
+  if(!currentUser){
+    return;
+  }
+
+  document.getElementById(
+    "modalEmail"
+  ).textContent =
+    currentUser.email;
+
+  try{
+
+    const snapshot =
+      await get(
+        ref(
+          db,
+          "users/" +
+          currentUser.uid
+        )
+      );
+
+    const data =
+      snapshot.exists()
+        ? snapshot.val()
+        : {};
+
+    document.getElementById(
+      "modalSavId"
+    ).textContent =
+      data.savId || "—";
+
+  }catch{
+
+    document.getElementById(
+      "modalSavId"
+    ).textContent =
+      "—";
+
+  }
+
+  document.getElementById(
+    "profileModal"
+  ).classList.remove("hidden");
+
+};
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+document.getElementById("logoutBtn").onclick =
+async () => {
+
+  await signOut(auth);
+
+  currentUser = null;
+  currentWallet = null;
+  currentKit = null;
+
+  showOnly(authScreen);
+
+};
+
+
+/* =========================================================
+   CLOSE MODALS
+========================================================= */
+
+document.querySelectorAll("[data-close]")
+.forEach(button => {
+
+  button.onclick = () => {
+
+    const id =
+      button.dataset.close;
+
+    document.getElementById(
+      id
+    ).classList.add("hidden");
+
+  };
+
+});
+
+
+document.querySelectorAll(".modal")
+.forEach(modal => {
+
+  modal.addEventListener(
+    "click",
+    event => {
+
+      if(event.target === modal){
+
+        modal.classList.add("hidden");
+
+      }
+
+    }
+  );
+
+});
+
+
+/* =========================================================
+   AUTH STATE
+========================================================= */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if(!user){
+
+      currentUser = null;
+
+      showOnly(authScreen);
+
+      return;
+    }
+
+    await reload(user);
+
+    currentUser =
+      auth.currentUser;
+
+    if(!currentUser.emailVerified){
+
+      verifyEmail.textContent =
+        currentUser.email;
+
+      showOnly(verifyScreen);
+
+      return;
+    }
+
+    if(hasPin()){
+
+      startEnterPin();
+
+    }else{
+
+      startCreatePin();
+
+    }
+
+  }
+);
+
+</script>
+
+</body>
+</html>
