@@ -1,0 +1,3477 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SavcomPay</title>
+
+<meta name="theme-color" content="#18a957">
+<meta name="description" content="SavcomPay — простой криптокошелёк">
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --green: #18a957;
+    --green-dark: #0d8b45;
+    --green-light: #e9fff2;
+    --bg: #f2fff7;
+    --white: #ffffff;
+    --text: #17251d;
+    --muted: #7a8b81;
+    --border: #e5eee8;
+    --danger: #e74c3c;
+    --shadow: 0 20px 60px rgba(20, 80, 45, .10);
+}
+
+body.dark {
+    --bg: #0e1712;
+    --white: #152019;
+    --text: #f2fff6;
+    --muted: #9bad9f;
+    --border: #26352c;
+    --green-light: #173b26;
+    --shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+body {
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    background:
+        radial-gradient(circle at top left, rgba(24,169,87,.12), transparent 35%),
+        var(--bg);
+
+    color: var(--text);
+    min-height: 100vh;
+    transition: .25s;
+}
+
+/* =========================
+   GLOBAL
+========================= */
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    border: none;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.container {
+    width: min(1100px, calc(100% - 30px));
+    margin: auto;
+}
+
+/* =========================
+   TOAST
+========================= */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 25px;
+    transform: translate(-50%, 120px);
+
+    background: #17251d;
+    color: white;
+
+    padding: 14px 20px;
+    border-radius: 14px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    z-index: 9999;
+
+    transition: .3s;
+    box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+
+.toast.show {
+    transform: translate(-50%, 0);
+}
+
+/* =========================
+   AUTH
+========================= */
+
+#authScreen {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+
+    background: var(--white);
+
+    border-radius: 28px;
+
+    padding: 34px;
+
+    box-shadow: var(--shadow);
+
+    border: 1px solid var(--border);
+}
+
+.logo-box {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    margin-bottom: 25px;
+}
+
+.logo {
+    width: 52px;
+    height: 52px;
+
+    border-radius: 16px;
+
+    background: var(--green);
+
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 25px;
+    font-weight: 900;
+
+    box-shadow: 0 10px 25px rgba(24,169,87,.25);
+}
+
+.logo-title {
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.logo-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    background: var(--green-light);
+
+    padding: 5px;
+
+    border-radius: 14px;
+
+    margin-bottom: 24px;
+}
+
+.auth-tab {
+    padding: 11px;
+
+    background: transparent;
+
+    border-radius: 10px;
+
+    color: var(--muted);
+
+    font-weight: 700;
+}
+
+.auth-tab.active {
+    background: var(--white);
+    color: var(--green);
+    box-shadow: 0 4px 12px rgba(0,0,0,.06);
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    margin-bottom: 8px;
+}
+
+.field input {
+    width: 100%;
+
+    border: 1px solid var(--border);
+
+    background: var(--bg);
+
+    color: var(--text);
+
+    border-radius: 14px;
+
+    padding: 14px 15px;
+
+    outline: none;
+
+    transition: .2s;
+}
+
+.field input:focus {
+    border-color: var(--green);
+
+    box-shadow: 0 0 0 3px rgba(24,169,87,.10);
+}
+
+.primary-btn {
+    width: 100%;
+
+    background: var(--green);
+
+    color: white;
+
+    padding: 15px;
+
+    border-radius: 14px;
+
+    font-weight: 800;
+
+    margin-top: 5px;
+
+    transition: .2s;
+}
+
+.primary-btn:hover {
+    background: var(--green-dark);
+    transform: translateY(-1px);
+}
+
+.secondary-btn {
+    width: 100%;
+
+    background: var(--green-light);
+
+    color: var(--green);
+
+    padding: 13px;
+
+    border-radius: 13px;
+
+    font-weight: 700;
+
+    margin-top: 10px;
+}
+
+.auth-error {
+    background: #fff0ee;
+    color: #c0392b;
+
+    border-radius: 12px;
+
+    padding: 11px 13px;
+
+    font-size: 13px;
+
+    margin-bottom: 15px;
+}
+
+body.dark .auth-error {
+    background: #3b1d1a;
+}
+
+.password-hint {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 6px;
+}
+
+/* =========================
+   APP
+========================= */
+
+#app {
+    min-height: 100vh;
+}
+
+.topbar {
+    position: sticky;
+    top: 0;
+
+    z-index: 100;
+
+    background: rgba(255,255,255,.86);
+
+    backdrop-filter: blur(20px);
+
+    border-bottom: 1px solid var(--border);
+}
+
+body.dark .topbar {
+    background: rgba(21,32,25,.88);
+}
+
+.topbar-inner {
+    width: min(1100px, calc(100% - 30px));
+
+    margin: auto;
+
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand .logo {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+
+    font-size: 18px;
+}
+
+.brand-name {
+    font-weight: 900;
+    font-size: 18px;
+}
+
+.status {
+    font-size: 11px;
+    color: var(--green);
+
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.status-dot {
+    width: 7px;
+    height: 7px;
+
+    background: var(--green);
+
+    border-radius: 50%;
+}
+
+/* =========================
+   NAV
+========================= */
+
+.nav {
+    display: flex;
+    gap: 6px;
+}
+
+.nav button {
+    background: transparent;
+
+    color: var(--muted);
+
+    padding: 10px 13px;
+
+    border-radius: 12px;
+
+    font-weight: 700;
+}
+
+.nav button.active {
+    color: var(--green);
+    background: var(--green-light);
+}
+
+.mobile-menu {
+    display: none;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 12px;
+
+    background: var(--green-light);
+
+    color: var(--green);
+
+    font-size: 20px;
+}
+
+/* =========================
+   CONTENT
+========================= */
+
+.page {
+    width: min(1100px, calc(100% - 30px));
+
+    margin: 30px auto 80px;
+}
+
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 900;
+
+    margin-bottom: 7px;
+}
+
+.page-subtitle {
+    color: var(--muted);
+
+    margin-bottom: 25px;
+}
+
+/* =========================
+   BALANCE
+========================= */
+
+.balance-card {
+    background:
+        linear-gradient(135deg, #18a957, #0d8b45);
+
+    color: white;
+
+    border-radius: 25px;
+
+    padding: 28px;
+
+    box-shadow: 0 20px 45px rgba(24,169,87,.20);
+
+    margin-bottom: 25px;
+
+    position: relative;
+    overflow: hidden;
+}
+
+.balance-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 220px;
+    height: 220px;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,.08);
+
+    right: -80px;
+    top: -90px;
+}
+
+.balance-label {
+    opacity: .8;
+    font-size: 13px;
+}
+
+.balance {
+    font-size: 42px;
+    font-weight: 900;
+
+    margin: 8px 0;
+}
+
+.balance-usd {
+    opacity: .85;
+    font-size: 14px;
+}
+
+.network {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    margin-top: 18px;
+
+    padding: 7px 11px;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,.15);
+
+    font-size: 11px;
+}
+
+/* =========================
+   ASSETS
+========================= */
+
+.assets {
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 16px;
+}
+
+.asset {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+
+    border-radius: 20px;
+
+    padding: 20px;
+
+    box-shadow: 0 8px 25px rgba(0,0,0,.03);
+}
+
+.asset-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+.asset-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.coin {
+    width: 43px;
+    height: 43px;
+
+    border-radius: 50%;
+
+    background: var(--green-light);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--green);
+
+    font-weight: 900;
+}
+
+.asset-name {
+    font-weight: 800;
+}
+
+.asset-type {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.asset-amount {
+    font-size: 24px;
+    font-weight: 900;
+
+    margin-bottom: 4px;
+}
+
+.asset-usd {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.actions {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 14px;
+
+    margin-bottom: 25px;
+}
+
+.action {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+
+    padding: 18px;
+
+    color: var(--text);
+
+    text-align: left;
+
+    transition: .2s;
+}
+
+.action:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(24,169,87,.35);
+}
+
+.action-icon {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+
+    background: var(--green-light);
+
+    color: var(--green);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 19px;
+
+    margin-bottom: 11px;
+}
+
+.action-title {
+    font-weight: 800;
+}
+
+.action-text {
+    color: var(--muted);
+
+    font-size: 12px;
+
+    margin-top: 3px;
+}
+
+/* =========================
+   CARDS
+========================= */
+
+.card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+
+    border-radius: 22px;
+
+    padding: 22px;
+
+    margin-bottom: 18px;
+}
+
+.card-title {
+    font-size: 17px;
+    font-weight: 900;
+
+    margin-bottom: 5px;
+}
+
+.card-subtitle {
+    color: var(--muted);
+    font-size: 13px;
+
+    margin-bottom: 18px;
+}
+
+/* =========================
+   WALLET
+========================= */
+
+.address-box {
+    display: flex;
+    gap: 10px;
+}
+
+.address {
+    flex: 1;
+
+    background: var(--bg);
+
+    border: 1px solid var(--border);
+
+    padding: 13px;
+
+    border-radius: 13px;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-btn {
+    background: var(--green-light);
+
+    color: var(--green);
+
+    border-radius: 13px;
+
+    padding: 0 16px;
+
+    font-weight: 800;
+}
+
+/* =========================
+   FORMS
+========================= */
+
+.form-grid {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 15px;
+}
+
+.form-grid .full {
+    grid-column: 1 / -1;
+}
+
+.select {
+    width: 100%;
+
+    padding: 14px;
+
+    border-radius: 14px;
+
+    border: 1px solid var(--border);
+
+    background: var(--bg);
+
+    color: var(--text);
+
+    outline: none;
+}
+
+/* =========================
+   PROFILE
+========================= */
+
+.profile {
+    display: flex;
+    align-items: center;
+
+    gap: 17px;
+
+    margin-bottom: 20px;
+}
+
+.avatar {
+    width: 65px;
+    height: 65px;
+
+    border-radius: 20px;
+
+    background: var(--green);
+
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.profile-name {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.profile-email {
+    color: var(--muted);
+
+    font-size: 13px;
+
+    margin-top: 3px;
+}
+
+.savcom-id {
+    display: inline-block;
+
+    margin-top: 7px;
+
+    padding: 5px 9px;
+
+    background: var(--green-light);
+
+    color: var(--green);
+
+    border-radius: 8px;
+
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+/* =========================
+   SETTINGS
+========================= */
+
+.setting {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 15px 0;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.setting:last-child {
+    border-bottom: none;
+}
+
+.setting-title {
+    font-weight: 800;
+}
+
+.setting-desc {
+    color: var(--muted);
+
+    font-size: 12px;
+
+    margin-top: 3px;
+}
+
+.switch {
+    width: 48px;
+    height: 27px;
+
+    background: #cbd6cf;
+
+    border-radius: 20px;
+
+    position: relative;
+
+    cursor: pointer;
+
+    transition: .2s;
+}
+
+.switch::after {
+    content: "";
+
+    width: 21px;
+    height: 21px;
+
+    background: white;
+
+    border-radius: 50%;
+
+    position: absolute;
+
+    left: 3px;
+    top: 3px;
+
+    transition: .2s;
+
+    box-shadow: 0 2px 5px rgba(0,0,0,.15);
+}
+
+.switch.active {
+    background: var(--green);
+}
+
+.switch.active::after {
+    transform: translateX(21px);
+}
+
+/* =========================
+   PIN
+========================= */
+
+.pin-dots {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    margin: 20px 0;
+}
+
+.pin-dot {
+    width: 13px;
+    height: 13px;
+
+    border-radius: 50%;
+
+    background: var(--border);
+
+    transition: .15s;
+}
+
+.pin-dot.active {
+    background: var(--green);
+}
+
+/* =========================
+   EMPTY / INFO
+========================= */
+
+.info {
+    padding: 15px;
+
+    border-radius: 14px;
+
+    background: var(--green-light);
+
+    color: var(--green);
+
+    font-size: 13px;
+
+    line-height: 1.5;
+}
+
+.warning {
+    padding: 15px;
+
+    border-radius: 14px;
+
+    background: #fff7df;
+
+    color: #946c00;
+
+    font-size: 13px;
+
+    line-height: 1.5;
+}
+
+body.dark .warning {
+    background: #3c3217;
+    color: #e8ca70;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 760px) {
+
+    .nav {
+        display: none;
+    }
+
+    .mobile-menu {
+        display: block;
+    }
+
+    .assets {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid .full {
+        grid-column: auto;
+    }
+
+    .balance {
+        font-size: 34px;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .auth-card {
+        padding: 24px;
+
+        border-radius: 22px;
+    }
+
+    .page {
+        margin-top: 22px;
+    }
+
+    .actions {
+        grid-template-columns: 1fr;
+    }
+
+    .topbar-inner {
+        height: 64px;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- =========================
+     TOAST
+========================= -->
+
+<div id="toast" class="toast"></div>
+
+
+<!-- =========================
+     AUTH SCREEN
+========================= -->
+
+<div id="authScreen">
+
+    <div class="auth-card">
+
+        <div class="logo-box">
+
+            <div class="logo">
+                S
+            </div>
+
+            <div>
+                <div class="logo-title">
+                    SavcomPay
+                </div>
+
+                <div class="logo-subtitle">
+                    простой криптокошелёк
+                </div>
+            </div>
+
+        </div>
+
+
+        <div class="auth-tabs">
+
+            <button
+                id="loginTab"
+                class="auth-tab active"
+                onclick="switchAuth('login')"
+            >
+                Войти
+            </button>
+
+            <button
+                id="registerTab"
+                class="auth-tab"
+                onclick="switchAuth('register')"
+            >
+                Регистрация
+            </button>
+
+        </div>
+
+
+        <div id="authError" class="auth-error hidden"></div>
+
+
+        <!-- LOGIN -->
+
+        <div id="loginForm">
+
+            <div class="field">
+
+                <label>
+                    Email
+                </label>
+
+                <input
+                    id="loginEmail"
+                    type="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Пароль
+                </label>
+
+                <input
+                    id="loginPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    autocomplete="current-password"
+                >
+
+            </div>
+
+
+            <button
+                class="primary-btn"
+                onclick="loginUser()"
+            >
+                Войти
+            </button>
+
+        </div>
+
+
+        <!-- REGISTER -->
+
+        <div id="registerForm" class="hidden">
+
+            <div class="field">
+
+                <label>
+                    Имя
+                </label>
+
+                <input
+                    id="registerName"
+                    type="text"
+                    placeholder="Ваше имя"
+                    autocomplete="name"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Email
+                </label>
+
+                <input
+                    id="registerEmail"
+                    type="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Пароль
+                </label>
+
+                <input
+                    id="registerPassword"
+                    type="password"
+                    placeholder="Минимум 6 символов"
+                    autocomplete="new-password"
+                >
+
+                <div class="password-hint">
+                    Используй минимум 6 символов.
+                </div>
+
+            </div>
+
+
+            <button
+                class="primary-btn"
+                onclick="registerUser()"
+            >
+                Создать аккаунт
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     APP
+========================= -->
+
+<div id="app" class="hidden">
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <div class="topbar-inner">
+
+            <div class="brand">
+
+                <div class="logo">
+                    S
+                </div>
+
+                <div>
+
+                    <div class="brand-name">
+                        SavcomPay
+                    </div>
+
+                    <div class="status">
+
+                        <span class="status-dot"></span>
+
+                        онлайн
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <nav class="nav">
+
+                <button
+                    id="navWallet"
+                    class="active"
+                    onclick="showSection('wallet')"
+                >
+                    Кошелёк
+                </button>
+
+                <button
+                    id="navSend"
+                    onclick="showSection('send')"
+                >
+                    Отправить
+                </button>
+
+                <button
+                    id="navReceive"
+                    onclick="showSection('receive')"
+                >
+                    Получить
+                </button>
+
+                <button
+                    id="navProfile"
+                    onclick="showSection('profile')"
+                >
+                    Профиль
+                </button>
+
+                <button
+                    id="navSettings"
+                    onclick="showSection('settings')"
+                >
+                    Настройки
+                </button>
+
+            </nav>
+
+
+            <button
+                class="mobile-menu"
+                onclick="toggleMobileMenu()"
+            >
+                ☰
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- MOBILE NAV -->
+
+    <div
+        id="mobileNav"
+        class="hidden"
+        style="
+            background:var(--white);
+            border-bottom:1px solid var(--border);
+            padding:10px 15px;
+        "
+    >
+
+        <div
+            style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:7px;
+            "
+        >
+
+            <button
+                class="nav button"
+                onclick="showSection('wallet');closeMobileMenu()"
+            >
+                Кошелёк
+            </button>
+
+            <button
+                class="nav button"
+                onclick="showSection('send');closeMobileMenu()"
+            >
+                Отправить
+            </button>
+
+            <button
+                class="nav button"
+                onclick="showSection('receive');closeMobileMenu()"
+            >
+                Получить
+            </button>
+
+            <button
+                class="nav button"
+                onclick="showSection('profile');closeMobileMenu()"
+            >
+                Профиль
+            </button>
+
+            <button
+                class="nav button"
+                onclick="showSection('settings');closeMobileMenu()"
+            >
+                Настройки
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <main class="page">
+
+
+        <!-- =====================
+             WALLET
+        ====================== -->
+
+        <section
+            id="walletSection"
+            class="section active"
+        >
+
+            <h1 class="page-title">
+                Мой кошелёк
+            </h1>
+
+            <p class="page-subtitle">
+                Управляйте своими криптоактивами
+            </p>
+
+
+            <div class="balance-card">
+
+                <div class="balance-label">
+                    Общий баланс
+                </div>
+
+                <div
+                    id="totalBalance"
+                    class="balance"
+                >
+                    $0.00
+                </div>
+
+                <div class="balance-usd">
+                    Баланс будет отображаться после подключения TON-кошелька
+                </div>
+
+                <div class="network">
+                    🧪 TON Testnet
+                </div>
+
+            </div>
+
+
+            <div class="actions">
+
+                <button
+                    class="action"
+                    onclick="showSection('send')"
+                >
+
+                    <div class="action-icon">
+                        ↑
+                    </div>
+
+                    <div class="action-title">
+                        Отправить
+                    </div>
+
+                    <div class="action-text">
+                        TON или USDT
+                    </div>
+
+                </button>
+
+
+                <button
+                    class="action"
+                    onclick="showSection('receive')"
+                >
+
+                    <div class="action-icon">
+                        ↓
+                    </div>
+
+                    <div class="action-title">
+                        Получить
+                    </div>
+
+                    <div class="action-text">
+                        Ваш адрес
+                    </div>
+
+                </button>
+
+
+                <button
+                    class="action"
+                    onclick="showSection('settings')"
+                >
+
+                    <div class="action-icon">
+                        ⚙
+                    </div>
+
+                    <div class="action-title">
+                        Настройки
+                    </div>
+
+                    <div class="action-text">
+                        Безопасность
+                    </div>
+
+                </button>
+
+            </div>
+
+
+            <div class="assets">
+
+                <!-- TON -->
+
+                <div class="asset">
+
+                    <div class="asset-head">
+
+                        <div class="asset-left">
+
+                            <div class="coin">
+                                T
+                            </div>
+
+                            <div>
+
+                                <div class="asset-name">
+                                    Toncoin
+                                </div>
+
+                                <div class="asset-type">
+                                    TON
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <span style="color:var(--green)">
+                            TON
+                        </span>
+
+                    </div>
+
+
+                    <div class="asset-amount">
+                        0 TON
+                    </div>
+
+                    <div class="asset-usd">
+                        $0.00
+                    </div>
+
+                </div>
+
+
+                <!-- USDT -->
+
+                <div class="asset">
+
+                    <div class="asset-head">
+
+                        <div class="asset-left">
+
+                            <div class="coin">
+                                $
+                            </div>
+
+                            <div>
+
+                                <div class="asset-name">
+                                    Tether USD
+                                </div>
+
+                                <div class="asset-type">
+                                    USDT · Jetton
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <span style="color:var(--green)">
+                            USDT
+                        </span>
+
+                    </div>
+
+
+                    <div class="asset-amount">
+                        0 USDT
+                    </div>
+
+                    <div class="asset-usd">
+                        $0.00
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="card" style="margin-top:18px">
+
+                <div class="card-title">
+                    USDT на TON
+                </div>
+
+                <div class="card-subtitle">
+                    Официальный master contract USDT Jetton
+                </div>
+
+                <div class="address-box">
+
+                    <div class="address">
+                        EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs
+                    </div>
+
+                    <button
+                        class="copy-btn"
+                        onclick="copyText('EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs')"
+                    >
+                        Копировать
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="warning">
+
+                ⚠️ Сейчас приложение работает в режиме подготовки кошелька.
+                Реальные приватные ключи и seed-фразы не сохраняются в Firebase.
+                Перед использованием реальных средств сначала подключим TON WalletKit
+                и протестируем всё в TON Testnet.
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================
+             SEND
+        ====================== -->
+
+        <section
+            id="sendSection"
+            class="section"
+        >
+
+            <h1 class="page-title">
+                Отправить
+            </h1>
+
+            <p class="page-subtitle">
+                Отправка TON или USDT
+            </p>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    Новая транзакция
+                </div>
+
+                <div class="card-subtitle">
+                    Выберите актив и укажите адрес получателя.
+                </div>
+
+
+                <div class="form-grid">
+
+                    <div class="field">
+
+                        <label>
+                            Актив
+                        </label>
+
+                        <select
+                            id="sendAsset"
+                            class="select"
+                        >
+
+                            <option value="TON">
+                                TON
+                            </option>
+
+                            <option value="USDT">
+                                USDT
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label>
+                            Сумма
+                        </label>
+
+                        <input
+                            id="sendAmount"
+                            type="number"
+                            min="0"
+                            step="any"
+                            placeholder="0.00"
+                        >
+
+                    </div>
+
+
+                    <div class="field full">
+
+                        <label>
+                            Адрес получателя
+                        </label>
+
+                        <input
+                            id="sendAddress"
+                            type="text"
+                            placeholder="Введите TON-адрес"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    class="primary-btn"
+                    onclick="prepareTransaction()"
+                >
+                    Продолжить
+                </button>
+
+            </div>
+
+
+            <div class="info">
+
+                ℹ️ Реальная подпись транзакции будет выполняться через
+                подключённый TON-кошелёк. Сайт не должен отправлять
+                приватный ключ или seed на Firebase.
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================
+             RECEIVE
+        ====================== -->
+
+        <section
+            id="receiveSection"
+            class="section"
+        >
+
+            <h1 class="page-title">
+                Получить
+            </h1>
+
+            <p class="page-subtitle">
+                Ваш адрес для получения TON и Jetton
+            </p>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    TON Wallet
+                </div>
+
+                <div class="card-subtitle">
+                    Адрес появится после создания или подключения кошелька.
+                </div>
+
+
+                <div class="address-box">
+
+                    <div
+                        id="walletAddress"
+                        class="address"
+                    >
+                        Кошелёк ещё не подключён
+                    </div>
+
+                    <button
+                        class="copy-btn"
+                        onclick="copyWalletAddress()"
+                    >
+                        Копировать
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    Как получить USDT
+                </div>
+
+                <div class="card-subtitle">
+                    USDT в SavcomPay будет использовать стандарт Jetton на сети TON.
+                </div>
+
+                <div class="info">
+
+                    Перед отправкой USDT всегда проверяйте,
+                    что отправитель использует правильный master contract Jetton.
+                    Название токена само по себе не гарантирует подлинность.
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================
+             PROFILE
+        ====================== -->
+
+        <section
+            id="profileSection"
+            class="section"
+        >
+
+            <h1 class="page-title">
+                Профиль
+            </h1>
+
+            <p class="page-subtitle">
+                Ваш аккаунт SavcomPay
+            </p>
+
+
+            <div class="card">
+
+                <div class="profile">
+
+                    <div
+                        id="profileAvatar"
+                        class="avatar"
+                    >
+                        S
+                    </div>
+
+                    <div>
+
+                        <div
+                            id="profileName"
+                            class="profile-name"
+                        >
+                            Пользователь
+                        </div>
+
+                        <div
+                            id="profileEmail"
+                            class="profile-email"
+                        >
+                            —
+                        </div>
+
+                        <div
+                            id="profileId"
+                            class="savcom-id"
+                        >
+                            Savcom ID: —
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        Имя
+                    </label>
+
+                    <input
+                        id="profileNameInput"
+                        type="text"
+                        placeholder="Ваше имя"
+                    >
+
+                </div>
+
+
+                <button
+                    class="primary-btn"
+                    onclick="saveProfile()"
+                >
+                    Сохранить профиль
+                </button>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    Email
+                </div>
+
+                <div class="card-subtitle">
+                    Статус подтверждения email
+                </div>
+
+                <div
+                    id="emailStatus"
+                    class="info"
+                >
+                    Проверяем...
+                </div>
+
+
+                <button
+                    id="verifyEmailBtn"
+                    class="secondary-btn"
+                    onclick="sendVerification()"
+                >
+                    Отправить письмо подтверждения
+                </button>
+
+            </div>
+
+
+            <button
+                class="primary-btn"
+                style="
+                    background:#e74c3c;
+                    margin-top:5px;
+                "
+                onclick="logoutUser()"
+            >
+                Выйти из аккаунта
+            </button>
+
+        </section>
+
+
+        <!-- =====================
+             SETTINGS
+        ====================== -->
+
+        <section
+            id="settingsSection"
+            class="section"
+        >
+
+            <h1 class="page-title">
+                Настройки
+            </h1>
+
+            <p class="page-subtitle">
+                Безопасность и параметры приложения
+            </p>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    Интерфейс
+                </div>
+
+
+                <div class="setting">
+
+                    <div>
+
+                        <div class="setting-title">
+                            Тёмная тема
+                        </div>
+
+                        <div class="setting-desc">
+                            Использовать тёмное оформление
+                        </div>
+
+                    </div>
+
+                    <div
+                        id="themeSwitch"
+                        class="switch"
+                        onclick="toggleTheme()"
+                    ></div>
+
+                </div>
+
+
+                <div class="setting">
+
+                    <div>
+
+                        <div class="setting-title">
+                            Сеть
+                        </div>
+
+                        <div class="setting-desc">
+                            Сейчас используется TON Testnet
+                        </div>
+
+                    </div>
+
+                    <strong style="color:var(--green)">
+                        TESTNET
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    PIN-код
+                </div>
+
+                <div class="card-subtitle">
+                    PIN хранится локально на устройстве в виде хеша.
+                </div>
+
+
+                <div
+                    id="pinStatus"
+                    class="info"
+                >
+                    PIN ещё не установлен.
+                </div>
+
+
+                <button
+                    class="secondary-btn"
+                    onclick="openPinSetup()"
+                >
+                    Установить / изменить PIN
+                </button>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    Firebase
+                </div>
+
+                <div class="card-subtitle">
+                    Состояние подключения
+                </div>
+
+                <div class="info">
+
+                    🟢 Firebase подключён<br>
+                    🔐 Authentication подключён<br>
+                    💾 Realtime Database подключена
+
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    Безопасность кошелька
+                </div>
+
+                <div class="warning">
+
+                    Никогда не отправляйте seed-фразу, private key или
+                    секретную фразу в чат, Firebase Database или обычную
+                    форму сайта.
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<!-- =========================
+     PIN MODAL
+========================= -->
+
+<div
+    id="pinModal"
+    class="hidden"
+    style="
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.45);
+        backdrop-filter:blur(8px);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        z-index:999;
+    "
+>
+
+    <div
+        class="card"
+        style="
+            width:100%;
+            max-width:390px;
+            margin:0;
+        "
+    >
+
+        <div class="card-title">
+            Установить PIN
+        </div>
+
+        <div class="card-subtitle">
+            Придумайте 6-значный PIN для локальной защиты.
+        </div>
+
+
+        <div
+            class="field"
+        >
+
+            <label>
+                PIN
+            </label>
+
+            <input
+                id="pinInput"
+                type="password"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="••••••"
+            >
+
+        </div>
+
+
+        <div
+            class="field"
+        >
+
+            <label>
+                Повторите PIN
+            </label>
+
+            <input
+                id="pinRepeat"
+                type="password"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="••••••"
+            >
+
+        </div>
+
+
+        <button
+            class="primary-btn"
+            onclick="savePin()"
+        >
+            Сохранить PIN
+        </button>
+
+
+        <button
+            class="secondary-btn"
+            onclick="closePinSetup()"
+        >
+            Отмена
+        </button>
+
+    </div>
+
+</div>
+
+
+<script type="module">
+
+/* =========================================================
+   FIREBASE IMPORTS
+========================================================= */
+
+import {
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+import {
+    getAnalytics,
+    isSupported
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics.js";
+
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    sendEmailVerification,
+    signOut,
+    onAuthStateChanged,
+    updateProfile
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import {
+    getDatabase,
+    ref,
+    set,
+    get,
+    update
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+
+/* =========================================================
+   FIREBASE CONFIG
+========================================================= */
+
+const firebaseConfig = {
+
+    apiKey:
+        "AIzaSyCsU2eJ2aF5oj4uWFbyy0Ez0mekT_At4vU",
+
+    authDomain:
+        "sava-online.firebaseapp.com",
+
+    databaseURL:
+        "https://sava-online-default-rtdb.europe-west1.firebasedatabase.app",
+
+    projectId:
+        "sava-online",
+
+    storageBucket:
+        "sava-online.firebasestorage.app",
+
+    messagingSenderId:
+        "997547069745",
+
+    appId:
+        "1:997547069745:web:821a8fa505cf14670ee010",
+
+    measurementId:
+        "G-S3X80BM74X"
+
+};
+
+
+/* =========================================================
+   INITIALIZE FIREBASE
+========================================================= */
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const database = getDatabase(app);
+
+
+/* =========================================================
+   ANALYTICS
+========================================================= */
+
+let analytics = null;
+
+try {
+
+    if (await isSupported()) {
+
+        analytics = getAnalytics(app);
+
+        console.log(
+            "Firebase Analytics подключён"
+        );
+
+    }
+
+} catch (error) {
+
+    console.log(
+        "Analytics недоступен:",
+        error
+    );
+
+}
+
+
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
+
+let currentUser = null;
+
+let currentProfile = null;
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function showToast(message) {
+
+    const toast =
+        document.getElementById("toast");
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    }, 2800);
+}
+
+
+function showAuthError(message) {
+
+    const box =
+        document.getElementById("authError");
+
+    box.textContent = message;
+
+    box.classList.remove("hidden");
+
+}
+
+
+function hideAuthError() {
+
+    document
+        .getElementById("authError")
+        .classList.add("hidden");
+
+}
+
+
+function firebaseError(error) {
+
+    console.error(error);
+
+    const code =
+        error?.code || "";
+
+    const messages = {
+
+        "auth/invalid-email":
+            "Неверный формат email.",
+
+        "auth/user-not-found":
+            "Пользователь с таким email не найден.",
+
+        "auth/wrong-password":
+            "Неверный пароль.",
+
+        "auth/invalid-credential":
+            "Неверный email или пароль.",
+
+        "auth/email-already-in-use":
+            "Этот email уже зарегистрирован.",
+
+        "auth/weak-password":
+            "Пароль слишком слабый.",
+
+        "auth/too-many-requests":
+            "Слишком много попыток. Попробуйте позже.",
+
+        "auth/network-request-failed":
+            "Ошибка сети.",
+
+        "auth/api-key-not-valid":
+            "Firebase API key недействителен.",
+
+        "auth/operation-not-allowed":
+            "Email/Password ещё не включён в Firebase."
+
+    };
+
+    return (
+        messages[code] ||
+        error?.message ||
+        "Произошла неизвестная ошибка."
+    );
+}
+
+
+/* =========================================================
+   AUTH TABS
+========================================================= */
+
+window.switchAuth = function(type) {
+
+    hideAuthError();
+
+    const login =
+        document.getElementById("loginForm");
+
+    const register =
+        document.getElementById("registerForm");
+
+    const loginTab =
+        document.getElementById("loginTab");
+
+    const registerTab =
+        document.getElementById("registerTab");
+
+
+    if (type === "login") {
+
+        login.classList.remove("hidden");
+
+        register.classList.add("hidden");
+
+        loginTab.classList.add("active");
+
+        registerTab.classList.remove("active");
+
+    } else {
+
+        login.classList.add("hidden");
+
+        register.classList.remove("hidden");
+
+        loginTab.classList.remove("active");
+
+        registerTab.classList.add("active");
+
+    }
+
+};
+
+
+/* =========================================================
+   REGISTER
+========================================================= */
+
+window.registerUser = async function() {
+
+    hideAuthError();
+
+    const name =
+        document
+            .getElementById("registerName")
+            .value
+            .trim();
+
+    const email =
+        document
+            .getElementById("registerEmail")
+            .value
+            .trim();
+
+    const password =
+        document
+            .getElementById("registerPassword")
+            .value;
+
+
+    if (!name) {
+
+        showAuthError(
+            "Введите имя."
+        );
+
+        return;
+    }
+
+
+    if (!email) {
+
+        showAuthError(
+            "Введите email."
+        );
+
+        return;
+    }
+
+
+    if (password.length < 6) {
+
+        showAuthError(
+            "Пароль должен содержать минимум 6 символов."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const credential =
+            await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+        const user =
+            credential.user;
+
+
+        /* Firebase profile */
+
+        await updateProfile(
+            user,
+            {
+                displayName: name
+            }
+        );
+
+
+        /* Email verification */
+
+        try {
+
+            await sendEmailVerification(user);
+
+        } catch (verifyError) {
+
+            console.warn(
+                "Не удалось отправить письмо:",
+                verifyError
+            );
+
+        }
+
+
+        /* Savcom ID */
+
+        const savcomId =
+            "SC-" +
+            user.uid
+                .substring(0, 8)
+                .toUpperCase();
+
+
+        /* Save profile */
+
+        await set(
+            ref(
+                database,
+                "users/" + user.uid
+            ),
+            {
+
+                uid:
+                    user.uid,
+
+                name:
+                    name,
+
+                email:
+                    email,
+
+                savcomId:
+                    savcomId,
+
+                createdAt:
+                    Date.now()
+
+            }
+        );
+
+
+        showToast(
+            "Аккаунт создан!"
+        );
+
+
+    } catch (error) {
+
+        showAuthError(
+            firebaseError(error)
+        );
+
+    }
+
+};
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+window.loginUser = async function() {
+
+    hideAuthError();
+
+    const email =
+        document
+            .getElementById("loginEmail")
+            .value
+            .trim();
+
+    const password =
+        document
+            .getElementById("loginPassword")
+            .value;
+
+
+    if (!email || !password) {
+
+        showAuthError(
+            "Введите email и пароль."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        showToast(
+            "Вход выполнен!"
+        );
+
+
+    } catch (error) {
+
+        showAuthError(
+            firebaseError(error)
+        );
+
+    }
+
+};
+
+
+/* =========================================================
+   LOGOUT
+========================================================= */
+
+window.logoutUser = async function() {
+
+    try {
+
+        await signOut(auth);
+
+        showToast(
+            "Вы вышли из аккаунта."
+        );
+
+    } catch (error) {
+
+        showToast(
+            "Не удалось выйти."
+        );
+
+    }
+
+};
+
+
+/* =========================================================
+   EMAIL VERIFICATION
+========================================================= */
+
+window.sendVerification = async function() {
+
+    if (!currentUser) {
+
+        return;
+    }
+
+
+    try {
+
+        await sendEmailVerification(
+            currentUser
+        );
+
+        showToast(
+            "Письмо отправлено!"
+        );
+
+    } catch (error) {
+
+        if (
+            error.code ===
+            "auth/too-many-requests"
+        ) {
+
+            showToast(
+                "Слишком много запросов. Попробуйте позже."
+            );
+
+        } else {
+
+            showToast(
+                firebaseError(error)
+            );
+
+        }
+
+    }
+
+};
+
+
+/* =========================================================
+   LOAD PROFILE
+========================================================= */
+
+async function loadProfile(user) {
+
+    try {
+
+        const snapshot =
+            await get(
+                ref(
+                    database,
+                    "users/" + user.uid
+                )
+            );
+
+
+        if (snapshot.exists()) {
+
+            currentProfile =
+                snapshot.val();
+
+        } else {
+
+            currentProfile = {
+
+                uid:
+                    user.uid,
+
+                name:
+                    user.displayName ||
+                    "Пользователь",
+
+                email:
+                    user.email,
+
+                savcomId:
+                    "SC-" +
+                    user.uid
+                        .substring(0, 8)
+                        .toUpperCase(),
+
+                createdAt:
+                    Date.now()
+
+            };
+
+
+            await set(
+                ref(
+                    database,
+                    "users/" + user.uid
+                ),
+                currentProfile
+            );
+
+        }
+
+
+        renderProfile();
+
+
+    } catch (error) {
+
+        console.error(
+            "Ошибка загрузки профиля:",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   RENDER PROFILE
+========================================================= */
+
+function renderProfile() {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    const name =
+        currentProfile?.name ||
+        currentUser.displayName ||
+        "Пользователь";
+
+
+    const email =
+        currentUser.email ||
+        currentProfile?.email ||
+        "—";
+
+
+    const savcomId =
+        currentProfile?.savcomId ||
+        "SC-" +
+        currentUser.uid
+            .substring(0, 8)
+            .toUpperCase();
+
+
+    document
+        .getElementById("profileName")
+        .textContent = name;
+
+
+    document
+        .getElementById("profileEmail")
+        .textContent = email;
+
+
+    document
+        .getElementById("profileId")
+        .textContent =
+            "Savcom ID: " + savcomId;
+
+
+    document
+        .getElementById("profileNameInput")
+        .value = name;
+
+
+    document
+        .getElementById("profileAvatar")
+        .textContent =
+            name
+                .charAt(0)
+                .toUpperCase();
+
+
+    const status =
+        document.getElementById(
+            "emailStatus"
+        );
+
+
+    if (currentUser.emailVerified) {
+
+        status.innerHTML =
+            "✅ Email подтверждён.";
+
+        document
+            .getElementById(
+                "verifyEmailBtn"
+            )
+            .classList.add("hidden");
+
+    } else {
+
+        status.innerHTML =
+            "⚠️ Email ещё не подтверждён.";
+
+        document
+            .getElementById(
+                "verifyEmailBtn"
+            )
+            .classList.remove("hidden");
+
+    }
+
+}
+
+
+/* =========================================================
+   SAVE PROFILE
+========================================================= */
+
+window.saveProfile = async function() {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    const name =
+        document
+            .getElementById(
+                "profileNameInput"
+            )
+            .value
+            .trim();
+
+
+    if (!name) {
+
+        showToast(
+            "Введите имя."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        await updateProfile(
+            currentUser,
+            {
+                displayName:
+                    name
+            }
+        );
+
+
+        await update(
+            ref(
+                database,
+                "users/" +
+                currentUser.uid
+            ),
+            {
+                name:
+                    name
+            }
+        );
+
+
+        currentProfile.name =
+            name;
+
+
+        renderProfile();
+
+
+        showToast(
+            "Профиль сохранён!"
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showToast(
+            firebaseError(error)
+        );
+
+    }
+
+};
+
+
+/* =========================================================
+   AUTH STATE
+========================================================= */
+
+onAuthStateChanged(
+    auth,
+    async (user) => {
+
+        currentUser = user;
+
+
+        if (user) {
+
+            document
+                .getElementById(
+                    "authScreen"
+                )
+                .classList.add("hidden");
+
+
+            document
+                .getElementById(
+                    "app"
+                )
+                .classList.remove("hidden");
+
+
+            await loadProfile(user);
+
+
+            console.log(
+                "👤 Пользователь:",
+                user.email
+            );
+
+
+            console.log(
+                "Email verified:",
+                user.emailVerified
+            );
+
+
+        } else {
+
+            document
+                .getElementById(
+                    "authScreen"
+                )
+                .classList.remove("hidden");
+
+
+            document
+                .getElementById(
+                    "app"
+                )
+                .classList.add("hidden");
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+window.showSection = function(section) {
+
+    const sections = [
+        "wallet",
+        "send",
+        "receive",
+        "profile",
+        "settings"
+    ];
+
+
+    sections.forEach(
+        (name) => {
+
+            const element =
+                document.getElementById(
+                    name + "Section"
+                );
+
+            if (element) {
+
+                element.classList.remove(
+                    "active"
+                );
+
+            }
+
+
+            const nav =
+                document.getElementById(
+                    "nav" +
+                    name
+                        .charAt(0)
+                        .toUpperCase() +
+                    name.substring(1)
+                );
+
+            if (nav) {
+
+                nav.classList.remove(
+                    "active"
+                );
+
+            }
+
+        }
+    );
+
+
+    const selected =
+        document.getElementById(
+            section + "Section"
+        );
+
+
+    if (selected) {
+
+        selected.classList.add(
+            "active"
+        );
+
+    }
+
+
+    const nav =
+        document.getElementById(
+            "nav" +
+            section
+                .charAt(0)
+                .toUpperCase() +
+            section.substring(1)
+        );
+
+
+    if (nav) {
+
+        nav.classList.add(
+            "active"
+        );
+
+    }
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+};
+
+
+/* =========================================================
+   MOBILE MENU
+========================================================= */
+
+window.toggleMobileMenu = function() {
+
+    const menu =
+        document.getElementById(
+            "mobileNav"
+        );
+
+    menu.classList.toggle(
+        "hidden"
+    );
+
+};
+
+
+window.closeMobileMenu = function() {
+
+    document
+        .getElementById(
+            "mobileNav"
+        )
+        .classList.add(
+            "hidden"
+        );
+
+};
+
+
+/* =========================================================
+   COPY
+========================================================= */
+
+window.copyText = async function(text) {
+
+    try {
+
+        await navigator.clipboard.writeText(
+            text
+        );
+
+        showToast(
+            "Скопировано!"
+        );
+
+    } catch {
+
+        showToast(
+            "Не удалось скопировать."
+        );
+
+    }
+
+};
+
+
+window.copyWalletAddress = function() {
+
+    const address =
+        document
+            .getElementById(
+                "walletAddress"
+            )
+            .textContent;
+
+
+    if (
+        !address ||
+        address ===
+        "Кошелёк ещё не подключён"
+    ) {
+
+        showToast(
+            "Сначала подключите TON-кошелёк."
+        );
+
+        return;
+    }
+
+
+    copyText(address);
+
+};
+
+
+/* =========================================================
+   SEND
+========================================================= */
+
+window.prepareTransaction = function() {
+
+    const asset =
+        document
+            .getElementById(
+                "sendAsset"
+            )
+            .value;
+
+    const amount =
+        document
+            .getElementById(
+                "sendAmount"
+            )
+            .value;
+
+    const address =
+        document
+            .getElementById(
+                "sendAddress"
+            )
+            .value
+            .trim();
+
+
+    if (!amount || Number(amount) <= 0) {
+
+        showToast(
+            "Введите сумму."
+        );
+
+        return;
+    }
+
+
+    if (!address) {
+
+        showToast(
+            "Введите адрес получателя."
+        );
+
+        return;
+    }
+
+
+    showToast(
+        `Транзакция ${asset} подготовлена. Подключение TON Wallet ещё не выполнено.`
+    );
+
+};
+
+
+/* =========================================================
+   THEME
+========================================================= */
+
+function loadTheme() {
+
+    const theme =
+        localStorage.getItem(
+            "savcom_theme"
+        );
+
+
+    if (theme === "dark") {
+
+        document.body.classList.add(
+            "dark"
+        );
+
+        document
+            .getElementById(
+                "themeSwitch"
+            )
+            .classList.add(
+                "active"
+            );
+
+    }
+
+}
+
+
+window.toggleTheme = function() {
+
+    document.body.classList.toggle(
+        "dark"
+    );
+
+
+    const dark =
+        document.body.classList.contains(
+            "dark"
+        );
+
+
+    localStorage.setItem(
+        "savcom_theme",
+        dark ? "dark" : "light"
+    );
+
+
+    document
+        .getElementById(
+            "themeSwitch"
+        )
+        .classList.toggle(
+            "active",
+            dark
+        );
+
+};
+
+
+loadTheme();
+
+
+/* =========================================================
+   PIN
+========================================================= */
+
+async function sha256(text) {
+
+    const data =
+        new TextEncoder().encode(
+            text
+        );
+
+
+    const hash =
+        await crypto.subtle.digest(
+            "SHA-256",
+            data
+        );
+
+
+    return Array
+        .from(
+            new Uint8Array(hash)
+        )
+        .map(
+            byte =>
+                byte
+                    .toString(16)
+                    .padStart(2, "0")
+        )
+        .join("");
+
+}
+
+
+function updatePinStatus() {
+
+    const exists =
+        localStorage.getItem(
+            "savcom_pin_hash"
+        );
+
+
+    const box =
+        document.getElementById(
+            "pinStatus"
+        );
+
+
+    if (exists) {
+
+        box.innerHTML =
+            "🔐 PIN установлен. Он хранится только локально на этом устройстве.";
+
+    } else {
+
+        box.innerHTML =
+            "PIN ещё не установлен.";
+
+    }
+
+}
+
+
+window.openPinSetup = function() {
+
+    document
+        .getElementById(
+            "pinModal"
+        )
+        .classList.remove(
+            "hidden"
+        );
+
+
+    document
+        .getElementById(
+            "pinInput"
+        )
+        .value = "";
+
+
+    document
+        .getElementById(
+            "pinRepeat"
+        )
+        .value = "";
+
+};
+
+
+window.closePinSetup = function() {
+
+    document
+        .getElementById(
+            "pinModal"
+        )
+        .classList.add(
+            "hidden"
+        );
+
+};
+
+
+window.savePin = async function() {
+
+    const pin =
+        document
+            .getElementById(
+                "pinInput"
+            )
+            .value;
+
+    const repeat =
+        document
+            .getElementById(
+                "pinRepeat"
+            )
+            .value;
+
+
+    if (!/^\d{6}$/.test(pin)) {
+
+        showToast(
+            "PIN должен состоять из 6 цифр."
+        );
+
+        return;
+    }
+
+
+    if (pin !== repeat) {
+
+        showToast(
+            "PIN-коды не совпадают."
+        );
+
+        return;
+    }
+
+
+    const hash =
+        await sha256(pin);
+
+
+    localStorage.setItem(
+        "savcom_pin_hash",
+        hash
+    );
+
+
+    closePinSetup();
+
+    updatePinStatus();
+
+
+    showToast(
+        "PIN сохранён!"
+    );
+
+};
+
+
+updatePinStatus();
+
+
+/* =========================================================
+   START
+========================================================= */
+
+console.log(
+    "🔥 SavcomPay запущен"
+);
+
+console.log(
+    "Firebase project:",
+    firebaseConfig.projectId
+);
+
+console.log(
+    "Realtime Database:",
+    firebaseConfig.databaseURL
+);
+
+</script>
+
+</body>
+</html>
