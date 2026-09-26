@@ -1,0 +1,3788 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#08b879">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<title>SavcomPay</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+<!-- QR -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+:root{
+  --green:#08b879;
+  --green2:#059b67;
+  --dark:#073d2c;
+  --text:#15201c;
+  --muted:#75807b;
+  --bg:#f5f8f6;
+  --card:#fff;
+  --border:#e7ece9;
+  --danger:#e84b4b;
+  --yellow:#fff5d9;
+  --shadow:0 12px 35px rgba(10,70,50,.08);
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  min-height:100%;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+body{
+  padding-bottom:88px;
+}
+
+button,input,select{
+  font:inherit;
+}
+
+button{
+  border:0;
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.app{
+  width:100%;
+  max-width:760px;
+  margin:auto;
+  min-height:100vh;
+}
+
+.hidden{
+  display:none!important;
+}
+
+/* ---------- SVG ---------- */
+
+.icon{
+  width:24px;
+  height:24px;
+  display:inline-block;
+  flex:none;
+}
+
+.icon svg{
+  width:100%;
+  height:100%;
+  stroke:currentColor;
+  fill:none;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+.logo{
+  width:46px;
+  height:46px;
+  border-radius:16px;
+  background:linear-gradient(145deg,#10c789,#079c69);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
+  font-weight:900;
+  box-shadow:0 7px 20px rgba(8,184,121,.25);
+}
+
+/* ---------- AUTH ---------- */
+
+.auth{
+  min-height:100vh;
+  padding:35px 20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.auth-box{
+  width:100%;
+  max-width:440px;
+  background:white;
+  border-radius:30px;
+  padding:30px;
+  box-shadow:var(--shadow);
+}
+
+.auth-brand{
+  text-align:center;
+  margin-bottom:25px;
+}
+
+.auth-brand .logo{
+  margin:auto;
+  width:70px;
+  height:70px;
+  border-radius:23px;
+  font-size:34px;
+}
+
+.auth-brand h1{
+  margin:15px 0 5px;
+  font-size:30px;
+}
+
+.auth-brand p{
+  color:var(--muted);
+  margin:0;
+}
+
+.tabs{
+  display:flex;
+  background:#eef3f0;
+  border-radius:15px;
+  padding:4px;
+  margin-bottom:20px;
+}
+
+.tab{
+  flex:1;
+  padding:12px;
+  background:transparent;
+  border-radius:12px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.tab.active{
+  background:white;
+  color:var(--green2);
+  box-shadow:0 2px 10px rgba(0,0,0,.05);
+}
+
+.input-group{
+  margin-bottom:14px;
+}
+
+.input-group label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:7px;
+  color:#55605b;
+}
+
+.input{
+  width:100%;
+  height:52px;
+  border:1px solid var(--border);
+  background:#f8faf9;
+  border-radius:15px;
+  padding:0 15px;
+  outline:none;
+  transition:.2s;
+}
+
+.input:focus{
+  border-color:var(--green);
+  background:white;
+  box-shadow:0 0 0 4px rgba(8,184,121,.08);
+}
+
+.primary{
+  width:100%;
+  min-height:54px;
+  border-radius:17px;
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  color:white;
+  font-weight:800;
+  font-size:17px;
+  box-shadow:0 10px 24px rgba(8,184,121,.22);
+}
+
+.secondary{
+  width:100%;
+  min-height:52px;
+  border-radius:16px;
+  background:#edf5f1;
+  color:var(--green2);
+  font-weight:800;
+}
+
+.link{
+  color:var(--green2);
+  font-weight:700;
+  cursor:pointer;
+}
+
+.error{
+  background:#fff0f0;
+  color:#b72d2d;
+  border-radius:14px;
+  padding:12px;
+  font-size:14px;
+  margin-bottom:12px;
+}
+
+.success{
+  background:#e9fbf3;
+  color:#147052;
+  border-radius:14px;
+  padding:12px;
+  font-size:14px;
+  margin-bottom:12px;
+}
+
+/* ---------- HEADER ---------- */
+
+.header{
+  padding:22px 20px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.profile{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.profile-info{
+  min-width:0;
+}
+
+.profile-name{
+  font-size:20px;
+  font-weight:850;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.profile-id{
+  color:var(--muted);
+  margin-top:3px;
+  font-size:14px;
+}
+
+.header-actions{
+  display:flex;
+  gap:8px;
+}
+
+.round-btn{
+  width:48px;
+  height:48px;
+  border-radius:17px;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#26322d;
+  box-shadow:0 4px 15px rgba(0,0,0,.04);
+}
+
+/* ---------- BALANCE ---------- */
+
+.balance-card{
+  margin:14px 20px 0;
+  padding:26px;
+  min-height:265px;
+  border-radius:32px;
+  background:
+    radial-gradient(circle at 100% 100%,rgba(255,255,255,.11) 0 90px,transparent 91px),
+    radial-gradient(circle at 88% 90%,rgba(255,255,255,.07) 0 150px,transparent 151px),
+    linear-gradient(145deg,#079b68,#056446);
+  color:white;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 15px 35px rgba(4,101,69,.20);
+}
+
+.balance-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.balance-label{
+  opacity:.75;
+  font-size:15px;
+}
+
+.network{
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);
+  border-radius:30px;
+  padding:8px 13px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.balance-number{
+  font-size:52px;
+  font-weight:900;
+  margin-top:28px;
+  letter-spacing:-2px;
+}
+
+.balance-sub{
+  opacity:.65;
+  margin-top:2px;
+}
+
+.wallet-state{
+  opacity:.7;
+  font-size:14px;
+  margin-top:6px;
+}
+
+.balance-actions{
+  display:flex;
+  gap:12px;
+  margin-top:30px;
+}
+
+.balance-btn{
+  flex:1;
+  min-height:54px;
+  border-radius:17px;
+  background:white;
+  color:#075d43;
+  font-weight:850;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+}
+
+.balance-btn.dark{
+  background:rgba(255,255,255,.08);
+  color:white;
+  border:1px solid rgba(255,255,255,.13);
+}
+
+/* ---------- CONTENT ---------- */
+
+.section{
+  padding:0 20px;
+  margin-top:28px;
+}
+
+.section-title{
+  font-size:23px;
+  font-weight:900;
+  margin-bottom:14px;
+}
+
+.quick-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+.quick{
+  background:white;
+  border-radius:20px;
+  min-height:105px;
+  padding:13px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  color:#123a2c;
+  box-shadow:0 5px 18px rgba(0,0,0,.035);
+}
+
+.quick-icon{
+  width:48px;
+  height:48px;
+  border-radius:16px;
+  background:#e7f9f1;
+  color:#078c60;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.quick span{
+  font-size:12px;
+  font-weight:800;
+  text-align:center;
+}
+
+.asset{
+  background:white;
+  border-radius:21px;
+  padding:17px;
+  display:flex;
+  align-items:center;
+  gap:13px;
+  margin-bottom:10px;
+  box-shadow:0 5px 18px rgba(0,0,0,.035);
+}
+
+.asset-logo{
+  width:48px;
+  height:48px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#e7f9f1;
+  color:#078c60;
+  font-weight:900;
+}
+
+.asset-main{
+  flex:1;
+}
+
+.asset-name{
+  font-weight:850;
+}
+
+.asset-address{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:3px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.asset-balance{
+  font-weight:900;
+  text-align:right;
+}
+
+.notice{
+  background:var(--yellow);
+  color:#80641d;
+  border-radius:18px;
+  padding:16px;
+  line-height:1.45;
+  font-size:14px;
+}
+
+/* ---------- BOTTOM ---------- */
+
+.bottom{
+  position:fixed;
+  z-index:20;
+  bottom:0;
+  left:0;
+  right:0;
+  height:76px;
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(15px);
+  border-top:1px solid #e7ece9;
+  display:flex;
+  justify-content:center;
+}
+
+.bottom-inner{
+  width:100%;
+  max-width:760px;
+  display:flex;
+}
+
+.nav{
+  flex:1;
+  background:none;
+  color:#89918d;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  font-size:11px;
+  font-weight:700;
+}
+
+.nav.active{
+  color:var(--green2);
+}
+
+/* ---------- MODALS ---------- */
+
+.overlay{
+  position:fixed;
+  z-index:100;
+  inset:0;
+  background:rgba(0,0,0,.48);
+  backdrop-filter:blur(5px);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+}
+
+.modal{
+  width:100%;
+  max-width:760px;
+  max-height:92vh;
+  overflow:auto;
+  background:white;
+  border-radius:30px 30px 0 0;
+  padding:24px 20px calc(25px + env(safe-area-inset-bottom));
+  animation:up .22s ease;
+}
+
+@keyframes up{
+  from{transform:translateY(100%)}
+  to{transform:translateY(0)}
+}
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+
+.modal-title{
+  font-size:27px;
+  font-weight:900;
+}
+
+.close{
+  width:48px;
+  height:48px;
+  border-radius:16px;
+  background:#f2f5f3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#111;
+}
+
+.info-box{
+  background:#e9fbf3;
+  color:#26765d;
+  border-radius:18px;
+  padding:16px;
+  line-height:1.45;
+  margin-bottom:12px;
+}
+
+.warn-box{
+  background:#fff6df;
+  color:#80631d;
+  border-radius:18px;
+  padding:16px;
+  line-height:1.45;
+  margin-bottom:12px;
+}
+
+.address-box{
+  background:#f6f8f7;
+  border:1px solid var(--border);
+  border-radius:17px;
+  padding:15px;
+  word-break:break-all;
+  font-family:monospace;
+  font-size:13px;
+}
+
+.copy-btn{
+  width:100%;
+  margin-top:10px;
+  height:50px;
+  border-radius:15px;
+  background:#e8f8f1;
+  color:#087052;
+  font-weight:800;
+}
+
+.qr-wrap{
+  display:flex;
+  justify-content:center;
+  padding:20px 0;
+}
+
+#qr{
+  padding:10px;
+  background:white;
+  border-radius:15px;
+  box-shadow:0 5px 20px rgba(0,0,0,.08);
+}
+
+.amount-input{
+  font-size:28px;
+  font-weight:800;
+  text-align:center;
+}
+
+/* ---------- SEED ---------- */
+
+.seed-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:15px 0;
+}
+
+.seed-word{
+  background:#f5f8f6;
+  border-radius:12px;
+  padding:11px 5px;
+  text-align:center;
+  font-size:13px;
+}
+
+.seed-word b{
+  color:#9ba39f;
+  margin-right:3px;
+}
+
+.seed-actions{
+  display:flex;
+  gap:10px;
+}
+
+.seed-actions button{
+  flex:1;
+}
+
+/* ---------- PIN ---------- */
+
+.pin-screen{
+  position:fixed;
+  z-index:500;
+  inset:0;
+  background:linear-gradient(145deg,#06b878,#056547);
+  color:white;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:25px;
+}
+
+.pin-logo{
+  width:72px;
+  height:72px;
+  border-radius:24px;
+  background:white;
+  color:#078e60;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:36px;
+  font-weight:900;
+  margin-bottom:20px;
+}
+
+.pin-screen h2{
+  margin:0;
+  font-size:27px;
+}
+
+.pin-screen p{
+  opacity:.72;
+}
+
+.pin-dots{
+  display:flex;
+  gap:12px;
+  margin:22px 0;
+}
+
+.pin-dot{
+  width:13px;
+  height:13px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.65);
+}
+
+.pin-dot.on{
+  background:white;
+}
+
+.pin-pad{
+  width:100%;
+  max-width:320px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.pin-key{
+  height:60px;
+  border-radius:19px;
+  background:rgba(255,255,255,.13);
+  color:white;
+  font-size:22px;
+  font-weight:800;
+}
+
+.pin-key:active{
+  background:rgba(255,255,255,.25);
+}
+
+.pin-error{
+  min-height:20px;
+  color:#ffe0e0;
+  margin-bottom:8px;
+}
+
+/* ---------- SETTINGS ---------- */
+
+.setting{
+  background:white;
+  border-radius:18px;
+  padding:17px;
+  margin-bottom:9px;
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+
+.setting-main{
+  flex:1;
+}
+
+.setting-title{
+  font-weight:850;
+}
+
+.setting-desc{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:4px;
+}
+
+.setting-danger{
+  color:#c63434;
+}
+
+/* ---------- CARD ---------- */
+
+.virtual-card{
+  height:215px;
+  border-radius:25px;
+  padding:25px;
+  background:
+    radial-gradient(circle at 85% 15%,rgba(255,255,255,.22),transparent 30%),
+    linear-gradient(135deg,#0a9b6b,#073d2c);
+  color:white;
+  position:relative;
+  overflow:hidden;
+  margin-bottom:15px;
+}
+
+.virtual-card .chip{
+  width:45px;
+  height:33px;
+  border-radius:8px;
+  background:linear-gradient(135deg,#d6d6d6,#7d7d7d);
+  margin-top:15px;
+}
+
+.virtual-card .card-number{
+  margin-top:28px;
+  letter-spacing:3px;
+  font-size:19px;
+}
+
+.virtual-card .card-bottom{
+  display:flex;
+  justify-content:space-between;
+  margin-top:20px;
+  font-size:11px;
+  opacity:.8;
+}
+
+/* ---------- TOAST ---------- */
+
+.toast{
+  position:fixed;
+  z-index:900;
+  left:50%;
+  bottom:95px;
+  transform:translateX(-50%);
+  background:#111;
+  color:white;
+  padding:14px 19px;
+  border-radius:16px;
+  max-width:90%;
+  text-align:center;
+  font-size:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.22);
+}
+
+/* ---------- LOADER ---------- */
+
+.loader{
+  width:20px;
+  height:20px;
+  border:3px solid rgba(255,255,255,.35);
+  border-top-color:white;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  display:inline-block;
+  vertical-align:middle;
+}
+
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+@media(max-width:390px){
+  .balance-number{
+    font-size:43px;
+  }
+
+  .quick-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .auth-box{
+    padding:23px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app"></div>
+
+<!-- PIN -->
+<div id="pinScreen" class="pin-screen hidden">
+  <div class="pin-logo">S</div>
+  <h2>Введите PIN</h2>
+  <p>Разблокировка SavcomPay</p>
+
+  <div id="pinDots" class="pin-dots">
+    <div class="pin-dot"></div>
+    <div class="pin-dot"></div>
+    <div class="pin-dot"></div>
+    <div class="pin-dot"></div>
+    <div class="pin-dot"></div>
+    <div class="pin-dot"></div>
+  </div>
+
+  <div id="pinError" class="pin-error"></div>
+
+  <div class="pin-pad">
+    <button class="pin-key" onclick="pinPress('1')">1</button>
+    <button class="pin-key" onclick="pinPress('2')">2</button>
+    <button class="pin-key" onclick="pinPress('3')">3</button>
+    <button class="pin-key" onclick="pinPress('4')">4</button>
+    <button class="pin-key" onclick="pinPress('5')">5</button>
+    <button class="pin-key" onclick="pinPress('6')">6</button>
+    <button class="pin-key" onclick="pinPress('7')">7</button>
+    <button class="pin-key" onclick="pinPress('8')">8</button>
+    <button class="pin-key" onclick="pinPress('9')">9</button>
+    <button class="pin-key" onclick="pinClear()">⌫</button>
+    <button class="pin-key" onclick="pinPress('0')">0</button>
+    <button class="pin-key" onclick="pinEnter()">✓</button>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- TON MODULE -->
+<script type="module">
+
+/*
+  ============================================================
+  SAVCOMPAY TON ENGINE
+  ============================================================
+
+  ВАЖНО:
+  Старый вариант использовал esm.sh + dynamic import().
+  Здесь используем jsDelivr ESM.
+
+  Официальный @ton/ton 16.3.0:
+  https://www.npmjs.com/package/@ton/ton
+
+  @ton/crypto:
+  https://www.npmjs.com/package/@ton/crypto
+*/
+
+const TON_VERSION = "16.3.0";
+const CRYPTO_VERSION = "3.3.0";
+
+let TON = null;
+let TONCRYPTO = null;
+let tonLoaded = false;
+let tonLoadError = null;
+
+/*
+  Загружаем модули один раз.
+  +esm заставляет jsDelivr подготовить ESM-версию пакета.
+*/
+
+async function loadTONLibraries(){
+
+  if(tonLoaded){
+    return true;
+  }
+
+  try{
+
+    showToast("Загрузка TON…");
+
+    const tonUrl =
+      "https://cdn.jsdelivr.net/npm/@ton/ton@" +
+      TON_VERSION +
+      "/+esm";
+
+    const cryptoUrl =
+      "https://cdn.jsdelivr.net/npm/@ton/crypto@" +
+      CRYPTO_VERSION +
+      "/+esm";
+
+    const results = await Promise.all([
+      import(tonUrl),
+      import(cryptoUrl)
+    ]);
+
+    TON = results[0];
+    TONCRYPTO = results[1];
+
+    if(!TON || !TONCRYPTO){
+      throw new Error("TON modules returned empty result");
+    }
+
+    tonLoaded = true;
+
+    console.log("SavcomPay TON SDK loaded", TON_VERSION);
+
+    return true;
+
+  }catch(error){
+
+    tonLoadError = error;
+
+    console.error("TON SDK load error:",error);
+
+    return false;
+  }
+}
+
+
+/*
+  Этот preload не блокирует интерфейс.
+*/
+window.addEventListener("load",()=>{
+  loadTONLibraries().then(ok=>{
+    if(ok){
+      console.log("TON готов");
+    }else{
+      console.warn("TON SDK пока недоступен");
+    }
+  });
+});
+
+
+/* Экспорт */
+window.TON_ENGINE = {
+  load:loadTONLibraries,
+  isReady:()=>tonLoaded,
+  getTON:()=>TON,
+  getCrypto:()=>TONCRYPTO,
+  getError:()=>tonLoadError
+};
+
+</script>
+
+<script>
+/* ==========================================================
+   FIREBASE
+   ========================================================== */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCs4Uj2aF5oj4uWFbyy0Ez0mekT_At4vU",
+  authDomain: "sava-online.firebaseapp.com",
+  databaseURL: "https://sava-online-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "sava-online",
+  storageBucket: "sava-online.firebasestorage.app",
+  messagingSenderId: "997547069745",
+  appId: "1:997547069745:web:821a8fa505cf14670ee010",
+  measurementId: "G-S3X80BM74X"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.database();
+
+
+/* ==========================================================
+   STATE
+   ========================================================== */
+
+const state = {
+  user:null,
+  profile:null,
+
+  network:"testnet",
+
+  tonAddress:null,
+  tonBalance:0,
+
+  usdtBalance:0,
+
+  keyPair:null,
+
+  wallet:null,
+  contract:null,
+
+  pin:"",
+  pinSetup:false,
+
+  currentPage:"home",
+
+  authMode:"login",
+
+  sdkReady:false
+};
+
+
+/* ==========================================================
+   HELPERS
+   ========================================================== */
+
+function $(id){
+  return document.getElementById(id);
+}
+
+function escapeHtml(str){
+
+  return String(str ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function shortAddress(address){
+
+  if(!address) return "—";
+
+  return address.slice(0,7)+"…"+address.slice(-6);
+}
+
+function showToast(message){
+
+  const el=$("toast");
+
+  el.textContent=message;
+  el.classList.remove("hidden");
+
+  clearTimeout(window.__toastTimer);
+
+  window.__toastTimer=setTimeout(()=>{
+    el.classList.add("hidden");
+  },2800);
+}
+
+function showError(message){
+
+  showToast(message);
+
+  console.error(message);
+}
+
+function fmtTon(value){
+
+  const n=Number(value || 0);
+
+  if(!Number.isFinite(n)) return "0";
+
+  return n.toLocaleString("ru-RU",{
+    maximumFractionDigits:6
+  });
+}
+
+
+/* ==========================================================
+   SVG ICONS
+   ========================================================== */
+
+const SVG = {
+
+  home:`
+  <svg viewBox="0 0 24 24">
+    <path d="M3 10.5 12 3l9 7.5"/>
+    <path d="M5 9.5V21h14V9.5"/>
+    <path d="M9 21v-6h6v6"/>
+  </svg>`,
+
+  send:`
+  <svg viewBox="0 0 24 24">
+    <path d="m22 2-7 20-4-9-9-4Z"/>
+    <path d="M22 2 11 13"/>
+  </svg>`,
+
+  receive:`
+  <svg viewBox="0 0 24 24">
+    <path d="M12 3v15"/>
+    <path d="m6 12 6 6 6-6"/>
+    <path d="M5 21h14"/>
+  </svg>`,
+
+  wallet:`
+  <svg viewBox="0 0 24 24">
+    <path d="M3 7h18v14H3z"/>
+    <path d="M3 7V5a2 2 0 0 1 2-2h14v4"/>
+    <path d="M16 14h5"/>
+  </svg>`,
+
+  settings:`
+  <svg viewBox="0 0 24 24">
+    <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.8 1.8-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.02 1.55V22h-2.55v-.11a1.7 1.7 0 0 0-1.02-1.55 1.7 1.7 0 0 0-1.88.34l-.06.06-1.8-1.8.06-.06A1.7 1.7 0 0 0 8.13 17a1.7 1.7 0 0 0-1.55-1.02H6V13.4h.58A1.7 1.7 0 0 0 8.13 12a1.7 1.7 0 0 0-.34-1.88l-.06-.06 1.8-1.8.06.06a1.7 1.7 0 0 0 1.88.34 1.7 1.7 0 0 0 1.02-1.55V7h2.55v.11a1.7 1.7 0 0 0 1.02 1.55 1.7 1.7 0 0 0 1.88-.34l.06-.06 1.8 1.8-.06.06A1.7 1.7 0 0 0 19.4 12c.25.6.83 1 1.55 1H21v2.55h-.05c-.7 0-1.3.4-1.55 1Z"/>
+  </svg>`,
+
+  bell:`
+  <svg viewBox="0 0 24 24">
+    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+    <path d="M10 21h4"/>
+  </svg>`,
+
+  qr:`
+  <svg viewBox="0 0 24 24">
+    <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/>
+    <path d="M14 14h3v3h-3zM17 17h3v3h-3zM20 14h-2"/>
+  </svg>`,
+
+  copy:`
+  <svg viewBox="0 0 24 24">
+    <rect x="9" y="9" width="11" height="11" rx="2"/>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>`,
+
+  card:`
+  <svg viewBox="0 0 24 24">
+    <rect x="3" y="5" width="18" height="14" rx="2"/>
+    <path d="M3 10h18"/>
+    <path d="M7 15h4"/>
+  </svg>`,
+
+  history:`
+  <svg viewBox="0 0 24 24">
+    <path d="M3 12a9 9 0 1 0 3-6.7"/>
+    <path d="M3 4v5h5"/>
+    <path d="M12 7v5l3 2"/>
+  </svg>`,
+
+  info:`
+  <svg viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M12 10v6"/>
+    <path d="M12 7h.01"/>
+  </svg>`,
+
+  lock:`
+  <svg viewBox="0 0 24 24">
+    <rect x="4" y="10" width="16" height="11" rx="2"/>
+    <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+  </svg>`,
+
+  logout:`
+  <svg viewBox="0 0 24 24">
+    <path d="M10 17l5-5-5-5"/>
+    <path d="M15 12H3"/>
+    <path d="M21 4v16"/>
+  </svg>`,
+
+  close:`
+  <svg viewBox="0 0 24 24">
+    <path d="m6 6 12 12M18 6 6 18"/>
+  </svg>`
+};
+
+
+/* ==========================================================
+   AUTH UI
+   ========================================================== */
+
+function renderAuth(){
+
+  $("app").innerHTML=`
+
+  <div class="auth">
+
+    <div class="auth-box">
+
+      <div class="auth-brand">
+        <div class="logo">S</div>
+        <h1>SavcomPay</h1>
+        <p>Ваш цифровой кошелёк</p>
+      </div>
+
+      <div class="tabs">
+        <button id="tabLogin"
+                class="tab ${state.authMode==="login"?"active":""}"
+                onclick="switchAuth('login')">
+          Войти
+        </button>
+
+        <button id="tabRegister"
+                class="tab ${state.authMode==="register"?"active":""}"
+                onclick="switchAuth('register')">
+          Регистрация
+        </button>
+      </div>
+
+      <div id="authError"></div>
+
+      <div id="authForm"></div>
+
+    </div>
+
+  </div>
+  `;
+
+  renderAuthForm();
+}
+
+
+function switchAuth(mode){
+
+  state.authMode=mode;
+
+  renderAuth();
+}
+
+
+function renderAuthForm(){
+
+  const register=state.authMode==="register";
+
+  $("authForm").innerHTML=`
+
+    ${register?`
+      <div class="input-group">
+        <label>Имя</label>
+        <input id="regName"
+               class="input"
+               placeholder="Ваше имя"
+               autocomplete="name">
+      </div>
+    `:""}
+
+    <div class="input-group">
+      <label>Email</label>
+      <input id="authEmail"
+             class="input"
+             type="email"
+             placeholder="example@mail.com"
+             autocomplete="email">
+    </div>
+
+    <div class="input-group">
+      <label>Пароль</label>
+      <input id="authPassword"
+             class="input"
+             type="password"
+             placeholder="Минимум 6 символов"
+             autocomplete="${register?"new-password":"current-password"}">
+    </div>
+
+    ${register?`
+      <div class="info-box">
+        После регистрации SavcomPay отправит письмо
+        для подтверждения email.
+      </div>
+    `:""}
+
+    <button class="primary" onclick="submitAuth()">
+      ${register?"Создать аккаунт":"Войти"}
+    </button>
+
+  `;
+}
+
+
+async function submitAuth(){
+
+  const email=$("authEmail")?.value.trim();
+  const password=$("authPassword")?.value;
+
+  if(!email || !password){
+
+    $("authError").innerHTML=
+      `<div class="error">Заполните email и пароль.</div>`;
+
+    return;
+  }
+
+  try{
+
+    $("authError").innerHTML="";
+
+    if(state.authMode==="register"){
+
+      const name=$("regName")?.value.trim() || "Пользователь";
+
+      const cred=
+        await auth.createUserWithEmailAndPassword(
+          email,
+          password
+        );
+
+      await cred.user.updateProfile({
+        displayName:name
+      });
+
+      await db.ref("users/"+cred.user.uid).set({
+
+        uid:cred.user.uid,
+
+        name:name,
+
+        email:email,
+
+        createdAt:firebase.database.ServerValue.TIMESTAMP,
+
+        savId:createSavId()
+
+      });
+
+      await cred.user.sendEmailVerification();
+
+      showToast("Письмо подтверждения отправлено");
+
+      await auth.signOut();
+
+      state.authMode="login";
+
+      renderAuth();
+
+      $("authError").innerHTML=
+        `<div class="success">
+          Проверьте почту и подтвердите email.
+        </div>`;
+
+    }else{
+
+      const cred=
+        await auth.signInWithEmailAndPassword(
+          email,
+          password
+        );
+
+      if(!cred.user.emailVerified){
+
+        $("authError").innerHTML=
+          `<div class="error">
+            Email ещё не подтверждён.
+            Проверьте почту.
+          </div>`;
+
+        await auth.signOut();
+
+        return;
+      }
+
+      state.user=cred.user;
+
+      await startApp();
+
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    let msg="Не удалось выполнить операцию.";
+
+    if(error.code==="auth/email-already-in-use"){
+      msg="Этот email уже зарегистрирован.";
+    }
+
+    if(error.code==="auth/wrong-password" ||
+       error.code==="auth/invalid-credential"){
+      msg="Неверный email или пароль.";
+    }
+
+    if(error.code==="auth/invalid-email"){
+      msg="Некорректный email.";
+    }
+
+    if(error.code==="auth/weak-password"){
+      msg="Пароль слишком короткий.";
+    }
+
+    $("authError").innerHTML=
+      `<div class="error">${escapeHtml(msg)}</div>`;
+  }
+}
+
+
+function createSavId(){
+
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let out="SAV-";
+
+  for(let i=0;i<8;i++){
+    out+=chars[Math.floor(Math.random()*chars.length)];
+  }
+
+  return out;
+}
+
+
+/* ==========================================================
+   AUTH STATE
+   ========================================================== */
+
+auth.onAuthStateChanged(async user=>{
+
+  if(!user){
+
+    state.user=null;
+
+    if(!state.profile){
+      renderAuth();
+    }
+
+    return;
+  }
+
+  if(!user.emailVerified){
+
+    return;
+  }
+
+  state.user=user;
+
+  await startApp();
+});
+
+
+/* ==========================================================
+   START APP
+   ========================================================== */
+
+async function startApp(){
+
+  await loadProfile();
+
+  await loadLocalWallet();
+
+  renderApp();
+
+  if(localStorage.getItem(pinKey()) &&
+     !sessionStorage.getItem("sav_unlocked")){
+
+    showPin();
+
+  }else{
+
+    sessionStorage.setItem("sav_unlocked","1");
+
+    refreshWallet();
+  }
+}
+
+
+/* ==========================================================
+   FIREBASE PROFILE
+   ========================================================== */
+
+async function loadProfile(){
+
+  if(!state.user) return;
+
+  try{
+
+    const snap=
+      await db.ref("users/"+state.user.uid).once("value");
+
+    state.profile=snap.val() || {
+
+      name:state.user.displayName || "Пользователь",
+
+      email:state.user.email,
+
+      savId:createSavId()
+
+    };
+
+    if(!snap.exists()){
+
+      await db.ref("users/"+state.user.uid)
+        .set(state.profile);
+    }
+
+  }catch(e){
+
+    console.error(e);
+
+    state.profile={
+
+      name:state.user.displayName || "Пользователь",
+
+      email:state.user.email,
+
+      savId:createSavId()
+    };
+  }
+}
+
+
+/* ==========================================================
+   WALLET ENCRYPTION
+   ========================================================== */
+
+function walletStorageKey(){
+
+  return "sav_wallet_"+state.user.uid+"_"+state.network;
+}
+
+function pinKey(){
+
+  return "sav_pin_"+state.user.uid;
+}
+
+async function deriveKey(pin,salt){
+
+  const enc=new TextEncoder();
+
+  const material=
+    await crypto.subtle.importKey(
+      "raw",
+      enc.encode(pin),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+
+  return crypto.subtle.deriveKey(
+
+    {
+      name:"PBKDF2",
+      salt:salt,
+      iterations:250000,
+      hash:"SHA-256"
+    },
+
+    material,
+
+    {
+      name:"AES-GCM",
+      length:256
+    },
+
+    false,
+
+    ["encrypt","decrypt"]
+  );
+}
+
+
+function bytesToB64(bytes){
+
+  let binary="";
+
+  bytes.forEach(b=>{
+    binary+=String.fromCharCode(b);
+  });
+
+  return btoa(binary);
+}
+
+
+function b64ToBytes(str){
+
+  const binary=atob(str);
+
+  const arr=new Uint8Array(binary.length);
+
+  for(let i=0;i<binary.length;i++){
+    arr[i]=binary.charCodeAt(i);
+  }
+
+  return arr;
+}
+
+
+async function encryptWallet(data,pin){
+
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+
+  const key=await deriveKey(pin,salt);
+
+  const plain=new TextEncoder().encode(
+    JSON.stringify(data)
+  );
+
+  const encrypted=
+    await crypto.subtle.encrypt(
+      {name:"AES-GCM",iv},
+      key,
+      plain
+    );
+
+  return {
+
+    salt:bytesToB64(salt),
+
+    iv:bytesToB64(iv),
+
+    data:bytesToB64(new Uint8Array(encrypted))
+  };
+}
+
+
+async function decryptWallet(record,pin){
+
+  const salt=b64ToBytes(record.salt);
+  const iv=b64ToBytes(record.iv);
+  const data=b64ToBytes(record.data);
+
+  const key=await deriveKey(pin,salt);
+
+  const decrypted=
+    await crypto.subtle.decrypt(
+      {name:"AES-GCM",iv},
+      key,
+      data
+    );
+
+  const text=
+    new TextDecoder().decode(decrypted);
+
+  return JSON.parse(text);
+}
+
+
+/* ==========================================================
+   PIN
+   ========================================================== */
+
+let enteredPin="";
+
+
+function showPin(){
+
+  enteredPin="";
+
+  updatePinDots();
+
+  $("pinError").textContent="";
+
+  $("pinScreen").classList.remove("hidden");
+}
+
+
+function hidePin(){
+
+  $("pinScreen").classList.add("hidden");
+
+  sessionStorage.setItem("sav_unlocked","1");
+}
+
+
+function pinPress(number){
+
+  if(enteredPin.length>=6) return;
+
+  enteredPin+=number;
+
+  updatePinDots();
+
+  if(enteredPin.length===6){
+
+    setTimeout(pinEnter,120);
+  }
+}
+
+
+function pinClear(){
+
+  enteredPin=enteredPin.slice(0,-1);
+
+  $("pinError").textContent="";
+
+  updatePinDots();
+}
+
+
+function updatePinDots(){
+
+  const dots=
+    document.querySelectorAll(".pin-dot");
+
+  dots.forEach((dot,i)=>{
+    dot.classList.toggle(
+      "on",
+      i<enteredPin.length
+    );
+  });
+}
+
+
+async function pinEnter(){
+
+  if(enteredPin.length!==6) return;
+
+  try{
+
+    const record=
+      localStorage.getItem(pinKey());
+
+    if(!record){
+
+      hidePin();
+
+      return;
+    }
+
+    const parsed=JSON.parse(record);
+
+    await decryptWallet(parsed,enteredPin);
+
+    state.pin=enteredPin;
+
+    hidePin();
+
+    await loadLocalWallet();
+
+    refreshWallet();
+
+  }catch(e){
+
+    enteredPin="";
+
+    updatePinDots();
+
+    $("pinError").textContent=
+      "Неверный PIN";
+  }
+}
+
+
+/* ==========================================================
+   LOCAL WALLET
+   ========================================================== */
+
+async function saveWalletLocal(){
+
+  if(!state.pin || !state.keyPair || !state.tonAddress){
+    return;
+  }
+
+  const secretHex=
+    Array.from(state.keyPair.secretKey)
+      .map(x=>x.toString(16).padStart(2,"0"))
+      .join("");
+
+  const publicHex=
+    Array.from(state.keyPair.publicKey)
+      .map(x=>x.toString(16).padStart(2,"0"))
+      .join("");
+
+  const record=await encryptWallet({
+
+    secretHex,
+
+    publicHex,
+
+    address:state.tonAddress
+
+  },state.pin);
+
+  localStorage.setItem(
+    walletStorageKey(),
+    JSON.stringify(record)
+  );
+
+  localStorage.setItem(
+    pinKey(),
+    localStorage.getItem(walletStorageKey())
+  );
+}
+
+
+async function loadLocalWallet(){
+
+  if(!state.user) return false;
+
+  const raw=
+    localStorage.getItem(walletStorageKey());
+
+  if(!raw){
+
+    state.tonAddress=null;
+    state.keyPair=null;
+
+    return false;
+  }
+
+  /*
+    Если PIN уже есть в памяти,
+    сразу расшифровываем.
+  */
+
+  if(!state.pin){
+
+    return false;
+  }
+
+  try{
+
+    const record=JSON.parse(raw);
+
+    const data=
+      await decryptWallet(record,state.pin);
+
+    if(!data.secretHex){
+
+      throw new Error("No secret key");
+    }
+
+    const TONCRYPTO=
+      window.TON_ENGINE.getCrypto();
+
+    if(!TONCRYPTO){
+
+      return false;
+    }
+
+    const secretKey=
+      new Uint8Array(
+        data.secretHex.match(/.{1,2}/g)
+          .map(x=>parseInt(x,16))
+      );
+
+    const publicKey=
+      new Uint8Array(
+        data.publicHex.match(/.{1,2}/g)
+          .map(x=>parseInt(x,16))
+      );
+
+    state.keyPair={
+      secretKey,
+      publicKey
+    };
+
+    state.tonAddress=data.address;
+
+    return true;
+
+  }catch(e){
+
+    console.error("Wallet decrypt error",e);
+
+    return false;
+  }
+}
+
+
+/* ==========================================================
+   TON WALLET
+   ========================================================== */
+
+async function ensureTON(){
+
+  if(window.TON_ENGINE.isReady()){
+    state.sdkReady=true;
+    return true;
+  }
+
+  const ok=
+    await window.TON_ENGINE.load();
+
+  state.sdkReady=ok;
+
+  if(!ok){
+
+    openModal("TON не загружен",`
+
+      <div class="warn-box">
+
+        Браузер не смог загрузить криптографическую
+        библиотеку TON.
+
+      </div>
+
+      <div class="info-box">
+
+        Попробуйте обновить страницу.
+        Если ошибка повторяется, возможно браузер
+        или сеть блокирует CDN.
+
+      </div>
+
+      <button class="primary"
+              onclick="location.reload()">
+        Обновить страницу
+      </button>
+
+    `);
+
+    return false;
+  }
+
+  return true;
+}
+
+
+async function createWallet(){
+
+  if(!state.user){
+
+    showError("Сначала войдите в аккаунт.");
+
+    return;
+  }
+
+  if(state.tonAddress){
+
+    showToast("Кошелёк уже создан.");
+
+    return;
+  }
+
+  const ok=await ensureTON();
+
+  if(!ok) return;
+
+  try{
+
+    showToast("Создаём TON-кошелёк…");
+
+    const cryptoLib=
+      window.TON_ENGINE.getCrypto();
+
+    if(!cryptoLib){
+
+      throw new Error("Crypto library unavailable");
+    }
+
+    const mnemonic=
+      await cryptoLib.mnemonicNew(24);
+
+    const keyPair=
+      await cryptoLib.mnemonicToPrivateKey(mnemonic);
+
+    state.keyPair=keyPair;
+
+    const TON=
+      window.TON_ENGINE.getTON();
+
+    const wallet=
+      TON.WalletContractV5R1.create({
+        workchain:0,
+        publicKey:keyPair.publicKey
+      });
+
+    state.wallet=wallet;
+
+    state.tonAddress=
+      wallet.address.toString({
+        bounceable:false,
+        testOnly:state.network==="testnet"
+      });
+
+    /*
+      Первый PIN:
+      если его ещё нет — просим создать.
+    */
+
+    if(!localStorage.getItem(pinKey())){
+
+      await showCreatePin();
+
+    }
+
+    if(!state.pin){
+
+      showToast("Создание отменено");
+
+      return;
+    }
+
+    await saveWalletLocal();
+
+    await db.ref(
+      "users/"+state.user.uid+"/wallet"
+    ).set({
+
+      address:state.tonAddress,
+
+      network:state.network,
+
+      walletVersion:"V5R1",
+
+      createdAt:firebase.database.ServerValue.TIMESTAMP
+
+    });
+
+    renderApp();
+
+    showSeed(mnemonic);
+
+    await refreshWallet();
+
+  }catch(e){
+
+    console.error(e);
+
+    openModal("Ошибка создания кошелька",`
+
+      <div class="error">
+        ${escapeHtml(e.message || "Неизвестная ошибка")}
+      </div>
+
+      <div class="info-box">
+        Ключи не были отправлены в Firebase.
+      </div>
+
+      <button class="primary"
+              onclick="closeModal()">
+        Закрыть
+      </button>
+
+    `);
+  }
+}
+
+
+/* ==========================================================
+   CREATE PIN
+   ========================================================== */
+
+function showCreatePin(){
+
+  return new Promise(resolve=>{
+
+    window.__pinResolver=resolve;
+
+    openModal("Создайте PIN",`
+
+      <div class="info-box">
+        Придумайте 6-значный PIN.
+        Он используется для локального шифрования
+        ключа кошелька.
+      </div>
+
+      <div class="input-group">
+        <label>PIN</label>
+        <input id="newPin1"
+               class="input"
+               type="password"
+               inputmode="numeric"
+               maxlength="6"
+               placeholder="••••••">
+      </div>
+
+      <div class="input-group">
+        <label>Повторите PIN</label>
+        <input id="newPin2"
+               class="input"
+               type="password"
+               inputmode="numeric"
+               maxlength="6"
+               placeholder="••••••">
+      </div>
+
+      <button class="primary"
+              onclick="finishCreatePin()">
+        Сохранить PIN
+      </button>
+
+    `);
+  });
+}
+
+
+function finishCreatePin(){
+
+  const p1=$("newPin1")?.value || "";
+  const p2=$("newPin2")?.value || "";
+
+  if(!/^\d{6}$/.test(p1)){
+
+    showToast("PIN должен содержать 6 цифр.");
+
+    return;
+  }
+
+  if(p1!==p2){
+
+    showToast("PIN-коды не совпадают.");
+
+    return;
+  }
+
+  state.pin=p1;
+
+  closeModal();
+
+  if(window.__pinResolver){
+
+    window.__pinResolver(true);
+
+    window.__pinResolver=null;
+  }
+}
+
+
+/* ==========================================================
+   REFRESH TON
+   ========================================================== */
+
+async function refreshWallet(){
+
+  if(!state.tonAddress){
+
+    updateWalletUI();
+
+    return;
+  }
+
+  const endpoint=
+    state.network==="testnet"
+      ? "https://testnet.toncenter.com/api/v2/getAddressBalance?address="
+      : "https://toncenter.com/api/v2/getAddressBalance?address=";
+
+  try{
+
+    const response=
+      await fetch(
+        endpoint+
+        encodeURIComponent(state.tonAddress)
+      );
+
+    if(!response.ok){
+
+      throw new Error("TON API HTTP "+response.status);
+    }
+
+    const data=await response.json();
+
+    if(data.ok){
+
+      const nano=BigInt(data.result || "0");
+
+      state.tonBalance=
+        Number(nano)/1e9;
+
+    }else{
+
+      throw new Error("TON API returned error");
+    }
+
+  }catch(e){
+
+    console.warn("Balance error",e);
+
+    state.tonBalance=0;
+  }
+
+  updateWalletUI();
+}
+
+
+/* ==========================================================
+   UI
+   ========================================================== */
+
+function renderApp(){
+
+  const name=
+    state.profile?.name ||
+    state.user?.displayName ||
+    "Пользователь";
+
+  const id=
+    state.profile?.savId ||
+    "SAV-USER";
+
+  $("app").innerHTML=`
+
+    <div class="app">
+
+      <header class="header">
+
+        <div class="profile">
+
+          <div class="logo">
+            ${escapeHtml(name.charAt(0).toUpperCase())}
+          </div>
+
+          <div class="profile-info">
+
+            <div class="profile-name">
+              ${escapeHtml(name)}
+            </div>
+
+            <div class="profile-id">
+              ${escapeHtml(id)}
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="header-actions">
+
+          <button class="round-btn"
+                  onclick="showNotifications()">
+            <span class="icon">${SVG.bell}</span>
+          </button>
+
+          <button class="round-btn"
+                  onclick="openSettings()">
+            <span class="icon">${SVG.settings}</span>
+          </button>
+
+        </div>
+
+      </header>
+
+      <main id="page"></main>
+
+    </div>
+
+    <div class="bottom">
+
+      <div class="bottom-inner">
+
+        <button class="nav ${state.currentPage==="home"?"active":""}"
+                onclick="navigate('home')">
+          <span class="icon">${SVG.home}</span>
+          Главная
+        </button>
+
+        <button class="nav ${state.currentPage==="wallet"?"active":""}"
+                onclick="navigate('wallet')">
+          <span class="icon">${SVG.wallet}</span>
+          Кошелёк
+        </button>
+
+        <button class="nav ${state.currentPage==="send"?"active":""}"
+                onclick="navigate('send')">
+          <span class="icon">${SVG.send}</span>
+          Отправить
+        </button>
+
+        <button class="nav ${state.currentPage==="history"?"active":""}"
+                onclick="navigate('history')">
+          <span class="icon">${SVG.history}</span>
+          История
+        </button>
+
+        <button class="nav ${state.currentPage==="settings"?"active":""}"
+                onclick="navigate('settings')">
+          <span class="icon">${SVG.settings}</span>
+          Настройки
+        </button>
+
+      </div>
+
+    </div>
+  `;
+
+  renderPage();
+}
+
+
+function renderPage(){
+
+  const page=$("page");
+
+  if(!page) return;
+
+  if(state.currentPage==="home"){
+    renderHome(page);
+  }
+
+  if(state.currentPage==="wallet"){
+    renderWallet(page);
+  }
+
+  if(state.currentPage==="send"){
+    renderSend(page);
+  }
+
+  if(state.currentPage==="history"){
+    renderHistory(page);
+  }
+
+  if(state.currentPage==="settings"){
+    renderSettings(page);
+  }
+}
+
+
+function navigate(page){
+
+  state.currentPage=page;
+
+  renderApp();
+}
+
+
+/* ==========================================================
+   HOME
+   ========================================================== */
+
+function renderHome(page){
+
+  page.innerHTML=`
+
+    <section class="balance-card">
+
+      <div class="balance-top">
+
+        <div class="balance-label">
+          Общий баланс
+        </div>
+
+        <div class="network">
+          ${state.network==="testnet"?"TESTNET":"MAINNET"}
+        </div>
+
+      </div>
+
+      <div class="balance-number">
+        ${fmtTon(state.tonBalance)} TON
+      </div>
+
+      <div class="wallet-state">
+        ${state.tonAddress
+          ? "TON-кошелёк подключён"
+          : "Кошелёк не создан"}
+      </div>
+
+      <div class="balance-actions">
+
+        <button class="balance-btn"
+                onclick="receiveTON()">
+
+          <span class="icon">${SVG.receive}</span>
+
+          Получить
+
+        </button>
+
+        <button class="balance-btn dark"
+                onclick="navigate('send')"
+                ${state.tonAddress?"":"disabled"}>
+
+          <span class="icon">${SVG.send}</span>
+
+          Отправить
+
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <section class="section">
+
+      <div class="section-title">
+        Быстрые действия
+      </div>
+
+      <div class="quick-grid">
+
+        <button class="quick"
+                onclick="receiveTON()">
+
+          <div class="quick-icon">
+            <span class="icon">${SVG.receive}</span>
+          </div>
+
+          <span>Получить</span>
+
+        </button>
+
+        <button class="quick"
+                onclick="navigate('send')">
+
+          <div class="quick-icon">
+            <span class="icon">${SVG.send}</span>
+          </div>
+
+          <span>Отправить</span>
+
+        </button>
+
+        <button class="quick"
+                onclick="navigate('history')">
+
+          <div class="quick-icon">
+            <span class="icon">${SVG.history}</span>
+          </div>
+
+          <span>История</span>
+
+        </button>
+
+        <button class="quick"
+                onclick="openSettings()">
+
+          <div class="quick-icon">
+            <span class="icon">${SVG.settings}</span>
+          </div>
+
+          <span>Настройки</span>
+
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <section class="section">
+
+      <div class="section-title">
+        Активы
+      </div>
+
+      <div class="asset">
+
+        <div class="asset-logo">T</div>
+
+        <div class="asset-main">
+
+          <div class="asset-name">
+            TON
+          </div>
+
+          <div class="asset-address">
+            ${state.tonAddress
+              ? shortAddress(state.tonAddress)
+              : "Кошелёк ещё не создан"}
+          </div>
+
+        </div>
+
+        <div class="asset-balance">
+          ${fmtTon(state.tonBalance)} TON
+        </div>
+
+      </div>
+
+
+      <div class="asset">
+
+        <div class="asset-logo">
+          $
+        </div>
+
+        <div class="asset-main">
+
+          <div class="asset-name">
+            USDT
+          </div>
+
+          <div class="asset-address">
+            Jetton в сети TON
+          </div>
+
+        </div>
+
+        <div class="asset-balance">
+          ${fmtTon(state.usdtBalance)} USDT
+        </div>
+
+      </div>
+
+    </section>
+
+
+    ${state.network==="testnet"?`
+
+      <section class="section">
+
+        <div class="notice">
+
+          Сейчас выбран <b>TON Testnet</b>.
+          Это сеть для тестирования.
+          Не отправляйте сюда реальные TON или USDT.
+
+        </div>
+
+      </section>
+
+    `:""}
+
+  `;
+}
+
+
+function updateWalletUI(){
+
+  if($("page")){
+
+    renderPage();
+  }
+}
+
+
+/* ==========================================================
+   WALLET PAGE
+   ========================================================== */
+
+function renderWallet(page){
+
+  page.innerHTML=`
+
+    <section class="section">
+
+      <div class="section-title">
+        Мой кошелёк
+      </div>
+
+      ${state.tonAddress?`
+
+        <div class="asset">
+
+          <div class="asset-logo">T</div>
+
+          <div class="asset-main">
+
+            <div class="asset-name">
+              TON Wallet V5R1
+            </div>
+
+            <div class="asset-address">
+              ${escapeHtml(shortAddress(state.tonAddress))}
+            </div>
+
+          </div>
+
+        </div>
+
+        <button class="primary"
+                onclick="receiveTON()">
+          Получить TON
+        </button>
+
+        <div style="height:10px"></div>
+
+        <button class="secondary"
+                onclick="showSeedBackup()">
+          Показать резервную копию
+        </button>
+
+      `:`
+
+        <div class="info-box">
+
+          У вас ещё нет TON-кошелька.
+          Создайте его, чтобы получить адрес
+          и принимать криптовалюту.
+
+        </div>
+
+        <button class="primary"
+                onclick="showCreateWalletModal()">
+          Создать TON-кошелёк
+        </button>
+
+      `}
+
+    </section>
+
+
+    <section class="section">
+
+      <div class="section-title">
+        Сеть
+      </div>
+
+      <select class="input"
+              onchange="changeNetwork(this.value)">
+
+        <option value="testnet"
+          ${state.network==="testnet"?"selected":""}>
+          TON Testnet
+        </option>
+
+        <option value="mainnet"
+          ${state.network==="mainnet"?"selected":""}>
+          TON Mainnet
+        </option>
+
+      </select>
+
+    </section>
+
+  `;
+}
+
+
+/* ==========================================================
+   CREATE WALLET MODAL
+   ========================================================== */
+
+function showCreateWalletModal(){
+
+  openModal("Создание кошелька",`
+
+    <div class="info-box">
+
+      Сейчас будет создан настоящий
+      TON-кошелёк V5R1.
+
+      Seed-фраза будет зашифрована
+      вашим PIN-кодом.
+
+    </div>
+
+    <div class="warn-box">
+
+      Seed-фраза — это полный доступ
+      к средствам.
+
+      Никому её не отправляйте и не храните
+      в переписке или скриншотах.
+
+    </div>
+
+    <button class="primary"
+            onclick="closeModal();createWallet()">
+      Создать кошелёк
+    </button>
+
+  `);
+}
+
+
+/* ==========================================================
+   SEED
+   ========================================================== */
+
+function showSeed(mnemonic){
+
+  const words=
+    mnemonic.map((word,i)=>`
+      <div class="seed-word">
+        <b>${i+1}</b>${escapeHtml(word)}
+      </div>
+    `).join("");
+
+  openModal("Резервная копия",`
+
+    <div class="warn-box">
+
+      Запишите эти 24 слова на бумагу.
+      Не отправляйте их никому.
+
+    </div>
+
+    <div class="seed-grid">
+      ${words}
+    </div>
+
+    <button class="primary"
+            onclick="closeModal()">
+      Я сохранил seed-фразу
+    </button>
+
+  `);
+}
+
+
+async function showSeedBackup(){
+
+  if(!state.keyPair){
+
+    showToast("Ключ сейчас заблокирован.");
+
+    return;
+  }
+
+  openModal("Резервная копия",`
+
+    <div class="warn-box">
+
+      ВНИМАНИЕ.
+      Показывать seed-фразу можно только
+      на своём устройстве.
+
+    </div>
+
+    <div class="input-group">
+
+      <label>Введите PIN</label>
+
+      <input id="backupPin"
+             class="input"
+             type="password"
+             inputmode="numeric"
+             maxlength="6">
+
+    </div>
+
+    <button class="primary"
+            onclick="revealSeed()">
+      Проверить PIN
+    </button>
+
+  `);
+}
+
+
+async function revealSeed(){
+
+  /*
+    В этой версии мы не храним mnemonic
+    в открытом виде после создания.
+
+    Поэтому здесь намеренно не показываем
+    seed из памяти.
+
+    Пользователь может восстановить кошелёк
+    по своей бумажной резервной копии.
+  */
+
+  showToast(
+    "Seed-фраза после создания не хранится в открытом виде."
+  );
+}
+
+
+/* ==========================================================
+   NETWORK
+   ========================================================== */
+
+async function changeNetwork(network){
+
+  if(network===state.network){
+    return;
+  }
+
+  if(state.tonAddress){
+
+    const yes=
+      confirm(
+        "Переключить сеть? Адрес V5R1 зависит от сети."
+      );
+
+    if(!yes){
+
+      renderApp();
+
+      return;
+    }
+  }
+
+  state.network=network;
+
+  state.tonAddress=null;
+  state.keyPair=null;
+  state.wallet=null;
+
+  state.pin="";
+
+  sessionStorage.removeItem("sav_unlocked");
+
+  renderApp();
+
+  showToast(
+    network==="testnet"
+      ? "Выбрана Testnet"
+      : "Выбрана Mainnet"
+  );
+}
+
+
+/* ==========================================================
+   RECEIVE
+   ========================================================== */
+
+function receiveTON(){
+
+  if(!state.tonAddress){
+
+    showCreateWalletModal();
+
+    return;
+  }
+
+  openModal("Получить TON",`
+
+    <div class="info-box">
+
+      Отправитель может отправить TON
+      на этот адрес.
+
+    </div>
+
+    <div class="qr-wrap">
+      <div id="qr"></div>
+    </div>
+
+    <div class="address-box">
+      ${escapeHtml(state.tonAddress)}
+    </div>
+
+    <button class="copy-btn"
+            onclick="copyText(state.tonAddress)">
+      ${SVG.copy}
+      Скопировать адрес
+    </button>
+
+    <div style="height:10px"></div>
+
+    <button class="primary"
+            onclick="closeModal()">
+      Готово
+    </button>
+
+  `);
+
+  setTimeout(()=>{
+
+    if(window.QRCode){
+
+      new QRCode(
+        $("qr"),
+        {
+          text:state.tonAddress,
+          width:210,
+          height:210
+        }
+      );
+
+    }
+
+  },100);
+}
+
+
+/* ==========================================================
+   SEND
+   ========================================================== */
+
+function renderSend(page){
+
+  page.innerHTML=`
+
+    <section class="section">
+
+      <div class="section-title">
+        Отправить TON
+      </div>
+
+      ${state.tonAddress?`
+
+        <div class="info-box">
+
+          Баланс:
+          <b>${fmtTon(state.tonBalance)} TON</b>
+
+        </div>
+
+        <div class="input-group">
+
+          <label>Адрес получателя</label>
+
+          <input id="sendAddress"
+                 class="input"
+                 placeholder="EQ... / UQ..."
+                 autocomplete="off">
+
+        </div>
+
+        <div class="input-group">
+
+          <label>Сумма TON</label>
+
+          <input id="sendAmount"
+                 class="input amount-input"
+                 type="number"
+                 min="0"
+                 step="0.000001"
+                 placeholder="0.00">
+
+        </div>
+
+        <div class="input-group">
+
+          <label>Комментарий — необязательно</label>
+
+          <input id="sendComment"
+                 class="input"
+                 placeholder="Например: оплата">
+
+        </div>
+
+        <button class="primary"
+                onclick="sendTON()">
+          Отправить TON
+        </button>
+
+      `:`
+
+        <div class="warn-box">
+          Сначала создайте кошелёк.
+        </div>
+
+        <button class="primary"
+                onclick="showCreateWalletModal()">
+          Создать кошелёк
+        </button>
+
+      `}
+
+    </section>
+
+  `;
+}
+
+
+async function sendTON(){
+
+  if(!state.tonAddress){
+
+    showToast("Кошелёк не создан.");
+
+    return;
+  }
+
+  if(!state.keyPair){
+
+    showToast("Кошелёк заблокирован.");
+
+    showPin();
+
+    return;
+  }
+
+  const to=
+    $("sendAddress")?.value.trim();
+
+  const amount=
+    Number($("sendAmount")?.value);
+
+  const comment=
+    $("sendComment")?.value.trim() || "";
+
+  if(!to){
+
+    showToast("Введите адрес получателя.");
+
+    return;
+  }
+
+  if(!Number.isFinite(amount) || amount<=0){
+
+    showToast("Введите корректную сумму.");
+
+    return;
+  }
+
+  if(amount>=state.tonBalance){
+
+    showToast("Недостаточно TON.");
+
+    return;
+  }
+
+  const ok=
+    confirm(
+      `Отправить ${amount} TON на ${shortAddress(to)}?`
+    );
+
+  if(!ok) return;
+
+  try{
+
+    if(!(await ensureTON())) return;
+
+    const TON=
+      window.TON_ENGINE.getTON();
+
+    const client=
+      new TON.TonClient({
+
+        endpoint:
+          state.network==="testnet"
+            ? "https://testnet.toncenter.com/api/v2/jsonRPC"
+            : "https://toncenter.com/api/v2/jsonRPC"
+
+      });
+
+    const wallet=
+      TON.WalletContractV5R1.create({
+
+        workchain:0,
+
+        publicKey:state.keyPair.publicKey
+
+      });
+
+    const contract=
+      client.open(wallet);
+
+    const seqno=
+      await contract.getSeqno();
+
+    const msg=
+      TON.internal({
+
+        to:to,
+
+        value:String(amount),
+
+        body:comment || undefined
+
+      });
+
+    const transfer=
+      await contract.createTransfer({
+
+        seqno,
+
+        secretKey:state.keyPair.secretKey,
+
+        messages:[msg]
+
+      });
+
+    const boc=
+      transfer.toBoc().toString("base64");
+
+    const result=
+      await fetch(
+
+        (state.network==="testnet"
+          ? "https://testnet.toncenter.com/api/v2/sendBoc"
+          : "https://toncenter.com/api/v2/sendBoc"),
+
+        {
+
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+
+          body:JSON.stringify({
+            boc
+          })
+
+        }
+
+      );
+
+    const json=await result.json();
+
+    if(!json.ok){
+
+      throw new Error(
+        json.error ||
+        "TON Center отклонил транзакцию"
+      );
+    }
+
+    showToast("Транзакция отправлена");
+
+    $("sendAddress").value="";
+    $("sendAmount").value="";
+    $("sendComment").value="";
+
+    await new Promise(r=>setTimeout(r,2500));
+
+    await refreshWallet();
+
+  }catch(e){
+
+    console.error(e);
+
+    showError(
+      e.message ||
+      "Не удалось отправить TON."
+    );
+  }
+}
+
+
+/* ==========================================================
+   HISTORY
+   ========================================================== */
+
+function renderHistory(page){
+
+  page.innerHTML=`
+
+    <section class="section">
+
+      <div class="section-title">
+        История
+      </div>
+
+      ${state.tonAddress?`
+
+        <button class="primary"
+                onclick="loadHistory()">
+          Обновить историю
+        </button>
+
+        <div id="historyList"
+             style="margin-top:15px">
+        </div>
+
+      `:`
+
+        <div class="info-box">
+          История появится после создания
+          TON-кошелька.
+        </div>
+
+      `}
+
+    </section>
+
+  `;
+
+  if(state.tonAddress){
+    loadHistory();
+  }
+}
+
+
+async function loadHistory(){
+
+  const list=$("historyList");
+
+  if(!list) return;
+
+  list.innerHTML=`
+
+    <div class="asset">
+      Загрузка…
+    </div>
+
+  `;
+
+  try{
+
+    const base=
+      state.network==="testnet"
+        ? "https://testnet.toncenter.com/api/v2/getTransactions"
+        : "https://toncenter.com/api/v2/getTransactions";
+
+    const url=
+      base+
+      "?address="+
+      encodeURIComponent(state.tonAddress)+
+      "&limit=10";
+
+    const response=
+      await fetch(url);
+
+    const data=
+      await response.json();
+
+    if(!data.ok){
+
+      throw new Error(
+        data.error || "Ошибка истории"
+      );
+    }
+
+    const txs=data.result || [];
+
+    if(!txs.length){
+
+      list.innerHTML=`
+
+        <div class="info-box">
+          Транзакций пока нет.
+        </div>
+
+      `;
+
+      return;
+    }
+
+    list.innerHTML=
+      txs.map(tx=>{
+
+        const hash=
+          tx.transaction_id?.hash ||
+          "transaction";
+
+        return `
+
+          <div class="asset">
+
+            <div class="asset-logo">
+              ${SVG.history}
+            </div>
+
+            <div class="asset-main">
+
+              <div class="asset-name">
+                Транзакция
+              </div>
+
+              <div class="asset-address">
+                ${escapeHtml(
+                  String(hash).slice(0,16)
+                )}…
+              </div>
+
+            </div>
+
+          </div>
+
+        `;
+
+      }).join("");
+
+  }catch(e){
+
+    console.error(e);
+
+    list.innerHTML=`
+
+      <div class="error">
+        Не удалось загрузить историю.
+      </div>
+
+    `;
+  }
+}
+
+
+/* ==========================================================
+   SETTINGS
+   ========================================================== */
+
+function renderSettings(page){
+
+  page.innerHTML=`
+
+    <section class="section">
+
+      <div class="section-title">
+        Настройки
+      </div>
+
+
+      <div class="setting"
+           onclick="openSecurity()">
+
+        <div class="quick-icon">
+          <span class="icon">${SVG.lock}</span>
+        </div>
+
+        <div class="setting-main">
+
+          <div class="setting-title">
+            Безопасность
+          </div>
+
+          <div class="setting-desc">
+            PIN-код и защита кошелька
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="setting"
+           onclick="openDocumentation()">
+
+        <div class="quick-icon">
+          <span class="icon">${SVG.info}</span>
+        </div>
+
+        <div class="setting-main">
+
+          <div class="setting-title">
+            Документация
+          </div>
+
+          <div class="setting-desc">
+            Как работает SavcomPay
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="setting"
+           onclick="openCard()">
+
+        <div class="quick-icon">
+          <span class="icon">${SVG.card}</span>
+        </div>
+
+        <div class="setting-main">
+
+          <div class="setting-title">
+            SavcomPay Card
+          </div>
+
+          <div class="setting-desc">
+            Банковская карта
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="setting"
+           onclick="openAbout()">
+
+        <div class="quick-icon">
+          <span class="icon">${SVG.info}</span>
+        </div>
+
+        <div class="setting-main">
+
+          <div class="setting-title">
+            О SavcomPay
+          </div>
+
+          <div class="setting-desc">
+            Версия и информация
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="setting setting-danger"
+           onclick="logout()">
+
+        <span class="icon">
+          ${SVG.logout}
+        </span>
+
+        <div class="setting-main">
+
+          <div class="setting-title">
+            Выйти
+          </div>
+
+          <div class="setting-desc">
+            Завершить текущую сессию
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  `;
+}
+
+
+/* ==========================================================
+   SECURITY
+   ========================================================== */
+
+function openSecurity(){
+
+  openModal("Безопасность",`
+
+    <div class="info-box">
+
+      Ваш приватный ключ хранится
+      локально в зашифрованном виде.
+
+      Firebase не используется
+      для хранения seed-фразы.
+
+    </div>
+
+    <div class="setting">
+
+      <span class="icon">
+        ${SVG.lock}
+      </span>
+
+      <div class="setting-main">
+
+        <div class="setting-title">
+          PIN-код
+        </div>
+
+        <div class="setting-desc">
+          ${localStorage.getItem(pinKey())
+            ? "PIN установлен"
+            : "PIN ещё не установлен"}
+        </div>
+
+      </div>
+
+    </div>
+
+    <button class="secondary"
+            onclick="closeModal();lockWallet()">
+      Заблокировать кошелёк
+    </button>
+
+  `);
+}
+
+
+function lockWallet(){
+
+  state.keyPair=null;
+
+  sessionStorage.removeItem("sav_unlocked");
+
+  showPin();
+}
+
+
+/* ==========================================================
+   DOCUMENTATION
+   ========================================================== */
+
+function openDocumentation(){
+
+  openModal("Документация",`
+
+    <div class="info-box">
+
+      <b>Что такое SavcomPay?</b><br><br>
+
+      Это интерфейс цифрового кошелька,
+      который работает с блокчейном TON.
+
+    </div>
+
+    <div class="setting">
+
+      <div class="setting-main">
+
+        <div class="setting-title">
+          TON
+        </div>
+
+        <div class="setting-desc">
+          Основная монета сети TON.
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="setting">
+
+      <div class="setting-main">
+
+        <div class="setting-title">
+          USDT
+        </div>
+
+        <div class="setting-desc">
+          USDT может существовать в TON
+          как Jetton.
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="warn-box">
+
+      Seed-фраза даёт полный контроль
+      над кошельком.
+
+      Никому её не сообщайте.
+
+    </div>
+
+    <button class="primary"
+            onclick="closeModal()">
+      Понятно
+    </button>
+
+  `);
+}
+
+
+/* ==========================================================
+   CARD
+   ========================================================== */
+
+function openCard(){
+
+  openModal("SavcomPay Card",`
+
+    <div class="virtual-card">
+
+      <div style="font-size:18px;font-weight:900">
+        SavcomPay
+      </div>
+
+      <div class="chip"></div>
+
+      <div class="card-number">
+        •••• •••• •••• ••••
+      </div>
+
+      <div class="card-bottom">
+
+        <span>
+          SAVCOM USER
+        </span>
+
+        <span>
+          SAV
+        </span>
+
+      </div>
+
+    </div>
+
+    <div class="info-box">
+
+      Модуль карты пока является интерфейсом.
+      Реальный выпуск карты требует подключения
+      лицензированного карточного/финансового
+      провайдера и KYC.
+
+    </div>
+
+    <button class="primary"
+            onclick="closeModal()">
+      Закрыть
+    </button>
+
+  `);
+}
+
+
+/* ==========================================================
+   ABOUT
+   ========================================================== */
+
+function openAbout(){
+
+  openModal("О SavcomPay",`
+
+    <div class="info-box">
+
+      <b>SavcomPay</b><br>
+      Цифровой кошелёк на TON.
+
+    </div>
+
+    <div class="setting">
+
+      <div class="setting-main">
+
+        <div class="setting-title">
+          TON
+        </div>
+
+        <div class="setting-desc">
+          V5R1 wallet
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="setting">
+
+      <div class="setting-main">
+
+        <div class="setting-title">
+          Сеть
+        </div>
+
+        <div class="setting-desc">
+          ${state.network==="testnet"
+            ? "Testnet"
+            : "Mainnet"}
+        </div>
+
+      </div>
+
+    </div>
+
+    <button class="primary"
+            onclick="closeModal()">
+      Закрыть
+    </button>
+
+  `);
+}
+
+
+/* ==========================================================
+   NOTIFICATIONS
+   ========================================================== */
+
+function showNotifications(){
+
+  openModal("Уведомления",`
+
+    <div class="info-box">
+
+      Пока новых уведомлений нет.
+
+    </div>
+
+    <button class="primary"
+            onclick="closeModal()">
+      Закрыть
+    </button>
+
+  `);
+}
+
+
+/* ==========================================================
+   MODAL SYSTEM
+   ========================================================== */
+
+function openModal(title,content){
+
+  closeModal();
+
+  const overlay=
+    document.createElement("div");
+
+  overlay.id="modalOverlay";
+
+  overlay.className="overlay";
+
+  overlay.innerHTML=`
+
+    <div class="modal">
+
+      <div class="modal-head">
+
+        <div class="modal-title">
+          ${title}
+        </div>
+
+        <button class="close"
+                onclick="closeModal()">
+          ${SVG.close}
+        </button>
+
+      </div>
+
+      ${content}
+
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+
+function closeModal(){
+
+  const modal=
+    $("modalOverlay");
+
+  if(modal){
+
+    modal.remove();
+  }
+}
+
+
+/* ==========================================================
+   COPY
+   ========================================================== */
+
+async function copyText(text){
+
+  try{
+
+    await navigator.clipboard.writeText(text);
+
+    showToast("Скопировано");
+
+  }catch(e){
+
+    const area=
+      document.createElement("textarea");
+
+    area.value=text;
+
+    document.body.appendChild(area);
+
+    area.select();
+
+    document.execCommand("copy");
+
+    area.remove();
+
+    showToast("Скопировано");
+  }
+}
+
+
+/* ==========================================================
+   LOGOUT
+   ========================================================== */
+
+async function logout(){
+
+  const yes=
+    confirm("Выйти из аккаунта?");
+
+  if(!yes) return;
+
+  state.keyPair=null;
+  state.pin="";
+
+  sessionStorage.clear();
+
+  await auth.signOut();
+
+  state.profile=null;
+
+  renderAuth();
+}
+
+
+/* ==========================================================
+   INIT
+   ========================================================== */
+
+renderAuth();
+
+</script>
+
+</body>
+</html>
